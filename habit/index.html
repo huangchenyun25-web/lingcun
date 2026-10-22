@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>我的习惯本</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- MOBILE TOPBAR -->
+  <div class="mobile-topbar">
+    <button class="hamburger" id="hamburgerBtn">&#9776;</button>
+    <span class="mobile-logo">我的习惯本</span>
+    <div class="live-clock-mini" id="liveClockMini">00:00</div>
+  </div>
+
+  <div class="app-shell">
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <span class="logo-icon">🌊</span>
+        <span class="logo-text">我的习惯本</span>
+      </div>
+      <div class="sidebar-clock">
+        <div class="clock-time" id="liveClock">00:00:00</div>
+        <div class="clock-date" id="liveDate">Loading...</div>
+      </div>
+      <ul class="nav-links">
+        <li><a href="#" class="nav-item active" data-page="dashboard">
+          <span class="nav-icon">🏠</span> Dashboard
+        </a></li>
+        <li><a href="#" class="nav-item" data-page="timeline">
+          <span class="nav-icon">⏱️</span> 24h Timeline
+        </a></li>
+        <li><a href="#" class="nav-item" data-page="habits">
+          <span class="nav-icon">📋</span> Habits
+        </a></li>
+        <li><a href="#" class="nav-item" data-page="analytics">
+          <span class="nav-icon">📊</span> Analytics
+        </a></li>
+        <li><a href="#" class="nav-item" data-page="achievements">
+          <span class="nav-icon">🏆</span> Achievements
+        </a></li>
+      </ul>
+      <div class="sidebar-footer">
+        <button class="btn-notify" id="notifyToggle">🔔 Enable Reminders</button>
+        <div class="freeze-info">
+          <span>❄️ Freeze Tokens:</span>
+          <span class="freeze-count" id="freezeCount">2</span>
+        </div>
+      </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content" id="mainContent">
+
+      <!-- ===== DASHBOARD PAGE ===== -->
+      <section class="page active" id="page-dashboard">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Good morning 👋</h1>
+            <p class="page-subtitle" id="dashSubtitle">Here's your habit summary for today</p>
+          </div>
+          <div class="today-badge" id="todayBadge">Today</div>
+        </div>
+
+        <!-- STATS ROW -->
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-icon">🔥</div>
+            <div class="stat-info">
+              <div class="stat-value" id="statBestStreak">0</div>
+              <div class="stat-label">Best Streak</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-info">
+              <div class="stat-value" id="statTodayDone">0</div>
+              <div class="stat-label">Done Today</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🎯</div>
+            <div class="stat-info">
+              <div class="stat-value" id="statCompletion">0%</div>
+              <div class="stat-label">Completion</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📅</div>
+            <div class="stat-info">
+              <div class="stat-value" id="statWeekStreak">0</div>
+              <div class="stat-label">Week Streak</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CURRENT HOUR CARD -->
+        <div class="section-title">⚡ Current Hour</div>
+        <div class="current-hour-card" id="currentHourCard">
+          <div class="hour-label" id="currentHourLabel">Loading...</div>
+          <div class="hour-habits" id="currentHourHabits">
+            <p class="empty-msg">No habits scheduled for this hour</p>
+          </div>
+          <div class="hour-progress-bar">
+            <div class="hour-progress-fill" id="hourProgressFill"></div>
+          </div>
+          <div class="hour-progress-text" id="hourProgressText">0 of 0 complete</div>
+        </div>
+
+        <!-- TODAY'S HABITS -->
+        <div class="section-title">📌 All Today's Habits</div>
+        <div class="habits-today-list" id="habitsTodayList">
+          <p class="empty-msg">No habits yet. <a href="#" data-page="habits">Add some →</a></p>
+        </div>
+
+        <!-- WEEK OVERVIEW -->
+        <div class="section-title">📆 This Week</div>
+        <div class="week-overview" id="weekOverview"></div>
+      </section>
+
+      <!-- ===== TIMELINE PAGE ===== -->
+      <section class="page" id="page-timeline">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">24h Timeline</h1>
+            <p class="page-subtitle">Your full day, hour by hour</p>
+          </div>
+          <div class="timeline-legend">
+            <span class="legend-dot done"></span>Done
+            <span class="legend-dot active"></span>Now
+            <span class="legend-dot pending"></span>Pending
+          </div>
+        </div>
+        <div class="timeline-container" id="timelineContainer"></div>
+      </section>
+
+      <!-- ===== HABITS PAGE ===== -->
+      <section class="page" id="page-habits">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Manage Habits</h1>
+            <p class="page-subtitle">Add, edit, and configure your habits</p>
+          </div>
+          <button class="btn-primary" id="addHabitBtn">+ New Habit</button>
+        </div>
+
+        <div class="habits-grid" id="habitsGrid">
+          <p class="empty-msg">No habits yet. Click "+ New Habit" to get started.</p>
+        </div>
+      </section>
+
+      <!-- ===== ANALYTICS PAGE ===== -->
+      <section class="page" id="page-analytics">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Analytics</h1>
+            <p class="page-subtitle">Your habit trends and insights</p>
+          </div>
+        </div>
+        <div class="analytics-tabs">
+          <button class="tab-btn active" data-tab="weekly">Weekly</button>
+          <button class="tab-btn" data-tab="monthly">Monthly</button>
+          <button class="tab-btn" data-tab="perhabit">Per Habit</button>
+        </div>
+        <div class="analytics-content">
+          <div class="tab-content active" id="tab-weekly">
+            <div class="chart-card">
+              <div class="chart-title">Weekly Completion (%)</div>
+              <canvas id="weeklyChart" width="700" height="280"></canvas>
+            </div>
+          </div>
+          <div class="tab-content" id="tab-monthly">
+            <div class="chart-card">
+              <div class="chart-title">Monthly Heatmap</div>
+              <div class="heatmap-container" id="heatmapContainer"></div>
+            </div>
+          </div>
+          <div class="tab-content" id="tab-perhabit">
+            <div class="chart-card">
+              <div class="chart-title">Habit Breakdown</div>
+              <canvas id="perHabitChart" width="700" height="320"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== ACHIEVEMENTS PAGE ===== -->
+      <section class="page" id="page-achievements">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Achievements 🏆</h1>
+            <p class="page-subtitle">Milestones you've unlocked</p>
+          </div>
+        </div>
+        <div class="achievements-grid" id="achievementsGrid"></div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ===== ADD/EDIT HABIT MODAL ===== -->
+  <div class="modal-overlay" id="habitModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalTitle">New Habit</h2>
+        <button class="modal-close" id="modalClose">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editHabitId" value="" />
+
+        <div class="form-group">
+          <label>Habit Name</label>
+          <input type="text" id="habitName" placeholder="e.g. Morning Run" />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Emoji Icon</label>
+            <input type="text" id="habitEmoji" placeholder="🏃" maxlength="2" />
+          </div>
+          <div class="form-group">
+            <label>Time Slot</label>
+            <select id="habitTimeSlot">
+              <option value="">— Choose Hour —</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Habit Type</label>
+          <div class="type-toggle">
+            <button class="type-btn active" data-type="yesno">✅ Yes/No</button>
+            <button class="type-btn" data-type="quantified">🔢 Quantified</button>
+            <button class="type-btn" data-type="timed">⏱ Timed</button>
+          </div>
+        </div>
+
+        <div class="form-group type-fields" id="quantifiedFields" style="display:none;">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Target Amount</label>
+              <input type="number" id="habitTarget" placeholder="8" min="1" />
+            </div>
+            <div class="form-group">
+              <label>Unit</label>
+              <input type="text" id="habitUnit" placeholder="glasses" />
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group type-fields" id="timedFields" style="display:none;">
+          <label>Duration (minutes)</label>
+          <input type="number" id="habitDuration" placeholder="20" min="1" />
+        </div>
+
+        <div class="form-group">
+          <label>Reminder Notification</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="habitReminder" />
+            <span class="toggle-track"></span>
+            <span class="toggle-label">Notify me at this time slot</span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label>Color Tag</label>
+          <div class="color-picker" id="colorPicker">
+            <div class="color-dot selected" data-color="#2383e2" style="background:#2383e2"></div>
+            <div class="color-dot" data-color="#0f7b6c" style="background:#0f7b6c"></div>
+            <div class="color-dot" data-color="#e9973f" style="background:#e9973f"></div>
+            <div class="color-dot" data-color="#d44c47" style="background:#d44c47"></div>
+            <div class="color-dot" data-color="#9065b0" style="background:#9065b0"></div>
+            <div class="color-dot" data-color="#337ea9" style="background:#337ea9"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="cancelHabit">Cancel</button>
+        <button class="btn-primary" id="saveHabit">Save Habit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== LOG NOTE MODAL ===== -->
+  <div class="modal-overlay" id="noteModal">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h2>Add Note</h2>
+        <button class="modal-close" id="noteModalClose">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="noteHabitId" />
+        <div class="form-group">
+          <label>Note for today</label>
+          <textarea id="noteText" rows="4" placeholder="How did it go? Any observations..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="cancelNote">Cancel</button>
+        <button class="btn-primary" id="saveNote">Save Note</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TIMER MODAL ===== -->
+  <div class="modal-overlay" id="timerModal">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h2 id="timerHabitName">Timer</h2>
+        <button class="modal-close" id="timerModalClose">✕</button>
+      </div>
+      <div class="modal-body timer-body">
+        <div class="timer-display" id="timerDisplay">00:00</div>
+        <div class="timer-ring-wrap">
+          <svg class="timer-ring" viewBox="0 0 120 120">
+            <circle class="ring-bg" cx="60" cy="60" r="54" />
+            <circle class="ring-fill" id="ringFill" cx="60" cy="60" r="54"
+              stroke-dasharray="339.3" stroke-dashoffset="339.3" />
+          </svg>
+        </div>
+        <div class="timer-controls">
+          <button class="btn-primary" id="timerStart">▶ Start</button>
+          <button class="btn-secondary" id="timerPause">⏸ Pause</button>
+          <button class="btn-secondary" id="timerReset">↺ Reset</button>
+          <button class="btn-secondary" id="timerMarkDone">✅ Done</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
