@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>三天能力对照</title>
+<style>
+  :root {
+    --bg: #f7f3eb;
+    --card: #fffdf8;
+    --ink: #2c2a26;
+    --muted: #6b6560;
+    --line: #e6dfd2;
+    --accent: #c45c26;
+    --accent-soft: #f3e0d2;
+    --ok: #2f6b4f;
+    --ok-soft: #e4f0e8;
+    --warn: #8a6a1f;
+    --warn-soft: #f5ecd0;
+    --mute-soft: #eeeae3;
+    --shadow: 0 8px 28px rgba(60, 40, 20, 0.08);
+    --radius: 16px;
+    --max: 680px;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC",
+      "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+    line-height: 1.55;
+    min-height: 100%;
+  }
+  body { padding: 24px 16px 64px; }
+  .wrap { max-width: var(--max); margin: 0 auto; }
+  header.app { margin-bottom: 20px; }
+  header.app h1 {
+    font-size: 1.45rem;
+    font-weight: 700;
+    margin: 0 0 6px;
+    letter-spacing: 0.02em;
+  }
+  header.app p { margin: 0; color: var(--muted); font-size: 0.95rem; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 22px 20px;
+    margin-bottom: 16px;
+  }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  label.field { display: block; margin-bottom: 16px; }
+  label.field > span.title {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    font-size: 0.98rem;
+  }
+  label.field > span.hint {
+    display: block;
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+  }
+  textarea {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font: inherit;
+    background: #fff;
+    color: var(--ink);
+    resize: vertical;
+    min-height: 180px;
+  }
+  textarea:focus {
+    outline: 2px solid var(--accent-soft);
+    border-color: var(--accent);
+  }
+  .tracks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0 4px;
+  }
+  .track-pill {
+    font-size: 0.82rem;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 1px solid #e8c9b0;
+  }
+  .note {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin: 0 0 14px;
+  }
+  .err {
+    display: none;
+    color: #a33;
+    font-size: 0.9rem;
+    margin: 0 0 12px;
+  }
+  .err.show { display: block; }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  button {
+    font: inherit;
+    border: none;
+    border-radius: 12px;
+    padding: 11px 18px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  button.primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  button.primary:hover { filter: brightness(1.05); }
+  button.ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--line);
+  }
+  button.ghost:hover { background: #fff; color: var(--ink); }
+  h2.section {
+    font-size: 1.1rem;
+    margin: 0 0 10px;
+  }
+  .item-block {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 14px 14px 10px;
+    margin-bottom: 14px;
+    background: #fff;
+  }
+  .item-text {
+    font-weight: 600;
+    margin: 0 0 10px;
+    font-size: 0.98rem;
+  }
+  .matrix {
+    display: grid;
+    gap: 10px;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 88px 1fr;
+    gap: 8px;
+    align-items: start;
+  }
+  .row .track-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--muted);
+    padding-top: 8px;
+  }
+  .marks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .mark {
+    font-size: 0.82rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 6px 12px;
+    background: var(--mute-soft);
+    color: var(--muted);
+    cursor: pointer;
+    font-weight: 500;
+  }
+  .mark:hover { border-color: #d4b89a; }
+  .mark.active-you {
+    background: var(--ok-soft);
+    border-color: #9cc5ae;
+    color: var(--ok);
+  }
+  .mark.active-bu {
+    background: var(--warn-soft);
+    border-color: #e0d0a0;
+    color: var(--warn);
+  }
+  .mark.active-no {
+    background: var(--mute-soft);
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .bu-list {
+    margin: 0;
+    padding-left: 1.2em;
+  }
+  .bu-list li { margin-bottom: 6px; }
+  .bu-list .empty { list-style: none; margin-left: -1.2em; color: var(--muted); }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin: 0 0 14px;
+  }
+  .legend span::before {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  .legend .l-you::before { background: var(--ok); }
+  .legend .l-bu::before { background: var(--warn); }
+  .legend .l-no::before { background: #b0aaa0; }
+  footer.tiny {
+    margin-top: 20px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    text-align: center;
+  }
+  @media (max-width: 480px) {
+    .row { grid-template-columns: 1fr; gap: 4px; }
+    .row .track-name { padding-top: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="app">
+    <h1>三天能力对照</h1>
+    <p>用你真做过的事，对照三条路——不替你选职业。</p>
+  </header>
+
+  <section id="screen-input" class="screen active">
+    <div class="card">
+      <p class="note">三条路固定为：</p>
+      <div class="tracks">
+        <span class="track-pill">出海营销</span>
+        <span class="track-pill">IP 营销</span>
+        <span class="track-pill">PM</span>
+      </div>
+      <p class="note" style="margin-top:14px">
+        写下 3–8 件你真实做过的事，每行一件。系统会先给一个建议标记，你随时可以改。
+        不会排名，也不会告诉你「该去哪条路」。
+      </p>
+      <label class="field">
+        <span class="title">我做过的事</span>
+        <span class="hint">每行一件，例如：写过英文落地页、带过小红书账号、跟产品一起排过上线</span>
+        <textarea id="items-input" placeholder="第一件……&#10;第二件……&#10;第三件……"></textarea>
+      </label>
+      <p id="input-err" class="err" role="alert"></p>
+      <div class="actions">
+        <button type="button" class="primary" id="btn-submit">对照一下</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="screen-result" class="screen">
+    <div class="card">
+      <h2 class="section">对照结果</h2>
+      <div class="legend">
+        <span class="l-you">已有：你做过、能直接用</span>
+        <span class="l-bu">可补：短期能补一格</span>
+        <span class="l-no">对不上：这条路暂时连不上</span>
+      </div>
+      <p class="note">点一下即可改标记。改完会自动记住（只在这台浏览器）。</p>
+      <div id="result-matrix"></div>
+    </div>
+    <div class="card">
+      <h2 class="section">短期可补</h2>
+      <p class="note">只列你标成「可补」的格子，最多 5 条。不是职业建议。</p>
+      <ul id="bu-list" class="bu-list"></ul>
+      <div class="actions" style="margin-top:16px">
+        <button type="button" class="ghost" id="btn-back">改事例</button>
+        <button type="button" class="primary" id="btn-reset">换一组事例再跑</button>
+      </div>
+    </div>
+  </section>
+
+  <footer class="tiny">数据只存在本机浏览器 · 不上传 · 不选职业</footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var STORAGE_KEY = "sandian-nengli-duizhao-v1";
+  var TRACKS = [
+    { id: "chuhai", name: "出海营销" },
+    { id: "ip", name: "IP 营销" },
+    { id: "pm", name: "PM" }
+  ];
+  var MARKS = [
+    { id: "you", label: "已有" },
+    { id: "bu", label: "可补" },
+    { id: "no", label: "对不上" }
+  ];
+
+  // Keyword cues (lowercase). English + Chinese.
+  var CUES = {
+    chuhai: [
+      "english", "overseas", "海外", "跨境", "独立站", "投放", "增长", "gtm",
+      "localization", "多语言", "海外用户", "出海", "外贸", "亚马逊", "amazon",
+      "shopify", "ads", "广告投放", "facebook ads", "google ads", "tiktok ads",
+      "本地化", "英文", "国际", "global", "market entry", "获客", "转化漏斗",
+      "landing", "落地页", "seo", "sem", "affiliate", "联盟"
+    ],
+    ip: [
+      "内容", "品牌", "账号", "小红书", "视频", "采访", "叙事", "人设", "公关",
+      "传播", "稿", "文案", "短视频", "直播", "抖音", "微博", "公众号", "专栏",
+      "故事", "调性", "视觉", "选题", "种草", "kol", "koc", "influencer",
+      "pr", "media", "媒体", "品牌侧", "ip", "人设", "访谈", "软文", "推文"
+    ],
+    pm: [
+      "需求", "排期", "原型", "评审", "指标", "roadmap", "协作", "上线", "文档",
+      "用户访谈", "验收", "产品", "迭代", "backlog", "sprint", "敏捷", "需求文档",
+      "prd", "埋点", "ab测", "a/b", "优先级", "里程碑", "版本", "功能", "用户故事",
+      "usecase", "wireframe", "线框", "可用性", "交付", "跨部门", "站会", "复盘"
+    ]
+  };
+
+  var state = {
+    items: [],       // [{text, marks: {chuhai, ip, pm}}]
+    screen: "input"  // input | result
+  };
+
+  var elInput = document.getElementById("items-input");
+  var elErr = document.getElementById("input-err");
+  var elMatrix = document.getElementById("result-matrix");
+  var elBu = document.getElementById("bu-list");
+  var screenInput = document.getElementById("screen-input");
+  var screenResult = document.getElementById("screen-result");
+
+  function normalize(s) {
+    return String(s || "").toLowerCase().replace(/\s+/g, " ").trim();
+  }
+
+  function scoreTrack(text, trackId) {
+    var t = normalize(text);
+    var cues = CUES[trackId] || [];
+    var hits = 0;
+    for (var i = 0; i < cues.length; i++) {
+      if (t.indexOf(cues[i]) !== -1) hits++;
+    }
+    return hits;
+  }
+
+  function suggestMark(text, trackId) {
+    var hits = scoreTrack(text, trackId);
+    if (hits >= 2) return "you";
+    if (hits === 1) return "bu";
+    return "no";
+  }
+
+  function parseItems(raw) {
+    return String(raw || "")
+      .split(/\r?\n/)
+      .map(function (l) { return l.trim(); })
+      .filter(function (l) { return l.length > 0; });
+  }
+
+  function buildStateFromTexts(texts) {
+    return texts.map(function (text) {
+      var marks = {};
+      TRACKS.forEach(function (tr) {
+        marks[tr.id] = suggestMark(text, tr.id);
+      });
+      return { text: text, marks: marks };
+    });
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        items: state.items,
+        screen: state.screen,
+        draft: elInput.value
+      }));
+    } catch (e) { /* ignore quota */ }
+  }
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      var data = JSON.parse(raw);
+      if (data && typeof data.draft === "string") {
+        elInput.value = data.draft;
+      }
+      if (data && Array.isArray(data.items) && data.items.length >= 3) {
+        state.items = data.items;
+        state.screen = data.screen === "result" ? "result" : "input";
+      }
+    } catch (e) { /* ignore */ }
+  }
+
+  function showScreen(name) {
+    state.screen = name;
+    screenInput.classList.toggle("active", name === "input");
+    screenResult.classList.toggle("active", name === "result");
+    save();
+  }
+
+  function setErr(msg) {
+    if (!msg) {
+      elErr.textContent = "";
+      elErr.classList.remove("show");
+      return;
+    }
+    elErr.textContent = msg;
+    elErr.classList.add("show");
+  }
+
+  function renderMatrix() {
+    elMatrix.innerHTML = "";
+    state.items.forEach(function (item, idx) {
+      var block = document.createElement("div");
+      block.className = "item-block";
+
+      var title = document.createElement("p");
+      title.className = "item-text";
+      title.textContent = (idx + 1) + ". " + item.text;
+      block.appendChild(title);
+
+      var matrix = document.createElement("div");
+      matrix.className = "matrix";
+
+      TRACKS.forEach(function (tr) {
+        var row = document.createElement("div");
+        row.className = "row";
+
+        var name = document.createElement("div");
+        name.className = "track-name";
+        name.textContent = tr.name;
+        row.appendChild(name);
+
+        var marks = document.createElement("div");
+        marks.className = "marks";
+        MARKS.forEach(function (m) {
+          var btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "mark";
+          if (item.marks[tr.id] === m.id) {
+            btn.classList.add(
+              m.id === "you" ? "active-you" :
+              m.id === "bu" ? "active-bu" : "active-no"
+            );
+          }
+          btn.textContent = m.label;
+          btn.addEventListener("click", function () {
+            item.marks[tr.id] = m.id;
+            save();
+            renderMatrix();
+            renderBuList();
+          });
+          marks.appendChild(btn);
+        });
+        row.appendChild(marks);
+        matrix.appendChild(row);
+      });
+
+      block.appendChild(matrix);
+      elMatrix.appendChild(block);
+    });
+  }
+
+  function renderBuList() {
+    elBu.innerHTML = "";
+    var bullets = [];
+    state.items.forEach(function (item) {
+      TRACKS.forEach(function (tr) {
+        if (item.marks[tr.id] === "bu") {
+          bullets.push(item.text + " → " + tr.name);
+        }
+      });
+    });
+    if (bullets.length === 0) {
+      var empty = document.createElement("li");
+      empty.className = "empty";
+      empty.textContent = "目前没有标成「可补」的格子。点上面的标记改一下即可。";
+      elBu.appendChild(empty);
+      return;
+    }
+    bullets.slice(0, 5).forEach(function (t) {
+      var li = document.createElement("li");
+      li.textContent = t;
+      elBu.appendChild(li);
+    });
+  }
+
+  function goResult() {
+    renderMatrix();
+    renderBuList();
+    showScreen("result");
+    window.scrollTo(0, 0);
+  }
+
+  document.getElementById("btn-submit").addEventListener("click", function () {
+    var texts = parseItems(elInput.value);
+    if (texts.length < 3) {
+      setErr("至少写 3 件真实做过的事（每行一件）。");
+      return;
+    }
+    if (texts.length > 8) {
+      setErr("最多 8 件。先挑最能代表你的，其余下次再跑。");
+      return;
+    }
+    setErr("");
+    state.items = buildStateFromTexts(texts);
+    save();
+    goResult();
+  });
+
+  document.getElementById("btn-back").addEventListener("click", function () {
+    // Keep draft text; stay editable
+    showScreen("input");
+    window.scrollTo(0, 0);
+  });
+
+  document.getElementById("btn-reset").addEventListener("click", function () {
+    state.items = [];
+    elInput.value = "";
+    setErr("");
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    showScreen("input");
+    window.scrollTo(0, 0);
+  });
+
+  elInput.addEventListener("input", function () {
+    // Persist draft while typing (without wiping result items until submit/reset)
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      var data = raw ? JSON.parse(raw) : {};
+      data.draft = elInput.value;
+      if (state.items && state.items.length) data.items = state.items;
+      data.screen = state.screen;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) {}
+  });
+
+  load();
+  if (state.screen === "result" && state.items.length >= 3) {
+    goResult();
+  } else {
+    showScreen("input");
+  }
+})();
+</script>
+</body>
+</html>
