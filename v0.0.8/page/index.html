@@ -535,7 +535,9 @@
   var CASE_SRC = ["主办方 / 公司统计", "平台后台数据", "公开报道", "我自己估算的"];
   var CASE_FIX_Q = [["wrong", "有内容写错了"], ["brag", "语气太夸张了"], ["long", "太长了"], ["other", "其他（我来说）"]];
 
-  /* 第 83 条：真实数据分级——草案·待拍板（衡量这段经历本身 + 本人负责的部分；替代旧 L1–L3） */
+  /* 第 83、88 条：经历数据三级——已定（2026-10-23）。只作页面内部逻辑：驱动「还可以补什么」的提示和第 68 条的升级。
+     页面永远不给用户看级别名、不让用户选级别；只给友好的补充提示，到 D3 给一句肯定。
+     D1 说得清 / D2 有结果数字且写明来源（自己估算不算）/ D3 有对比或第三方旁证 */
   var TIERS = [
     { id: "D1", name: "D1｜说得清", desc: "写清了你负责哪一块（主导 / 执行 / 协助），有一项能核对的事实：时间、地点、主办方，或一篇公开报道。" },
     { id: "D2", name: "D2｜有结果数字", desc: "至少一个结果数字（到场人数、曝光或阅读、互动、报名或转化、媒体报道篇数），并写明数字从哪来。" },
@@ -1283,7 +1285,8 @@
   function judgeCred(id, c) {
     if (c.level === 2 || (c.type === 4 && !c.other)) return "back";
     if (id === "en") return (c.type === 1 || c.type === 3 || c.level === 0) ? "strong" : "weak";
-    return ((c.type === 0 || c.type === 2) && c.level === 0) ? "strong" : "weak";
+    /* 第 89 条：公开链接或账号 / 数据或报告，且主导或参与执行 → 强 */
+    return ((c.type === 0 || c.type === 2) && (c.level === 0 || c.level === 1)) ? "strong" : "weak";
   }
   function labTag(id) {
     var lab = S.labels[id] || "待验证", cr = S.cred[id];
@@ -1584,6 +1587,17 @@
     if (!f.noData && f.data && f.src >= 0 && f.src !== 3 && /\d/.test(f.data)) return (f.cmp || f.src === 2) ? "D3" : "D2";
     return "D1";
   }
+  /* 第 88 条：只给人看「还可以补什么」，不给级别 */
+  function tierHints(p) {
+    var f = p["case"].f, t = suggestTier(p);
+    if (t === "D3") return { ok: true, list: ["有数字、写明了来源，还有对比或旁证——这段经历已经很扎实了。"] };
+    if (t === "D2") return { ok: false, list: ["加一个对比（比上一次、比目标、比同类）或旁证（媒体报道、主办方或客户评价、获奖），会更有说服力。"] };
+    var hasNum = !f.noData && f.data && /\d/.test(f.data);
+    var first = hasNum && f.src === 3 ? "自己估算的数字先不算数；换成主办方统计、平台后台或公开报道里的数，并写明从哪来，会更有说服力。"
+      : hasNum && !(f.src >= 0) ? "给这个数字写明从哪来（主办方统计、平台后台、公开报道），会更有说服力。"
+      : "补一个结果数字（到场人数、曝光或阅读、互动、报名或转化、媒体报道篇数），并写明从哪来，会更有说服力。";
+    return { ok: false, list: [first, "再加一个对比或旁证（媒体报道、主办方评价、获奖），会更扎实。"] };
+  }
   function caseHtml(p, mark) {
     var c = p["case"], g = c.gen, f = caseFacts(p), imgs = imgsOf(p), unk = mark ? (c.warn || []) : [];
     function t(s) { var e = esc(s); return unk.length ? e.replace(/\d[\d,]*(?:\.\d+)?/g, function (n) { return unk.indexOf(normNum(n)) >= 0 ? "<mark>" + n + "</mark>" : n; }) : e; }
@@ -1591,7 +1605,6 @@
     var pub = "";
     if (c.confirmed) { var u = safeUrl(c.confirmed.source_url); pub = "<p>" + esc([c.confirmed.title, c.confirmed.date, c.confirmed.place, c.confirmed.organizer].filter(Boolean).join(" · ")) + (u ? ' · <a href="' + esc(u) + '">来源</a>' : "") + "</p>"; }
     else if (c.f.manual) { var u2 = safeUrl(c.f.manual); pub = "<p>" + (u2 ? '<a href="' + esc(u2) + '">' + esc(u2) + "</a>" : esc(c.f.manual)) + "</p>"; }
-    var tier = TIERS.filter(function (x) { return x.id === p.tier; })[0];
     return "<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<title>" + esc(g.title) + "</title>\n<style>\n" +
       "body{font-family:system-ui,\"PingFang SC\",\"Microsoft YaHei\",sans-serif;background:#f7f3eb;color:#2c2a26;margin:0;line-height:1.7}article{max-width:720px;margin:0 auto;padding:28px 20px 48px}\n" +
       ".kicker{color:#c45c26;font-size:.85rem;margin:0}h1{font-size:1.6rem;margin:4px 0 6px}.lead{font-size:1.05rem;color:#4a4540}h2{font-size:1.05rem;margin:22px 0 6px;border-left:4px solid #c45c26;padding-left:8px}\n" +
@@ -1607,7 +1620,7 @@
       (pub ? "<section><h2>可以核对的公开信息</h2>" + pub + "</section>\n" : "") +
       '<section class="quote"><h2>一句话证据</h2><p>' + t(p.sentence || g.evidence_sentence) + "</p></section>\n" +
       '<section class="hypo"><h2>如果再做一次（设想，不是已经发生的事）</h2>' + ul(g.if_again) + "</section>\n" +
-      "<footer>做于另存人生 v" + VERSION + " · 只写真实发生过的事" + (tier ? " · 数据分级（草案）：" + esc(tier.name) : "") + "</footer>\n</article>\n</body>\n</html>\n";
+      "<footer>做于另存人生 v" + VERSION + " · 只写真实发生过的事</footer>\n</article>\n</body>\n</html>\n";
   }
   function planHtml(p) {
     var pl = p["case"].plan, ul = function (a) { return "<ul>" + a.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>"; };
@@ -1701,18 +1714,17 @@
   function renderDone() {
     var p = curP(), B = $("done-body"); if (!p) return;
     var isCase = p.mode === "case", g = p["case"].gen;
-    if (isCase && !p.tier) p.tier = suggestTier(p);
+    if (isCase) p.tier = suggestTier(p);
     if (!p.sentence) p.sentence = isCase && g ? (p["case"].pack ? p["case"].pack.evidence_sentence : g.evidence_sentence) : "我用 AI 做了「" + p.title.replace(/[「」]/g, "") + "」：" + (p.build.summary || "");
-    var sug = isCase ? suggestTier(p) : "";
     var pub = PUBLISH.filter(function (x) { return x[0] === p.publish; })[0];
     var h = '<div class="qt"><span class="n">1</span>做到什么程度了？</div>' + radios("dg", DEGREE.map(function (d) { return d[1]; }), DEGREE.map(function (d) { return d[0]; }).indexOf(p.degree)) +
       '<div class="qt"><span class="n">2</span>想放到哪里给人看？</div>' + radios("pb", PUBLISH.map(function (d) { return d[1]; }), PUBLISH.map(function (d) { return d[0]; }).indexOf(p.publish), true) +
       '<div id="pb-hint">' + (pub ? '<p class="hint">' + esc(pub[2]) + "</p>" : "") + (p.publish === "gh" ? '<details><summary>GitHub Pages 怎么放（大约 10 分钟）</summary><ol class="hint"><li>注册或登录 GitHub，新建一个公开仓库（名字用英文，例如 my-case）。</li><li>点 Add file → Upload files，把下载的 .html 传上去，文件名改成 index.html。</li><li>Settings → Pages → Branch 选 main，点 Save。</li><li>等一两分钟，页面上会出现 https://你的用户名.github.io/仓库名/ 的链接，填到下面。</li></ol></details>' : "") + "</div>" +
       '<input type="text" id="dn-link" class="' + (p.publish && p.publish !== "self" ? "" : "hidden") + '" placeholder="发出去之后，把链接贴在这里（可以以后再填）" value="' + esc(p.link) + '" />';
     if (isCase) {
-      h += '<div class="qt"><span class="n">3</span>这段经历的数据有多扎实？ <span class="tag draft">草案·待拍板</span></div><div class="choices">' + TIERS.map(function (t) {
-        return '<label class="choice"><input type="radio" name="tier" value="' + t.id + '"' + (p.tier === t.id ? " checked" : "") + " /><span><b>" + esc(t.name) + "</b>" + (t.id === sug ? "（页面按你填的建议）" : "") + '<br><small class="hint" style="display:inline">' + esc(t.desc) + "</small></span></label>";
-      }).join("") + '</div><p class="hint">这套分级还是草案，只衡量这段经历本身和你负责的部分，不给人打分。</p>';
+      var th = tierHints(p);
+      h += '<div class="qt"><span class="n">3</span>这段经历，还可以补点什么？</div><div id="tier-hint" class="' + (th.ok ? "okbox" : "next") + '">' + th.list.map(function (x) { return "<div>" + esc(x) + "</div>"; }).join("") + "</div>" +
+        (th.ok ? "" : '<p class="hint">不补也能存。想补的话：点上面「一起做出来」旁的「改」，展开「哪里不对？改一改」，点「回去改我的回答」，补上数据那一题再重新生成。</p>');
     } else {
       h += '<label class="field"><span class="t">用起来怎么样（可选）</span><span class="h">一句话就好，例：「这周用了 3 次，每次少抄一张表」</span><input type="text" id="dn-usage" value="' + esc(p.usage) + '" /></label>';
     }
@@ -1727,7 +1739,6 @@
     B.innerHTML = h;
     B.querySelectorAll('input[name="dg"]').forEach(function (r) { r.onchange = function () { p.degree = DEGREE[+r.value][0]; save(); }; });
     B.querySelectorAll('input[name="pb"]').forEach(function (r) { r.onchange = function () { p.publish = PUBLISH[+r.value][0]; save(); renderDone(); }; });
-    B.querySelectorAll('input[name="tier"]').forEach(function (r) { r.onchange = function () { p.tier = r.value; save(); }; });
     $("dn-link").oninput = function () { p.link = this.value.trim(); save(); };
     if ($("dn-usage")) $("dn-usage").oninput = function () { p.usage = this.value.trim(); save(); };
     $("dn-sentence").oninput = function () { p.sentence = this.value.trim(); save(); };
@@ -1743,7 +1754,7 @@
     };
     $("btn-done").onclick = function () {
       if (!p.degree || !p.publish) { $("err-done").textContent = "第 1、2 题点一下就好（选「只自己用」也完全可以）。"; return; }
-      $("err-done").textContent = ""; p.sentence = $("dn-sentence").value.trim(); p.done = true;
+      $("err-done").textContent = ""; p.sentence = $("dn-sentence").value.trim(); p.done = true; if (p.mode === "case") p.tier = suggestTier(p);
       S.flash = upgrade(p); go("s-asset");
     };
   }
@@ -1751,7 +1762,7 @@
     if (p.kind !== "B" || !p.axis || !dirCached()) return "";
     var old = labTag(p.axis), strong = p.mode === "case" ? (p.tier === "D2" || p.tier === "D3") : p.degree === "live";
     S.labels[p.axis] = "已有证据";
-    S.cred[p.axis] = { strength: strong ? "strong" : "weak", from: p.mode, verdict: strong ? "用「" + p.title + "」补上了，算「已有证据（强）」。" : "用「" + p.title + "」补上了；" + (p.mode === "case" ? "补上带来源的结果数字（D2）就能升级成「强」。" : "发出去、真有人用之后就能升级成「强」。") };
+    S.cred[p.axis] = { strength: strong ? "strong" : "weak", from: p.mode, verdict: strong ? "用「" + p.title + "」补上了，算「已有证据（强）」。" : "用「" + p.title + "」补上了；" + (p.mode === "case" ? "补上一个写明来源的结果数字，就能升级成「强」。" : "发出去、真有人用之后就能升级成「强」。") };
     return "能力对照更新：「" + axisName(p.axis) + "」" + old + " → " + labTag(p.axis);
   }
 
@@ -1763,7 +1774,7 @@
     $("asset-lead").innerHTML = (S.flash ? '<span class="okbox" style="display:block">' + esc(S.flash) + "</span>" : "") + esc("v0.1 · 已点亮 " + lit.length + (grey.length ? " / " + (lit.length + grey.length) : "") + " 件。每做成一件，就多一张卡。不用全部补完，现在这一页就已经是你的了。");
     $("assets").innerHTML = lit.map(function (p) {
       var dg = (DEGREE.filter(function (d) { return d[0] === p.degree; })[0] || [0, "还没记程度"])[1], pb = (PUBLISH.filter(function (d) { return d[0] === p.publish; })[0] || [0, ""])[1];
-      return '<div class="asset"><h4>' + esc(p.title) + '</h4><div class="badges"><span class="badge">' + esc(kindName(p.kind)) + '</span><span class="badge">' + (p.mode === "case" ? "复盘案例" : "小网页") + '</span><span class="badge' + (p.done ? "" : " wait") + '">' + esc(dg) + "</span>" + (p.tier ? '<span class="badge">' + esc(p.tier) + "（草案）</span>" : "") + "</div>" +
+      return '<div class="asset"><h4>' + esc(p.title) + '</h4><div class="badges"><span class="badge">' + esc(kindName(p.kind)) + '</span><span class="badge">' + (p.mode === "case" ? "复盘案例" : "小网页") + '</span><span class="badge' + (p.done ? "" : " wait") + '">' + esc(dg) + "</span>" + "</div>" +
         (pb ? "<div>放在：" + esc(pb.split("（")[0]) + "</div>" : "") + (p.link ? "<div>🔗 " + esc(p.link) + "</div>" : "") + (p.sentence && p.done ? "<div>「" + esc(p.sentence) + "」</div>" : "") +
         (p.sat !== null || p.match ? '<div class="hint">自己满意 ' + (p.sat === null ? "—" : p.sat + "%") + " · 旁人看对得上 " + (p.match ? p.match.score + "%" : "—") + "</div>" : "") +
         (p.done ? "" : '<div class="row"><button class="ghost small" data-finish="' + p.id + '">记一下做到什么程度</button></div>') + "</div>";
@@ -1915,7 +1926,7 @@
     submit: function (id, result) { return AI.submit(id, result); }
   };
   /* 测试用 */
-  window.__lingcun = { state: function () { return S; }, enc: enc, dec: dec, stateLink: stateLink, judgeCred: judgeCred, caseHtml: function () { var p = curP(); return p && p["case"].gen ? caseHtml(p, false) : ""; }, unknownNums: unknownNums, ai: AI };
+  window.__lingcun = { state: function () { return S; }, enc: enc, dec: dec, stateLink: stateLink, judgeCred: judgeCred, tierOf: function (f) { var p = { "case": { f: f } }; return { tier: suggestTier(p), hints: tierHints(p) }; }, caseHtml: function () { var p = curP(); return p && p["case"].gen ? caseHtml(p, false) : ""; }, unknownNums: unknownNums, ai: AI };
 })();
 </script>
 </body>
