@@ -150,6 +150,40 @@
   .verdict.need { border-left-color: var(--warn); }
   mark { background: #ffe59a; }
   @media (max-width: 480px) { body { padding: 12px 10px 80px; } .card { padding: 15px 13px; } .stages span { font-size: .6rem; } .preview { height: 380px; } }
+  .hbtns { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+  .bagbtn { font-size: .8rem; background: #fff3d6; color: var(--ink); border: 2px solid var(--ink); border-radius: 4px; box-shadow: 2px 2px 0 var(--ink); padding: 3px 10px; cursor: pointer; font-weight: 600; }
+  .bagbtn b { font-weight: 700; }
+  .bagpanel { position: fixed; inset: 0; background: rgba(32,28,24,.35); z-index: 50; display: flex; justify-content: flex-end; }
+  .bagdrawer { width: min(460px, 100%); height: 100%; overflow-y: auto; background: var(--card); border-left: 3px solid var(--ink); padding: 16px 14px 40px; box-shadow: -4px 0 0 var(--ink); }
+  body.bagopen { overflow: hidden; }
+  .bagfilter { display: flex; gap: 10px; flex-wrap: wrap; margin: 8px 0; font-size: .85rem; }
+  .bagfilter select { width: auto; padding: 4px 6px; }
+  .baglist { display: grid; gap: 10px; }
+  .bagcard { display: block; text-align: left; width: 100%; background: #fff; color: var(--ink); border: 2px solid var(--ink); border-radius: 6px; box-shadow: 3px 3px 0 var(--ink); padding: 10px 12px; cursor: pointer; font-weight: 400; }
+  .bagcard.wip { border-style: dashed; box-shadow: 3px 3px 0 var(--grey); }
+  .bagcard.cur { outline: 3px solid var(--accent); }
+  .bagcard .bc-n { display: block; font-weight: 700; font-size: .98rem; margin-bottom: 3px; }
+  .bagcard .bc-s { display: block; font-size: .84rem; color: var(--muted); margin-bottom: 4px; }
+  .bagcard .bc-m { display: block; font-size: .76rem; color: var(--muted); }
+  .tag { display: inline-block; font-size: .72rem; padding: 0 6px; border: 1.5px solid var(--ink); border-radius: 3px; }
+  .tag.done { background: #dff0e4; } .tag.wip { background: #f6ecd4; }
+  .bd-h { font-weight: 700; font-size: 1.1rem; margin: 12px 0 4px; }
+  .bd-s { font-size: .9rem; }
+  .bigbtn[disabled] { opacity: .5; cursor: not-allowed; }
+  .acts { display: grid; gap: 10px; grid-template-columns: repeat(3, 1fr); }
+  .acts .bigbtn { padding: 12px 10px; }
+  .subways { margin: 10px 0 0; padding: 10px 12px; border: 2px dashed var(--ink); border-radius: 6px; display: grid; gap: 8px; }
+  .subways button { text-align: left; }
+  .scene { margin-top: 14px; padding: 14px; border: 3px solid var(--ink); border-radius: 6px; background: #fff3d6; box-shadow: 4px 4px 0 var(--accent); transition: transform .2s; }
+  .scene.flash { transform: scale(1.02); }
+  .scene-h { font-weight: 700; font-size: 1.05rem; }
+  .scene-s { font-size: .88rem; color: var(--muted); margin: 4px 0 8px; }
+  .scene-b { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+  .clar { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0; }
+  .steps li { margin-bottom: 8px; font-size: .88rem; }
+  .ghlinks { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0; }
+  .btnlink { display: inline-block; font-size: .82rem; padding: 4px 10px; border: 2px solid var(--ink); border-radius: 4px; box-shadow: 2px 2px 0 var(--ink); background: #fff; color: var(--ink); text-decoration: none; font-weight: 600; }
+  @media (max-width: 480px) { .acts { grid-template-columns: 1fr; } .bagdrawer { width: 100%; border-left: none; box-shadow: none; } }
 </style>
 </head>
 <body>
@@ -159,9 +193,10 @@
       <h1><span class="px">存档</span>另存人生 · 借助 AI 做出你想做的东西</h1>
       <p>选一件你想做的，在这一页里一步一步做出来。不打卡、不考试、不承诺求职结果。</p>
     </div>
-    <button class="aichip" id="ai-chip" title="AI 设置">AI：<b id="ai-chip-t">还没填密钥</b></button>
+    <div class="hbtns"><button class="bagbtn" id="bag-btn" title="背包：做过的全部东西">🎒 背包 <b>(0)</b></button><button class="aichip" id="ai-chip" title="AI 设置">AI：<b id="ai-chip-t">还没填密钥</b></button></div>
   </header>
   <p class="netnote" id="netnote"></p>
+  <div class="bagpanel hidden" id="bag-panel" role="dialog" aria-label="背包"><div class="bagdrawer"><div class="head"><h2 style="font-size:1rem;margin:0">🎒 你的背包</h2><button class="ghost small" id="bag-close">收起</button></div><div id="bag-body"></div></div></div>
 
   <section class="card hidden" id="ai-cfg">
     <div class="head"><h2 style="font-size:1rem;margin:0 0 6px">AI 设置：用你自己的 API 密钥</h2><button class="ghost small" id="ai-cfg-close">收起</button></div>
@@ -1007,28 +1042,33 @@
 
   /* ========== 状态：只存在本浏览器的 localStorage（#10、第 96 条③：不再写进网址） ========== */
   function blank() {
-    return { v: VERSION, t: 0, stage: "pick", entry: { mode: "", idea: "", bg: { weekly: "", keep: "", avoid: "" }, situation: "", goal: "", small: false },
-      cur: -1, projects: [], ask: { q: "", stage: "", resolved: true, a: null }, match: { dir: null, desc: "", items: {}, open: "" }, nextGoal: "" };
+    return { v: VERSION, t: 0, stage: "pick", entry: { mode: "", act: "", idea: "", bg: { weekly: "", keep: "", avoid: "" }, situation: "", goal: "", small: false },
+      cur: -1, projects: [], ask: { q: "", stage: "", resolved: true, a: null }, match: { dir: null, desc: "", items: {}, open: "" }, nextGoal: "", gh: {} };
   }
   var S = blank();
   function newProject(cat, idea) {
     return { id: Date.now() + Math.floor(Math.random() * 1000), cat: cat, idea: idea || "", title: "", a: {}, photos: [], out: null, warn: [], pub: null, cands: null, candNote: "", query: "",
-      degree: null, sat: null, selfOk: [], fix: null, fixPart: -1, revs: 0, saved: false, savedAt: 0, runs: 1, stage: "material", small: !!S.entry.small, paused: false };
+      degree: null, sat: null, selfOk: [], fix: null, fixPart: -1, revs: 0, saved: false, savedAt: 0, runs: 1, stage: "material", small: !!S.entry.small, paused: false, createdAt: Date.now(), updatedAt: Date.now() };
   }
   function merge(o) {
     var b = blank(), k, j;
     for (k in o) b[k] = o[k];
     ["entry", "ask", "match"].forEach(function (k2) { var d = blank()[k2]; if (!b[k2] || typeof b[k2] !== "object") b[k2] = d; for (j in d) if (b[k2][j] === undefined) b[k2][j] = d[j]; });
     if (!Array.isArray(b.projects)) b.projects = [];
-    b.projects.forEach(function (p) { var d = newProject(p.cat || "generic"); for (var k3 in d) if (p[k3] === undefined) p[k3] = d[k3]; if (!CATS[p.cat]) p.cat = "generic"; });
+    b.projects.forEach(function (p) { var had = p.updatedAt, d = newProject(p.cat || "generic"); for (var k3 in d) if (p[k3] === undefined) p[k3] = d[k3]; if (!CATS[p.cat]) p.cat = "generic"; if (!had) { p.updatedAt = p.savedAt || o.t || 0; p.createdAt = p.createdAt === d.createdAt ? p.updatedAt : p.createdAt; } if (!p.title) p.title = titleFromInput(p); });
     if (b.cur >= b.projects.length) b.cur = b.projects.length - 1;
     if (stageIdx(b.stage) < 0) b.stage = "pick";
     return b;
   }
-  function save() { S.t = Date.now(); try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch (e) { toast("这个浏览器的存储满了，记得点「下载」把文件存好"); } }
+  /* #17：updatedAt 只在这件东西的内容真的变了时才更新（打开、看一眼不算） */
+  var sigs = {};
+  function sigOf(p) { return JSON.stringify([p.a, p.out, p.photos, p.saved, p.degree, p.revs, p.title, p.pub, p.sat, p.selfOk]); }
+  function touch() { var p = curP(); if (!p) return; var g = sigOf(p); if (sigs[p.id] !== undefined && sigs[p.id] !== g) p.updatedAt = Date.now(); sigs[p.id] = g; }
+  function resetSigs() { sigs = {}; S.projects.forEach(function (p) { sigs[p.id] = sigOf(p); }); }
+  function save() { touch(); if (typeof renderBagBtn === "function") renderBagBtn(); S.t = Date.now(); try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch (e) { toast("这个浏览器的存储满了，记得点「下载」把文件存好"); } }
   function load() {
     if (/state=/.test(location.hash)) { try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {} } /* v0.0.8 的旧存档链接：不再读网址里的进度 */
-    try { var raw = localStorage.getItem(LS_KEY); if (raw) { S = merge(JSON.parse(raw)); return true; } } catch (e) {}
+    try { var raw = localStorage.getItem(LS_KEY); if (raw) { S = merge(JSON.parse(raw)); resetSigs(); return true; } } catch (e) {}
     return false;
   }
   function download(name, text, type) {
@@ -1116,37 +1156,66 @@
     $("sum-again").textContent = "";
   }
 
-  /* ---------- ① 选想做的东西（第 108 条②：有想法的直接开始；没想法的看例子或说一点背景；情绪不是必答） ---------- */
+  /* ---------- ① 选想做的东西（#16：动作入口 + 场景卡 + 带主题和形态的例子；底层仍映射到各类目配置，事实规则跟配置走） ---------- */
+  /* 例子同时带「主题」和「形态」；点了直接预填。pre 里数字 = 选项序号，字符串 = 文字题的值 */
   var EXAMPLES = [
-    { cat: "novel", t: "写一篇五百字左右的微小说", idea: "写一篇五百字左右的微小说，温暖一点", small: true },
-    { cat: "photo", t: "把 3 张最喜欢的照片排成一页", idea: "把 3 张最喜欢的照片排成一页，发给朋友家人看", small: true },
+    { cat: "photo", t: "把旅行照片做成一页纪念册", idea: "把旅行照片做成一页纪念册，发给一起去的朋友", small: true, pre: { ph_theme: "一次旅行", ph_use: 0, ph_order: 0 } },
+    { cat: "novel", t: "写一篇五百字的雨夜小故事", idea: "写一篇五百字左右的微小说，雨夜，温暖一点", small: true, pre: { n_len: 0, n_style: 0 } },
     { cat: "tool", t: "做一个「本周行动清单」小网页", idea: "把这周想做的几件事写下来、勾掉，关掉再打开还在", small: true, pre: { t_input: 2, t_action: 0, t_first: 2 } },
-    { cat: "resume", t: "把最近一段工作整理成一页简历", idea: "把最近一段工作整理成一页精简简历" },
-    { cat: "exp", t: "把做过的一场活动写成一页复盘", idea: "把做过的一场活动写成复盘" },
+    { cat: "resume", t: "把最近一段工作整理成一页简历", idea: "把最近一段工作整理成一页精简简历", pre: { r_len: 0 } },
+    { cat: "exp", t: "把办过的一场活动写成一页复盘", idea: "把办过的一场活动写成一页复盘", pre: { x_type: 0 } },
+    { cat: "generic", t: "给家里的猫做一页成长手账", idea: "给家里的猫做一页成长手账", pre: { g_form: 0, g_for: 1, g_kind: 0 } },
     { cat: "tool", t: "做一个习惯打卡小网页", idea: "每天给一两个习惯打卡，看连续了几天", pre: { t_input: 2, t_action: 1 } },
-    { cat: "novel", t: "写一个三千字左右的短篇故事", idea: "写一个三千字左右的短篇" }
+    { cat: "novel", t: "写一个三千字左右的校园短篇", idea: "写一个三千字左右的校园短篇小说", pre: { n_len: 1, n_type: 4 } }
+  ];
+  /* 三个动作入口 → 具体做法（每个做法对应一份现有配置）。名字不超出实际能力：「整理已有材料」目前只有照片 */
+  var ACTS = {
+    write: { name: "写点东西", icon: "✍️", sub: "小说、故事，或者一页文字、清单、计划", ways: [
+      { t: "写小说或故事", s: "可以虚构，跳过的设定由 AI 来创作", cat: "novel" },
+      { t: "写一页文字、清单或计划", s: "真实的事还是创作，你来选", cat: "generic", pre: { g_form: 0 } },
+      { t: "把我自己讲清楚", s: "简历 / 经历复盘 / 作品介绍，只写真实的事", self: true }] },
+    organize: { name: "整理已有材料", icon: "🗂", sub: "目前先支持照片：排成一页能给人看的", ways: [
+      { t: "整理照片", s: "做成一页纪念册或展示页；照片不发给 AI", cat: "photo" }],
+      note: "其他材料（文字稿、表格、聊天记录……）还在一个个补做法。现在可以用下面「说说你的想法」按通用方式做。" },
+    tool: { name: "做个小工具", icon: "🧰", sub: "一个只做一件事的小网页，关掉再打开还在", ways: [{ t: "做个小工具", cat: "tool" }] }
+  };
+  /* 「讲清楚我自己」：作品介绍暂无专门配置 → 走通用（一页文字、写真实的事），事实规则按「真实」 */
+  var SELF = [
+    { id: "resume", t: "简历", s: "把做过的事和会的东西排成一页", cat: "resume" },
+    { id: "exp", t: "经历复盘", s: "把一段经历写成「背景、我做了什么、结果」", cat: "exp" },
+    { id: "work", t: "作品介绍", s: "介绍一件你做出来的东西：是什么、怎么做的", cat: "generic", idea: "介绍我做过的一件作品", pre: { g_form: 0, g_kind: 0 } }
+  ];
+  /* 本地匹配澄清（不调 AI）：一句话对上一类直接走；对上多类或对不上，给几个按钮问一下 */
+  var CLARIFY = [
+    { t: "写小说或故事", cat: "novel" }, { t: "整理照片", cat: "photo" }, { t: "做个小工具", cat: "tool" },
+    { t: "简历", cat: "resume" }, { t: "经历复盘", cat: "exp" }, { t: "都不像：按通用方式做", cat: "generic" }
   ];
   var ANX = /焦虑|慌|迷茫|崩溃|压力|好累|撑不住|难受|失眠|没意义|浑浑噩噩|很烦|烦躁|害怕|不安/;
   function anxious() { var e = S.entry; return ANX.test([e.situation, e.bg.weekly, e.bg.keep, e.bg.avoid, e.idea].join(" ")); }
-  function bagHtml() {
-    if (!S.projects.length) return "";
-    return '<div class="qt">你的背包（做过的和没做完的）</div><div class="bag">' + S.projects.map(function (p, i) {
-      return '<div class="item' + (p.saved ? "" : " grey") + '"><h4>' + esc(CATS[p.cat].icon + " " + (p.title || CATS[p.cat].name)) + "</h4><div>" + esc(CATS[p.cat].name) + " · " + (p.saved ? "已保存" : "做到「" + STAGES[stageIdx(p.stage)].name + "」") + '</div><div class="row"><button class="sec2 small" data-open="' + i + '">' + (p.saved ? "打开" : "接着做") + "</button></div></div>";
-    }).join("") + "</div>";
+  function lastOpen() { var best = -1, t = -1; S.projects.forEach(function (p, i) { if (!p.saved && (p.updatedAt || 0) > t) { t = p.updatedAt || 0; best = i; } }); return best; }
+  function ideaHint(idea) {
+    var m = matchCats(idea);
+    if (!idea.trim()) return { m: m, text: "", clar: false };
+    if (m.length === 1) return { m: m, text: "看起来是「" + CATS[m[0]].name + "」。点下面就按这个做法开始；不是的话，在下面换一个。", clar: false };
+    if (m.length > 1) return { m: m, text: "这句话同时像好几种做法（" + m.map(function (k) { return CATS[k].name; }).join("、") + "）。你想要的更接近哪一种？", clar: true };
+    return { m: m, text: "没对上现成的做法。更接近下面哪一种？都不像就按通用方式做，不硬套。", clar: true };
   }
-  function bindBag(root) { root.querySelectorAll("[data-open]").forEach(function (b) { b.onclick = function () { S.cur = +b.getAttribute("data-open"); var p = curP(); go(p.saved ? "check" : p.stage || "material"); }; }); }
   function renderPick() {
-    var e = S.entry, B = $("b-pick"), anx = anxious(), m = matchCats(e.idea);
-    var h = '<div class="hello"><div class="avatar">存</div><div class="bubble"><p>你好，我是另存人生。</p><p>选一件你想做的东西，我们在这一页里一步一步把它做出来：先补齐材料，AI 做出第一版，你检查、修改、保存。不用去别的地方。</p></div></div>' +
-      '<div class="big" style="margin-top:12px"><button class="bigbtn' + (e.mode === "have" ? " on" : "") + '" id="pk-have"><strong>我已经有想做的东西</strong><small>直接选一类，或者用一句话说说。</small></button>' +
-      '<button class="bigbtn' + (e.mode === "none" ? " on" : "") + '" id="pk-none"><strong>还没想好，先看看例子</strong><small>看几个具体的例子；也可以说一点背景（可选）。</small></button></div>';
-    if (e.mode === "have") {
-      var sug = m.length === 1 ? "看起来是「" + CATS[m[0]].name + "」。点下面就按这一类做；不是的话，直接点别的类目。" : e.idea.trim() ? (m.length > 1 ? "这句话同时像好几类（" + m.map(function (k) { return CATS[k].name; }).join("、") + "），可以直接点一类；或者按通用方式做，不硬套。" : "没有正好对应的类目，就用通用方式做，不硬套。") : "";
-      h += '<label class="field" style="margin-top:12px"><span class="t">一句话说说你想做的（可选）</span><input type="text" id="pk-idea" placeholder="例：写一篇雨夜外卖员和猫的短篇小说" value="' + esc(e.idea) + '" /></label>' +
-        '<div class="note' + (sug ? "" : " hidden") + '" id="pk-sug">' + esc(sug) + "</div>" +
-        '<div class="row' + (e.idea.trim() ? "" : " hidden") + '" id="pk-go-row"><button id="pk-go">' + esc(m.length === 1 ? "按「" + CATS[m[0]].name + "」开始" : "按通用方式开始") + "</button></div>" +
-        '<div class="qt">或者直接选一类</div><div class="grid2">' + CAT_ORDER.concat(["generic"]).map(function (k) { var c = CATS[k]; return '<button class="bigbtn" data-cat="' + k + '"><strong>' + c.icon + " " + esc(c.name) + "</strong><small>" + esc(c.one) + "</small></button>"; }).join("") + "</div>";
+    var e = S.entry, B = $("b-pick"), anx = anxious(), hint = ideaHint(e.idea), lo = lastOpen();
+    var h = '<div class="hello"><div class="avatar">存</div><div class="bubble"><p>你好，我是另存人生。</p><p>选一件你想做的东西，我们在这一页里一步一步把它做出来：先补齐材料，AI 做出第一版，你检查、修改、保存。不用去别的地方。</p></div></div>';
+    if (lo >= 0) h += '<div class="row" style="margin-top:10px"><button class="sec2 small" id="pk-last">▶ 继续上次存档：「' + esc(S.projects[lo].title || CATS[S.projects[lo].cat].name) + '」</button><span class="hint" style="display:inline;margin-left:4px">做过的全部东西在右上角 🎒 背包里</span></div>';
+    h += '<div class="qt">想做哪一种？</div><div class="acts">' + Object.keys(ACTS).map(function (k) { var a = ACTS[k]; return '<button class="bigbtn act' + (e.act === k ? " on" : "") + '" data-act="' + k + '"><strong>' + a.icon + " " + esc(a.name) + "</strong><small>" + esc(a.sub) + "</small></button>"; }).join("") + "</div>";
+    if (e.act && ACTS[e.act] && e.act !== "tool") {
+      var A = ACTS[e.act];
+      h += '<div class="subways" id="act-sub"><div class="qt" style="margin-top:0">' + esc(A.name) + "：具体想做哪个？</div>" + A.ways.map(function (w, i) { return '<button class="sec2" data-way="' + i + '">' + esc(w.t) + (w.s ? '<small style="display:block;font-weight:400">' + esc(w.s) + "</small>" : "") + "</button>"; }).join("") + (A.note ? '<p class="hint">' + esc(A.note) + "</p>" : "") + "</div>";
     }
+    h += '<div class="scene" id="scene-self"><div class="scene-h">🪪 讲清楚我自己</div><div class="scene-s">把做过的事、会的东西、做出来的作品，讲给想认识你的人听。只写真实的事。</div><div class="scene-b">' +
+      SELF.map(function (x) { return '<button class="small" data-self-go="' + x.id + '">' + esc(x.t) + '</button>'; }).join("") + '</div><div class="hint">' + SELF.map(function (x) { return esc(x.t) + "：" + esc(x.s); }).join("；") + "。</div></div>";
+    h += '<label class="field" style="margin-top:12px"><span class="t">💬 说说你的想法（可选，一句话就行）</span><input type="text" id="pk-idea" placeholder="例：把旅行照片做成一页纪念册；写一篇雨夜外卖员和猫的小说" value="' + esc(e.idea) + '" /></label>' +
+      '<div class="note' + (hint.text ? "" : " hidden") + '" id="pk-sug">' + esc(hint.text) + "</div>" +
+      '<div class="clar' + (hint.clar ? "" : " hidden") + '" id="pk-clar">' + CLARIFY.filter(function (c) { return !hint.m.length || hint.m.indexOf(c.cat) >= 0 || c.cat === "generic"; }).map(function (c) { return '<button class="sec2 small" data-clar="' + c.cat + '">' + esc(c.t) + "</button>"; }).join("") + "</div>" +
+      '<div class="row' + (e.idea.trim() ? "" : " hidden") + '" id="pk-go-row"><button id="pk-go">' + esc(hint.m.length === 1 ? "按「" + CATS[hint.m[0]].name + "」开始" : "按通用方式开始") + "</button></div>";
+    h += '<div class="big" style="margin-top:12px"><button class="bigbtn' + (e.mode === "none" ? " on" : "") + '" id="pk-none"><strong>🎲 还没想好，看看例子</strong><small>每个例子都写清做什么、做成什么样；点一下就预填好。也可以说一点背景（可选）。</small></button></div>';
     if (e.mode === "none") {
       var ex = EXAMPLES.filter(function (x) { return !anx || x.small; });
       h += '<details id="pk-bg" style="margin-top:12px"' + (e.situation || e.bg.weekly || e.bg.keep || e.bg.avoid ? " open" : "") + '><summary>说一点背景（可选，不说也能往下走）</summary>' +
@@ -1158,37 +1227,43 @@
       var bgs = [];
       if (e.bg.avoid) bgs.push({ cat: "tool", t: "根据你写的：让「" + short(e.bg.avoid, 16) + "」少做一步的小工具", idea: e.bg.avoid });
       if (e.bg.keep) { var mk = matchCats(e.bg.keep); bgs.push({ cat: mk.length === 1 ? mk[0] : "generic", t: "根据你写的：从「" + short(e.bg.keep, 16) + "」做出一件小东西", idea: e.bg.keep }); }
-      h += '<div class="qt">' + (anx ? "今天可以先试的一小步" : "挑一个例子（点一下就开始，之后都能改）") + '</div><div class="big">' + bgs.concat(ex).map(function (x, i) {
+      h += '<div class="qt">' + (anx ? "今天可以先试的一小步" : "挑一个例子（点一下就预填好，之后都能改）") + '</div><div class="big">' + bgs.concat(ex).map(function (x, i) {
         return '<button class="bigbtn" data-ex="' + i + '"><strong>' + CATS[x.cat].icon + " " + esc(x.t) + "</strong><small>" + esc(CATS[x.cat].name) + " · " + esc(anx ? CATS[x.cat].firstStep : CATS[x.cat].deliverable) + "</small></button>";
       }).join("") + "</div>";
       ui.ex = bgs.concat(ex);
     }
+    h += '<details style="margin-top:12px" id="pk-all"><summary>直接选具体做法（全部）</summary><div class="grid2">' + CAT_ORDER.concat(["generic"]).map(function (k) { var c = CATS[k]; return '<button class="bigbtn" data-cat="' + k + '"><strong>' + c.icon + " " + esc(c.name) + "</strong><small>" + esc(c.one) + "</small></button>"; }).join("") + "</div></details>";
     h += '<details style="margin-top:12px"' + (e.goal ? " open" : "") + '><summary>你想往哪去？（可选）</summary><input type="text" id="pk-goal" placeholder="例：明年转去做内容运营；先把爱好做成能给人看的东西" value="' + esc(e.goal) + '" /><p class="hint">写了的话，做完一件东西时会告诉你它离那里近了哪一步。不写也完全可以。</p></details>';
-    h += bagHtml();
     B.innerHTML = h;
-    $("pk-have").onclick = function () { e.mode = "have"; save(); renderPick(); appendAsk("pick"); };
-    $("pk-none").onclick = function () { e.mode = "none"; save(); renderPick(); appendAsk("pick"); };
+    var rer = function () { save(); renderPick(); appendAsk("pick"); };
+    if ($("pk-last")) $("pk-last").onclick = function () { S.cur = lo; go(S.projects[lo].stage || "material"); };
+    B.querySelectorAll("[data-act]").forEach(function (b) { b.onclick = function () { var k = b.getAttribute("data-act"); if (k === "tool") { startProject("tool", ""); return; } e.act = e.act === k ? "" : k; rer(); }; });
+    B.querySelectorAll("[data-way]").forEach(function (b) { b.onclick = function () { var w = ACTS[e.act].ways[+b.getAttribute("data-way")]; if (w.self) { var sc = $("scene-self"); sc.classList.add("flash"); try { sc.scrollIntoView({ behavior: "smooth", block: "center" }); } catch (x) {} setTimeout(function () { sc.classList.remove("flash"); }, 1200); return; } startProject(w.cat, e.idea, w.pre); }; });
+    B.querySelectorAll("[data-self-go]").forEach(function (b) { b.onclick = function () { var x = SELF.filter(function (y) { return y.id === b.getAttribute("data-self-go"); })[0]; startProject(x.cat, x.idea || "", x.pre); }; });
     var idea = $("pk-idea");
-    if (idea) idea.oninput = function () {
-      e.idea = idea.value; save(); var mm = matchCats(e.idea), sg = $("pk-sug");
-      var s2 = mm.length === 1 ? "看起来是「" + CATS[mm[0]].name + "」。点下面就按这一类做；不是的话，直接点别的类目。" : e.idea.trim() ? (mm.length > 1 ? "这句话同时像好几类（" + mm.map(function (k) { return CATS[k].name; }).join("、") + "），可以直接点一类；或者按通用方式做，不硬套。" : "没有正好对应的类目，就用通用方式做，不硬套。") : "";
-      sg.textContent = s2; sg.classList.toggle("hidden", !s2); $("pk-go-row").classList.toggle("hidden", !e.idea.trim());
-      $("pk-go").textContent = mm.length === 1 ? "按「" + CATS[mm[0]].name + "」开始" : "按通用方式开始";
+    idea.oninput = function () {
+      e.idea = idea.value; save(); var hh = ideaHint(e.idea), sg = $("pk-sug"), cl = $("pk-clar");
+      sg.textContent = hh.text; sg.classList.toggle("hidden", !hh.text); $("pk-go-row").classList.toggle("hidden", !e.idea.trim());
+      cl.innerHTML = CLARIFY.filter(function (c) { return !hh.m.length || hh.m.indexOf(c.cat) >= 0 || c.cat === "generic"; }).map(function (c) { return '<button class="sec2 small" data-clar="' + c.cat + '">' + esc(c.t) + "</button>"; }).join("");
+      cl.classList.toggle("hidden", !hh.clar); bindClar();
+      $("pk-go").textContent = hh.m.length === 1 ? "按「" + CATS[hh.m[0]].name + "」开始" : "按通用方式开始";
     };
-    if ($("pk-go")) $("pk-go").onclick = function () { var mm = matchCats(e.idea); startProject(mm.length === 1 ? mm[0] : "generic", e.idea); };
+    function bindClar() { B.querySelectorAll("[data-clar]").forEach(function (b) { b.onclick = function () { startProject(b.getAttribute("data-clar"), e.idea); }; }); }
+    bindClar();
+    $("pk-go").onclick = function () { var mm = matchCats(e.idea); startProject(mm.length === 1 ? mm[0] : "generic", e.idea); };
+    $("pk-none").onclick = function () { e.mode = "none"; rer(); var x = $("pk-bg"); if (x) try { x.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (er) {} };
     B.querySelectorAll("[data-cat]").forEach(function (b) { b.onclick = function () { startProject(b.getAttribute("data-cat"), e.idea); }; });
     B.querySelectorAll("[data-ex]").forEach(function (b) { b.onclick = function () { var x = ui.ex[+b.getAttribute("data-ex")]; S.entry.small = anxious() || !!x.small; startProject(x.cat, x.idea, x.pre); }; });
     [["bg-weekly", "weekly"], ["bg-keep", "keep"], ["bg-avoid", "avoid"]].forEach(function (x) { var el = $(x[0]); if (el) { el.oninput = function () { e.bg[x[1]] = el.value.trim(); save(); }; el.onchange = function () { renderPick(); appendAsk("pick"); }; } });
     var sit = $("bg-sit"); if (sit) { sit.oninput = function () { e.situation = sit.value.trim(); save(); }; sit.onchange = function () { renderPick(); appendAsk("pick"); }; }
     $("pk-goal").oninput = function () { e.goal = this.value.trim(); save(); };
-    bindBag(B);
   }
   function startProject(cat, idea, pre) {
     var p = newProject(cat, idea); p.small = !!S.entry.small || anxious();
     if (idea) guessFrom(p, idea);
-    if (pre) for (var k in pre) p.a[k] = { i: pre[k] };
     if (idea && cat === "generic") p.a.g_what = { v: idea };
     if (idea && cat === "tool") p.a.t_scene = { v: idea };
+    if (pre) for (var k in pre) p.a[k] = typeof pre[k] === "number" ? { i: pre[k] } : { v: String(pre[k]) };
     if (p.small) { if (cat === "novel" && !p.a.n_len) p.a.n_len = { i: 0 }; if (cat === "resume" && !p.a.r_len) p.a.r_len = { i: 0 }; }
     p.title = idea ? short(idea, 18) : "";
     S.projects.push(p); S.cur = S.projects.length - 1; go("material");
@@ -1237,7 +1312,7 @@
     $("mat-go").onclick = function () {
       var mm = missingMust(p);
       if (mm.length) { $("err-mat").textContent = "还差：" + mm.map(function (f) { return f.t.replace(/[（(：？?].*$/, ""); }).join("、") + "（这几项是做出第一版必须的）。"; return; }
-      if (!p.title) p.title = short(answeredText(p, "x_name") ? p.a.x_name.v : answeredText(p, "g_what") ? p.a.g_what.v : answeredText(p, "t_scene") ? p.a.t_scene.v : CATS[p.cat].name, 18);
+      if (!p.title) p.title = titleFromInput(p);
       p.out = null; p.degree = null; p.saved = false; go("draft");
     };
   }
@@ -1305,9 +1380,18 @@
     var k = task.key; if (ui.running[k]) return; ui.running[k] = 1;
     AI.run(task, slot).then(function (o) { delete ui.running[k]; then(o); });
   }
+  /* 没有 AI 标题时：用用户自己写的（一句话、作品名、情节、主题…），最后才用类目名 */
+  function titleFromInput(p) {
+    var cand = [p.idea, answeredText(p, "x_name") && p.a.x_name.v, answeredText(p, "g_what") && p.a.g_what.v, answeredText(p, "t_scene") && p.a.t_scene.v,
+      answeredText(p, "ph_theme") && p.a.ph_theme.v, answeredText(p, "n_plot") && p.a.n_plot.v, answeredText(p, "r_target") && p.a.r_target.v && ("简历 · " + p.a.r_target.v), answeredText(p, "r_exp") && p.a.r_exp.v];
+    for (var i = 0; i < cand.length; i++) if (cand[i] && String(cand[i]).trim()) return short(String(cand[i]).trim(), 18);
+    return CATS[p.cat].name;
+  }
   function setOut(p, o) {
     if (o.html === undefined && p.cat === "novel" && o.sections && o.logline !== undefined) { p.out = { title: o.title, logline: o.logline, style_note: o.style_note, sections: o.sections.map(function (s) { return { heading: s.heading, summary: s.summary, text: "" }; }) }; }
     else p.out = o;
+    var ot = p.out && (p.out.title || p.out.headline); /* #17：AI 产出的标题回写成项目名（不额外调 AI 命名） */
+    if (ot && String(ot).trim()) p.title = short(String(ot).trim(), 24);
     if (p.cat === "exp" || p.cat === "resume") p.warn = unknownNums(textsOf(p.out), p.cat === "exp" ? caseFacts(p) : inputsOf(p));
   }
   function renderDraft() {
@@ -1399,7 +1483,7 @@
         '<button class="bigbtn" id="nx-more"><strong>➕ 再做一件</strong><small>换一份材料再做一次，或者做另一类。</small></button>' +
         '<button class="bigbtn" id="nx-pause"><strong>☕ 暂停并保留进度</strong><small>今天先到这儿；同一个浏览器再打开就能接上。</small></button></div><div id="sv-out"></div>' +
         '<label class="field" style="margin-top:12px"><span class="t">下一件想做的事（可选）</span><input type="text" id="sv-goal" placeholder="例：把这篇小说再写一个续篇；给朋友做一个记账小网页" value="' + esc(S.nextGoal) + '" /></label>' +
-        '<details><summary>想放到网上给人看？（可选）</summary><ol class="hint" style="display:block"><li>注册或登录 GitHub，新建一个公开仓库（名字用英文，例如 my-work）。</li><li>点 Add file → Upload files，把下载的 .html 传上去，文件名改成 index.html。</li><li>Settings → Pages → Branch 选 main，点 Save。等一两分钟会出现 https://你的用户名.github.io/仓库名/ 的链接。</li></ol><p class="hint">发小红书、公众号也可以：把里面最关键的一段和一两张图发出去。只自己用、不公开也完全算数。</p></details>';
+        publishHtml(p);
     }
     B.innerHTML = h;
     var dl = function () { download(fileName(p), renderOut(p, true)); };
@@ -1410,6 +1494,7 @@
     if ($("nx-more")) $("nx-more").onclick = function () { go("again"); };
     if ($("nx-pause")) $("nx-pause").onclick = function () { p.paused = true; save(); $("sv-out").innerHTML = '<div class="okbox">进度保留好了。今天就到这儿，去过生活吧。<br>下次回来：用这台设备的这个浏览器打开这一页，会看到「上次做到这里」，点「继续」就接上。换电脑的话，先在页面最下面「存档与恢复」里下载存档文件。<br>卡住了也可以直接告诉我你看到什么：每一步下面都有「卡住了？」。</div>'; toast("进度已保留"); };
     if ($("sv-goal")) $("sv-goal").oninput = function () { S.nextGoal = this.value.trim(); save(); };
+    if ($("gh-dl")) bindPublish(p);
   }
 
   /* ---------- ⑥ 换材料再做 / 继续完善 ---------- */
@@ -1423,17 +1508,23 @@
       '<button class="bigbtn" id="ag-other"><strong>➕ 做另一类</strong><small>小说、照片、简历、小工具、经历复盘，或者用通用方式。</small></button>' +
       (p.cat === "exp" || p.cat === "resume" ? '<button class="bigbtn" id="ag-match"><strong>🧭 可选：能力对照</strong><small>看看这段经历和哪个方向较贴合。不是必经的一步。</small></button>' : "") + "</div>";
     if (gaps.length) h += '<div class="qt">能力对照里还没看到相关经历的几项，点一下就开始补</div><div class="big">' + gaps.map(function (g, i) { return '<button class="bigbtn" data-gap="' + i + '"><strong>补上「' + esc(g.ax.name) + "」</strong><small>" + esc(CATS[g.cat].name) + "：" + esc(g.idea) + "</small></button>"; }).join("") + "</div>";
-    h += bagHtml();
+    h += '<div class="row"><button class="ghost small" id="ag-bag">🎒 打开背包：看做过的全部东西</button></div>';
     B.innerHTML = h;
     $("ag-swap").onclick = function () {
-      var np = newProject(p.cat, p.idea); c.keep.forEach(function (id) { if (p.a[id]) np.a[id] = clone(p.a[id]); }); np.runs = (p.runs || 1) + 1; np.small = p.small; np.title = (p.title || c.name).replace(/（第 \d+ 份）$/, "") + "（第 " + np.runs + " 份）";
-      S.projects.push(np); S.cur = S.projects.length - 1; go("material");
+      newFromSettings(p);
     };
     $("ag-polish").onclick = function () { go("check"); };
-    $("ag-other").onclick = function () { S.cur = -1; S.entry.mode = "have"; go("pick"); };
+    $("ag-other").onclick = function () { S.cur = -1; go("pick"); };
+    $("ag-bag").onclick = function () { openBag(); };
     if ($("ag-match")) $("ag-match").onclick = function () { openMatch(); };
     B.querySelectorAll("[data-gap]").forEach(function (b) { b.onclick = function () { var g = gaps[+b.getAttribute("data-gap")]; S.entry.small = false; startProject(g.cat, g.idea, g.pre); }; });
-    bindBag(B);
+  }
+
+  /* 沿用设置做一件新的：原作原样保留，新的一件只带「换材料再做」时保留的那些设置 */
+  function newFromSettings(p) {
+    var c = CATS[p.cat], np = newProject(p.cat, p.idea); c.keep.forEach(function (id) { if (p.a[id]) np.a[id] = clone(p.a[id]); });
+    np.runs = (p.runs || 1) + 1; np.small = p.small; np.from = p.id; np.title = (p.title || c.name).replace(/（第 \d+ 份）$/, "") + "（第 " + np.runs + " 份）";
+    S.projects.push(np); S.cur = S.projects.length - 1; go("material");
   }
   /* JD 分析库：科技AI · IP/内容营销（JD分析库/科技AI_IP内容营销_v0.0.6.md，8 份官网原文，抓取 2026-10-23）。
      rank 只在内部决定顺序和「先露哪 4 项」，页面上不显示。 */
@@ -1586,6 +1677,104 @@
   }
   function closeMatch() { $("s-match").classList.add("hidden"); var el = $("s-" + S.stage); if (el) try { el.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {} }
 
+
+  /* ========== #18 发布：可点的步骤 + 下载为 index.html + 选填用户名/仓库名生成链接；不自动发布，也不说「已经发布」 ========== */
+  var GH_USER = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/, GH_REPO = /^[A-Za-z0-9._-]{1,100}$/;
+  function ghLinks(u, r) {
+    u = String(u || "").trim(); r = String(r || "").trim();
+    if (!u || !r) return null;
+    if (!GH_USER.test(u) || !GH_REPO.test(r)) return { bad: true };
+    var eu = encodeURIComponent(u), er = encodeURIComponent(r);
+    return { upload: "https://github.com/" + eu + "/" + er + "/upload/main", pages: "https://github.com/" + eu + "/" + er + "/settings/pages", site: "https://" + u.toLowerCase() + ".github.io/" + er + "/" };
+  }
+  function ghLinksHtml() {
+    var g = S.gh || {}, L = ghLinks(g.u, g.r);
+    if (!L) return '<p class="hint">填好用户名和仓库名，这里会出现三个链接：上传页、Pages 设置页、预计的公开网址。</p>';
+    if (L.bad) return '<div class="warnbox">用户名只能有英文字母、数字和「-」；仓库名只能有英文字母、数字和「. _ -」。</div>';
+    return '<div class="ghlinks"><a class="btnlink" id="gh-up" href="' + esc(L.upload) + '" target="_blank" rel="noopener noreferrer">④ 打开上传页 ↗</a><a class="btnlink" id="gh-pages" href="' + esc(L.pages) + '" target="_blank" rel="noopener noreferrer">⑤ 打开 Pages 设置页 ↗</a></div>' +
+      '<div class="note">预计的公开网址：<a id="gh-site" href="' + esc(L.site) + '" target="_blank" rel="noopener noreferrer">' + esc(L.site) + "</a><br>这只是按你填的名字算出来的地址。要等你上传 index.html、在 Pages 设置里选好 main 并点 Save，再等一两分钟，它才能打开；页面没法替你确认。</div>";
+  }
+  function publishHtml(p) {
+    var g = S.gh || {};
+    return '<details id="pub-gh"' + (g.open ? " open" : "") + '><summary>想放到网上给人看？（可选）</summary>' +
+      '<p class="hint">下面的按钮都在新标签页打开 GitHub，这一页不会关；步骤留在这里，回来接着看就行。</p><ol class="steps">' +
+      '<li>注册或登录 GitHub。<div class="ghlinks"><a class="btnlink" id="gh-signup" href="https://github.com/signup" target="_blank" rel="noopener noreferrer">注册 GitHub ↗</a><a class="btnlink" id="gh-login" href="https://github.com/login" target="_blank" rel="noopener noreferrer">登录 ↗</a></div></li>' +
+      '<li>新建一个公开（Public）仓库，名字用英文，例如 my-work。<div class="ghlinks"><a class="btnlink" id="gh-new" href="https://github.com/new" target="_blank" rel="noopener noreferrer">新建仓库 ↗</a></div></li>' +
+      '<li>把这件作品下载成 index.html（GitHub Pages 要这个文件名才能直接打开）。<div class="ghlinks"><button class="small" id="gh-dl">下载为 index.html（放 GitHub 用）</button></div></li>' +
+      "<li>在仓库里点 Add file → Upload files，把 index.html 拖进去，点 Commit changes。</li>" +
+      "<li>Settings → Pages → Branch 选 main，点 Save。等一两分钟。</li></ol>" +
+      '<div class="qt" style="font-weight:400">选填：填了用户名和仓库名，第 4、5 步可以直接点</div><div class="grid2"><label class="field"><span class="h">GitHub 用户名</span><input type="text" id="gh-user" autocomplete="off" placeholder="例：chenyun" value="' + esc(g.u || "") + '" /></label>' +
+      '<label class="field"><span class="h">仓库名</span><input type="text" id="gh-repo" autocomplete="off" placeholder="例：my-work" value="' + esc(g.r || "") + '" /></label></div><div id="gh-links">' + ghLinksHtml() + "</div>" +
+      '<p class="hint">发小红书、公众号也可以：把里面最关键的一段和一两张图发出去。只自己用、不公开也完全算数。</p></details>';
+  }
+  function bindPublish(p) {
+    S.gh = S.gh || {};
+    $("pub-gh").ontoggle = function () { S.gh.open = this.open; save(); };
+    $("gh-dl").onclick = function () { download("index.html", renderOut(p, true)); };
+    ["gh-user", "gh-repo"].forEach(function (id) { $(id).oninput = function () { S.gh[id === "gh-user" ? "u" : "r"] = this.value.trim(); save(); $("gh-links").innerHTML = ghLinksHtml(); }; });
+  }
+
+  /* ========== #17 背包：右上角常驻；列全部、可筛选；点卡片进详情，不直接跳阶段 ========== */
+  var bagView = { type: "", status: "", open: -1 };
+  function statusOf(p) { return p.saved ? { k: "done", t: "已保存" } : p.out ? { k: "wip", t: "做出了第一版，还没保存" } : { k: "wip", t: "没做完 · 停在「" + STAGES[stageIdx(p.stage)].name + "」" }; }
+  function fmtTime(t) { if (!t) return "时间不详"; var d = new Date(t), z = function (n) { return (n < 10 ? "0" : "") + n; }; return (d.getMonth() + 1) + "月" + d.getDate() + "日 " + z(d.getHours()) + ":" + z(d.getMinutes()); }
+  function summaryOf(p) {
+    var o = p.out;
+    if (o) {
+      var s = o.summary || o.logline || o.one_line || o.intro || "";
+      if (!s && o.sections && o.sections[0]) s = o.sections[0].text || o.sections[0].summary || "";
+      if (!s && o.experiences && o.experiences[0]) s = o.experiences[0].org + " · " + o.experiences[0].role;
+      if (s) return short(String(s).replace(/\s+/g, " "), 60);
+    }
+    var t = textsOf(inputsOf(p)).filter(function (x) { return x && x !== PEND; })[0];
+    return t ? "材料：" + short(String(t), 50) : "还没填材料";
+  }
+  function renderBagBtn() { var b = $("bag-btn"); if (b) b.innerHTML = "🎒 背包 <b>(" + S.projects.length + ")</b>"; }
+  function openBag(i) { bagView.open = typeof i === "number" ? i : -1; $("bag-panel").classList.remove("hidden"); document.body.classList.add("bagopen"); renderBag(); }
+  function closeBag() { $("bag-panel").classList.add("hidden"); document.body.classList.remove("bagopen"); }
+  function renderBag() {
+    var B = $("bag-body"), h = "";
+    if (bagView.open >= 0 && S.projects[bagView.open]) return renderBagDetail(bagView.open);
+    var cats = []; S.projects.forEach(function (p) { if (cats.indexOf(p.cat) < 0) cats.push(p.cat); });
+    var list = S.projects.map(function (p, i) { return { p: p, i: i }; }).filter(function (x) { return (!bagView.type || x.p.cat === bagView.type) && (!bagView.status || statusOf(x.p).k === bagView.status); })
+      .sort(function (a, b) { return (b.p.updatedAt || 0) - (a.p.updatedAt || 0); });
+    if (!S.projects.length) h = '<div class="note">背包还是空的。做完一件东西（没做完也算）就会出现在这里。</div><div class="row"><button class="small" id="bag-start">开始做一件</button></div>';
+    else {
+      h = '<div class="bagfilter"><label>类型 <select id="bag-type"><option value="">全部</option>' + cats.map(function (k) { return '<option value="' + k + '"' + (bagView.type === k ? " selected" : "") + ">" + esc(CATS[k].name) + "</option>"; }).join("") + "</select></label>" +
+        '<label>状态 <select id="bag-status"><option value="">全部</option><option value="wip"' + (bagView.status === "wip" ? " selected" : "") + '>没做完</option><option value="done"' + (bagView.status === "done" ? " selected" : "") + ">已保存</option></select></label></div>" +
+        '<p class="hint">一共 ' + S.projects.length + " 件，这里显示 " + list.length + " 件，最近改过的在前。点一件看看，再决定怎么打开。</p>" +
+        (list.length ? '<div class="baglist">' + list.map(function (x) { var p = x.p, st = statusOf(p);
+          return '<button class="bagcard ' + st.k + (x.i === S.cur ? " cur" : "") + '" data-bag-card="' + x.i + '"><span class="bc-n">' + esc(CATS[p.cat].icon + " " + (p.title || titleFromInput(p))) + '</span><span class="bc-s">' + esc(summaryOf(p)) + '</span><span class="bc-m"><span class="tag ' + st.k + '">' + esc(st.t) + "</span> " + esc(CATS[p.cat].name) + " · 最后修改 " + esc(fmtTime(p.updatedAt)) + (x.i === S.cur ? " · 正在做" : "") + "</span></button>"; }).join("") + "</div>" : '<div class="note">这个筛选下没有东西。</div>') +
+        '<div class="row"><button class="ghost small" id="bag-other">➕ 开始别的创作</button></div>';
+    }
+    B.innerHTML = h;
+    if ($("bag-type")) $("bag-type").onchange = function () { bagView.type = this.value; renderBag(); };
+    if ($("bag-status")) $("bag-status").onchange = function () { bagView.status = this.value; renderBag(); };
+    B.querySelectorAll("[data-bag-card]").forEach(function (b) { b.onclick = function () { bagView.open = +b.getAttribute("data-bag-card"); renderBag(); }; });
+    var other = $("bag-other") || $("bag-start"); if (other) other.onclick = startOther;
+  }
+  function startOther() { closeBag(); S.cur = -1; S.entry.act = ""; go("pick"); toast("选一件新的想做的东西"); }
+  function renderBagDetail(i) {
+    var p = S.projects[i], c = CATS[p.cat], st = statusOf(p), B = $("bag-body");
+    var where = p.saved || p.out ? "检查与修改" : STAGES[stageIdx(p.stage)].name;
+    B.innerHTML = '<button class="ghost small" id="bd-back">← 回到全部</button>' +
+      '<div class="bd-h" id="bd-title">' + esc(c.icon + " " + (p.title || titleFromInput(p))) + '</div><div class="hint"><span class="tag ' + st.k + '">' + esc(st.t) + "</span> " + esc(c.name) + " · 最后修改 " + esc(fmtTime(p.updatedAt)) + (p.revs ? " · 改过 " + p.revs + " 次" : "") + (p.from ? " · 沿用了另一件的设置" : "") + "</div>" +
+      '<p class="bd-s">' + esc(summaryOf(p)) + "</p>" +
+      '<div class="big bd-acts">' +
+      '<button class="bigbtn" id="bd-view"' + (p.out ? "" : " disabled") + '><strong>👀 查看成果</strong><small>' + (p.out ? "在这里看一眼，不改动它。" : "这一件还没做出第一版。") + "</small></button>" +
+      '<button class="bigbtn" id="bd-edit"><strong>✏️ 继续修改这一件</strong><small>改的就是这一件本身；回到「' + esc(where) + "」。</small></button>" +
+      '<button class="bigbtn" id="bd-new"><strong>🔁 沿用设置做一件新的</strong><small>原作原样保留；新的一件带上' + (c.keep.length ? "这些设置（" + esc(c.keep.map(function (id) { var f = fieldById(p, id); return f ? f.t.replace(/[（(？?].*$/, "") : ""; }).filter(Boolean).join("、")) + "）" : "同样的做法") + "，从补齐材料开始。</small></button>" +
+      '<button class="bigbtn" id="bd-dl"' + (p.out ? "" : " disabled") + '><strong>💾 下载</strong><small>' + (p.out ? esc(fileName(p)) + "，双击就能打开。" : "做出第一版之后才能下载。") + "</small></button></div>" +
+      '<div id="bd-prev-wrap" class="hidden"><iframe class="preview" id="bd-prev" sandbox="allow-scripts" title="成果预览"></iframe></div>' +
+      '<div class="row"><button class="ghost small" id="bd-other">➕ 开始别的创作</button></div>';
+    $("bd-back").onclick = function () { bagView.open = -1; renderBag(); };
+    $("bd-view").onclick = function () { if (!p.out) return; $("bd-prev-wrap").classList.remove("hidden"); setPreview("bd-prev", renderOut(p, false)); };
+    $("bd-edit").onclick = function () { closeBag(); bagView.open = -1; S.cur = i; p.paused = false; go(p.saved || p.out ? "check" : (p.stage || "material")); toast("在改「" + (p.title || c.name) + "」这一件"); };
+    $("bd-new").onclick = function () { closeBag(); bagView.open = -1; newFromSettings(p); toast("新开了一件，原作留在背包里"); };
+    $("bd-dl").onclick = function () { if (p.out) download(fileName(p), renderOut(p, true)); };
+    $("bd-other").onclick = function () { bagView.open = -1; startOther(); };
+  }
+
   /* ========== 卡住能问（#10）：每一步都有，答完接回这一步；默认仍以选择题推进 ========== */
   var GLOSS = [
     [/api\s*(密钥|key)|密钥/i, "API 密钥是一串像密码的字符，AI 服务（比如 DeepSeek、阿里云百炼）用它认出是你在调用，并从你的账户扣额度。在这一页里它只存在你这个浏览器里，不会发给另存人生。要填的话，点右上角「AI：…」。"],
@@ -1682,19 +1871,24 @@
     $("foot").textContent = "另存人生 v" + VERSION + " 测试版 · 单个网页，页面本身不统计。" + NET_NOTICE + "做出来的小网页联不联网，以它自己的检查结果为准（见「检查与修改」）。我们陪你借助 AI 做出东西，不承诺求职结果。";
     document.querySelectorAll("[data-edit]").forEach(function (b) { b.onclick = function () { go(b.getAttribute("data-edit")); }; });
     $("match-close").onclick = closeMatch;
+    $("bag-btn").onclick = function () { if ($("bag-panel").classList.contains("hidden")) openBag(); else closeBag(); };
+    $("bag-close").onclick = closeBag;
+    $("bag-panel").onclick = function (ev) { if (ev.target === this) closeBag(); };
+    document.addEventListener("keydown", function (ev) { if (ev.key === "Escape" && !$("bag-panel").classList.contains("hidden")) closeBag(); });
+    renderBagBtn();
     $("btn-export").onclick = function () {
       var o = clone(S), files = {}; o.projects.forEach(function (p) { var m = imgsOf(p); if (Object.keys(m).length) files[p.id] = m; });
       download("另存人生存档_" + new Date().toISOString().slice(0, 10) + ".json", JSON.stringify({ lingcun_save: VERSION, state: o, images: files }), "application/json");
     };
     $("restore-file").onchange = function () {
       var f = this.files && this.files[0]; if (!f) return; var fr = new FileReader();
-      fr.onload = function () { try { var j = JSON.parse(fr.result); if (!j || !j.state || !j.state.projects) throw 0; S = merge(j.state); for (var id in (j.images || {})) try { localStorage.setItem(LS_FILES + id, JSON.stringify(j.images[id])); } catch (e) {} $("err-restore").textContent = ""; save(); render(); toast("已恢复"); } catch (e) { $("err-restore").textContent = "这个文件读不出来：要用「下载存档文件」存下的那个 .json。"; } };
+      fr.onload = function () { try { var j = JSON.parse(fr.result); if (!j || !j.state || !j.state.projects) throw 0; S = merge(j.state); resetSigs(); renderBagBtn(); for (var id in (j.images || {})) try { localStorage.setItem(LS_FILES + id, JSON.stringify(j.images[id])); } catch (e) {} $("err-restore").textContent = ""; save(); render(); toast("已恢复"); } catch (e) { $("err-restore").textContent = "这个文件读不出来：要用「下载存档文件」存下的那个 .json。"; } };
       fr.readAsText(f);
     };
     $("btn-reset").onclick = function () {
       if (!window.confirm("确定清空这台设备上的进度吗？清空后找不回来。（API 密钥不会被清掉，要删请到右上角「忘掉密钥」）")) return;
       try { S.projects.forEach(function (p) { localStorage.removeItem(LS_FILES + p.id); }); localStorage.removeItem(LS_KEY); } catch (e) {}
-      S = blank(); $("resume").classList.add("hidden"); $("s-match").classList.add("hidden"); go("pick");
+      S = blank(); resetSigs(); renderBagBtn(); $("resume").classList.add("hidden"); $("s-match").classList.add("hidden"); go("pick");
     };
     bindCfg();
   }
@@ -1719,7 +1913,7 @@
   Object.defineProperty(window.lingcunAI, "timings", { enumerable: true, get: function () { return AI.timings.map(AI.publicTm); } });
   /* 测试用 */
   window.__lingcun = { state: function () { return S; }, ai: AI, CATS: CATS, matchCats: matchCats, judge: judgeMatch, sysPrompt: function (t) { return AI.sysPrompt(t); }, taskDraft: function () { return taskDraft(curP()); },
-    taskRevise: function (req, part) { return taskRevise(curP(), req, part); }, render: function () { render(); }, setMockDelay: function (ms) { AI.setMockDelay(ms); }, renderOut: function () { var p = curP(); return p ? renderOut(p, true) : ""; } };
+    taskRevise: function (req, part) { return taskRevise(curP(), req, part); }, render: function () { render(); }, setMockDelay: function (ms) { AI.setMockDelay(ms); }, renderOut: function () { var p = curP(); return p ? renderOut(p, true) : ""; }, ghLinks: ghLinks, openBag: function (i) { openBag(i); } };
 })();
 </script>
 </body>
