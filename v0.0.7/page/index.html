@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>另存人生 · 先做出第一件东西（v0.0.7 测试版）</title>
+<link rel="icon" href="data:," />
+<style>
+  :root {
+    --bg: #f7f3eb; --card: #fffdf8; --ink: #2c2a26; --muted: #6b6560; --line: #e6dfd2;
+    --accent: #c45c26; --accent-soft: #f3e0d2; --ok: #2f6b4f; --ok-soft: #e4f0e8;
+    --blue: #335f8a; --blue-soft: #e3edf7; --grey: #b9b2a8;
+    --shadow: 0 8px 28px rgba(60, 40, 20, 0.08); --radius: 16px; --max: 680px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink);
+    font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Noto Sans CJK SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+    line-height: 1.6; }
+  body { padding: 18px 14px 80px; }
+  .wrap { max-width: var(--max); margin: 0 auto; }
+  header.app h1 { font-size: 1.4rem; margin: 0 0 4px; letter-spacing: .02em; }
+  header.app p { margin: 0; color: var(--muted); font-size: .92rem; }
+  .progress { position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 10px 0 8px; margin: 10px 0 6px; }
+  .progress .bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+  .progress .bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .3s; }
+  .progress .txt { font-size: .82rem; color: var(--muted); margin-top: 5px; display: flex; justify-content: space-between; gap: 8px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .chips span { font-size: .72rem; padding: 2px 8px; border-radius: 99px; background: #fff; border: 1px solid var(--line); color: var(--muted); }
+  .chips span.done { background: var(--ok-soft); color: var(--ok); border-color: #c5dccb; }
+  .chips span.now { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 18px; margin-bottom: 14px; }
+  .sec { display: none; }
+  .sec.show { display: block; }
+  .sec.collapsed { padding: 10px 16px; box-shadow: none; background: #fbf8f2; }
+  .sec.collapsed .body { display: none; }
+  .sec .head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+  .sec .head h2 { font-size: 1.08rem; margin: 0 0 10px; }
+  .sec.collapsed .head h2 { font-size: .9rem; margin: 0; color: var(--muted); font-weight: 600; }
+  .sec .sum { display: none; font-size: .88rem; color: var(--ink); }
+  .sec.collapsed .sum { display: block; }
+  .sec .edit { display: none; background: none; border: none; color: var(--accent); font-size: .85rem; padding: 0; cursor: pointer; font-weight: 600; }
+  .sec.collapsed .edit { display: inline; }
+  label.field { display: block; margin-bottom: 14px; }
+  label.field .t { display: block; font-weight: 600; margin-bottom: 4px; }
+  label.field .h, .hint { display: block; color: var(--muted); font-size: .84rem; margin-bottom: 6px; }
+  textarea, input[type=text], select { width: 100%; border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px; font: inherit; background: #fff; color: var(--ink); }
+  textarea { min-height: 70px; resize: vertical; }
+  textarea:focus, input[type=text]:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
+  .choices { display: grid; gap: 7px; margin-bottom: 12px; }
+  .choice { display: flex; gap: 10px; align-items: flex-start; border: 1px solid var(--line); border-radius: 12px; padding: 9px 12px; background: #fff; cursor: pointer; }
+  .choice:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+  .choice input { margin-top: 4px; flex-shrink: 0; }
+  .qt { font-weight: 600; margin: 6px 0 6px; }
+  .row { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 8px; }
+  button { appearance: none; border: none; border-radius: 999px; padding: 11px 18px; font: inherit; font-weight: 600; cursor: pointer; background: var(--accent); color: #fff; }
+  button:active { transform: scale(.98); }
+  button.sec2 { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+  button.ghost { background: transparent; color: var(--muted); border: 1px dashed var(--grey); }
+  button.small { padding: 6px 12px; font-size: .85rem; }
+  .big { display: grid; gap: 10px; }
+  .bigbtn { text-align: left; background: #fff; color: var(--ink); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; font-weight: 400; }
+  .bigbtn strong { display: block; font-size: 1.02rem; margin-bottom: 2px; }
+  .bigbtn small { color: var(--muted); }
+  .bigbtn.on { border-color: var(--accent); background: var(--accent-soft); }
+  .note { background: var(--blue-soft); border: 1px solid #c8d9ea; color: var(--blue); border-radius: 12px; padding: 11px 13px; font-size: .9rem; margin: 10px 0; }
+  .okbox { background: var(--ok-soft); border: 1px solid #c5dccb; color: var(--ok); border-radius: 12px; padding: 11px 13px; font-size: .92rem; margin: 10px 0; }
+  .next { border-left: 4px solid var(--accent); background: #fff; border-radius: 10px; padding: 10px 12px; margin: 12px 0 4px; font-size: .95rem; }
+  .next b { color: var(--accent); }
+  .err { color: #a33; font-size: .88rem; min-height: 1em; margin-top: 6px; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+  .tabs button { background: #fff; color: var(--ink); border: 1px solid var(--line); padding: 8px 14px; font-size: .9rem; }
+  .tabs button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .axis { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: #fff; margin-bottom: 8px; }
+  .axis .top { display: flex; justify-content: space-between; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .axis .nm { font-weight: 600; }
+  .axis .src { font-size: .78rem; color: var(--muted); margin-top: 3px; }
+  .axis .fix { font-size: .86rem; margin-top: 4px; }
+  .axis select { width: auto; padding: 4px 8px; font-size: .82rem; border-radius: 99px; }
+  .tag { display: inline-block; font-size: .78rem; padding: 2px 9px; border-radius: 99px; font-weight: 600; }
+  .tag.t1 { background: #e4f0e8; color: #2f6b4f; }
+  .tag.t2 { background: #e3edf7; color: #335f8a; }
+  .tag.t3 { background: #f6ecd5; color: #8a6420; }
+  .tag.t4 { background: var(--accent-soft); color: var(--accent); }
+  details { margin: 8px 0; }
+  details summary { cursor: pointer; color: var(--accent); font-weight: 600; font-size: .92rem; }
+  pre.out { white-space: pre-wrap; word-break: break-word; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-size: .82rem; max-height: 320px; overflow: auto; font-family: ui-monospace, Menlo, Consolas, "Noto Sans Mono CJK SC", monospace; }
+  .pcard { border: 1px dashed var(--accent); border-radius: 14px; padding: 12px 14px; background: #fff; font-size: .92rem; }
+  .pcard div { margin: 2px 0; }
+  .pcard b { display: inline-block; min-width: 6.5em; color: var(--muted); font-weight: 600; }
+  .assets { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); margin: 10px 0; }
+  .asset { border: 1px solid #c5dccb; background: #fff; border-radius: 14px; padding: 12px; font-size: .86rem; word-break: break-word; }
+  .asset h4 { margin: 0 0 4px; font-size: .96rem; }
+  .asset.grey { border: 1px dashed var(--grey); background: #f3f0ea; color: #8f877d; }
+  .badges { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0; }
+  .badge { font-size: .72rem; padding: 1px 7px; border-radius: 99px; background: var(--ok-soft); color: var(--ok); }
+  .badge.wait { background: #f6ecd5; color: #8a6420; }
+  .mic.on { background: #a33; color: #fff; }
+  .toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 9px 16px; border-radius: 99px; font-size: .88rem; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 20; max-width: 90vw; }
+  .toast.show { opacity: .95; }
+  .banner { background: #fff; border: 1px solid var(--accent); border-radius: 14px; padding: 12px 14px; margin-bottom: 12px; font-size: .92rem; }
+  footer { color: var(--muted); font-size: .8rem; margin-top: 24px; }
+  code { font-size: .85em; }
+  .hidden { display: none !important; }
+  @media (max-width: 480px) { body { padding: 12px 10px 80px; } .card { padding: 15px 14px; } button { padding: 11px 15px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="app">
+    <h1>另存人生 · 先做出第一件东西</h1>
+    <p>按你自己的节奏，用你已经在用的 AI，做出一件真能用的小东西。不打卡、不考试、不承诺求职结果。</p>
+  </header>
+
+  <div class="progress" aria-label="进度">
+    <div class="bar"><i id="pbar"></i></div>
+    <div class="txt"><span id="ptxt">第 1 步</span><span id="pnext"></span></div>
+    <div class="chips" id="pchips"></div>
+  </div>
+
+  <div id="resume" class="banner hidden"></div>
+
+  <section class="sec card" id="s-q" data-name="三句话">
+    <div class="head"><h2>① 先写三句话</h2><button class="edit" data-edit="s-q">改</button></div>
+    <div class="sum" id="sum-q"></div>
+    <div class="body">
+      <p class="hint">写几个字就行，不用写完整。写不出来也没关系，最下面有「今天就能开始的小项目」。</p>
+      <label class="field"><span class="t">每周重复在做的事</span><span class="h">工作和生活都算</span>
+        <textarea id="q-weekly" rows="2" placeholder="例如：整理照片、给朋友回消息、每周写一次复盘"></textarea></label>
+      <label class="field"><span class="t">想继续做的</span><span class="h">你愿意带走、想多做一点的</span>
+        <textarea id="q-keep" rows="2" placeholder="例如：每天留半小时给自己、把散落的笔记收成一页"></textarea></label>
+      <label class="field"><span class="t">不想再做的麻烦事</span><span class="h">重复、费时、做完也没感觉的那件</span>
+        <textarea id="q-avoid" rows="2" placeholder="例如：每周手抄同一张表、反复提醒自己交材料"></textarea></label>
+      <details id="limits"><summary>时间和预算（已按默认选好，可改）</summary>
+        <div class="qt">每天能花多久 <span class="hint" style="display:inline">一天能挤出多少时间做这件事</span></div>
+        <div class="choices">
+          <label class="choice"><input type="radio" name="daily" value="30 分钟" />30 分钟</label>
+          <label class="choice"><input type="radio" name="daily" value="1 小时" checked />1 小时（默认）</label>
+          <label class="choice"><input type="radio" name="daily" value="2 小时" />2 小时</label>
+        </div>
+        <div class="qt">一共试几天 <span class="hint" style="display:inline">这件事总共做多久</span></div>
+        <div class="choices">
+          <label class="choice"><input type="radio" name="days" value="3 天" />3 天</label>
+          <label class="choice"><input type="radio" name="days" value="7 天" checked />7 天（默认）</label>
+          <label class="choice"><input type="radio" name="days" value="14 天" />14 天</label>
+        </div>
+        <div class="qt">预算 <span class="hint" style="display:inline">这件事最多花多少钱</span></div>
+        <div class="choices">
+          <label class="choice"><input type="radio" name="budget" value="不花钱" checked />不花钱（默认）</label>
+          <label class="choice"><input type="radio" name="budget" value="可以花一点（上限我自己定）" />可以花一点（上限你自己定）</label>
+        </div>
+      </details>
+      <div class="err" id="err-q"></div>
+      <div class="row"><button id="btn-q">写好了，下一步</button></div>
+      <div class="row"><button class="ghost" id="btn-idea1">我暂时没想法，给我一个今天就能开始的小项目</button></div>
+    </div>
+  </section>
+
+  <section class="sec card" id="s-head" data-name="先动哪一头">
+    <div class="head"><h2>② 你想先动哪一头？</h2><button class="edit" data-edit="s-head">改</button></div>
+    <div class="sum" id="sum-head"></div>
+    <div class="body">
+      <p class="hint">生活卡住，常常就两件事：不想做现在的事，或者想做别的事。先动哪一头都行，另一头之后还能回来。</p>
+      <div class="big">
+        <button class="bigbtn" id="head-avoid"><strong>不想做现在的事（解决麻烦）</strong><small id="head-avoid-sub">拿你写的那件麻烦事，做一个帮你少做一步的小工具。</small></button>
+        <button class="bigbtn" id="head-grow"><strong>想做别的事（发掘能力）</strong><small>讲讲你的经历，看看你已经有哪些能力可以迁移，再做一件小作品。</small></button>
+        <button class="bigbtn" id="head-idea"><strong>我暂时没想法，给我一个今天就能开始的小项目</strong><small>从几件已经实测能跑的小东西里挑一件。</small></button>
+      </div>
+      <div class="err" id="err-head"></div>
+    </div>
+  </section>
+
+  <section class="sec card" id="s-exp" data-name="讲经历">
+    <div class="head"><h2>③ 讲讲你的经历</h2><button class="edit" data-edit="s-exp">改</button></div>
+    <div class="sum" id="sum-exp"></div>
+    <div class="body">
+      <div class="tabs"><button id="tab-choice" class="on">几道选择题</button><button id="tab-talk">讲一讲你过去发生了什么</button></div>
+      <div id="exp-choice"></div>
+      <div id="exp-talk" class="hidden">
+        <p class="hint">像跟朋友聊天一样：过去那段日子都在干嘛？哪件事最累，哪件事最得意？说多乱都没关系。</p>
+        <textarea id="talk" rows="6" placeholder="可以直接打字，也可以点下面的话筒说"></textarea>
+        <div class="row"><button class="sec2 small mic" id="btn-mic">🎙️ 点击说话，自动转文字</button></div>
+        <p class="hint">在手机或微信里打开时，直接点键盘上的小话筒说话更准。你说的原话会原样放进给你 AI 的说明里，它会更懂你。</p>
+      </div>
+      <div class="err" id="err-exp"></div>
+      <div class="row"><button id="btn-exp">好了，看看推荐方向</button></div>
+      <div class="row"><button class="ghost small" id="btn-skipdir">先不定方向，直接做一件解决自己问题的事</button></div>
+    </div>
+  </section>
+
+  <section class="sec card" id="s-dir" data-name="方向">
+    <div class="head"><h2>④ 推荐方向</h2><button class="edit" data-edit="s-dir">改</button></div>
+    <div class="sum" id="sum-dir"></div>
+    <div class="body">
+      <div id="dir-reco"></div>
+      <div class="qt">选一个先看（可以改）</div>
+      <div class="choices" id="dir-list"></div>
+      <div id="dir-other-wrap" class="hidden"><input type="text" id="dir-other" placeholder="写下你想去的方向，例如：大健康品牌的内容运营" /></div>
+      <div class="note">测试期只有「科技AI · IP/内容营销」收好了 8 份官网 JD，可以在页面里直接对照。选别的方向，对照这一步交给你自己的 AI 去做，结果标「未核实」。</div>
+      <div class="err" id="err-dir"></div>
+      <div class="row"><button id="btn-dir">就看这个方向</button></div>
+    </div>
+  </section>
+
+  <section class="sec card" id="s-match" data-name="能力对照">
+    <div class="head"><h2>⑤ 能力对照</h2><button class="edit" data-edit="s-match">改</button></div>
+    <div class="sum" id="sum-match"></div>
+    <div class="body">
+      <p class="hint">按 8 份官网 JD 里常写的要求，对一对你已经有的。这不是打分，是找你身上已经有、可以带走的东西。哪条不对，直接改标签。</p>
+      <div id="match-core"></div>
+      <details id="match-more-wrap"><summary id="match-more-sum">其余几项（展开）</summary><div id="match-more"></div></details>
+      <details><summary>这些要求来自哪 8 份官网 JD</summary><div id="jd-src" class="hint"></div></details>
+      <div class="row"><button id="btn-match">看好了，选一个题目</button></div>
+    </div>
+  </section>
+
+  <section class="sec card" id="s-topic" data-name="选题目">
+    <div class="head"><h2>⑥ 选一个题目</h2><button class="edit" data-edit="s-topic">改</button></div>
+    <div class="sum" id="sum-topic"></div>
+    <div class="body">
+      <div class="big">
+        <button class="bigbtn" id="topic-A"><strong>A｜解决你自己的一个问题</strong><small>做一个只做一件事、真能用的小网页。</small></button>
+        <button class="bigbtn" id="topic-B"><strong>B｜把一项「可怎么补」做成证据</strong><small id="topic-B-sub">做一件小而能公开的作品，对应你想去的方向里的一项要求。</small></button>
+      </div>
+      <div id="topic-A-wrap" class="hidden" style="margin-top:12px">
+        <label class="field"><span class="t">这个小网页帮你做什么（一句话，可改）</span><input type="text" id="topic-A-text" /></label>
+      </div>
+      <div id="topic-B-wrap" class="hidden" style="margin-top:12px">
+        <div class="qt">挑一项来补</div>
+        <div class="choices" id="topic-B-list"></div>
+      </div>
+      <div class="note hidden" id="topic-onlyA">你选了先不定方向，所以这里只给 A。想补某个方向的证据，随时回到「③ 讲讲你的经历」。</div>
+      <div class="err" id="err-topic"></div>
+      <div class="row"><button id="btn-topic">生成项目卡</button></div>
+    </div>
+  </section>
+
+  <section class="sec card" id="s-tpl" data-name="挑一件小东西">
+    <div class="head"><h2>③ 挑一件今天就能开始的小东西</h2><button class="edit" data-edit="s-tpl">改</button></div>
+    <div class="sum" id="sum-tpl"></div>
+    <div class="body">
+      <p class="hint">这几件在精选库里实测过：一个文件就能跑，数据只存在你自己的浏览器里。先做出来，想法常常是做着做着才有的。</p>
+      <div class="big" id="tpl-list"></div>
+      <div class="err" id="err-tpl"></div>
+      <div class="row"><button id="btn-tpl">就做这个</button></div>
+    </div>
+  </section>
+
+  <section class="sec card" id="s-card" data-name="项目卡">
+    <div class="head"><h2>⑦ 你的项目卡，和给你 AI 的说明</h2><button class="edit" data-edit="s-card">看</button></div>
+    <div class="sum" id="sum-card"></div>
+    <div class="body">
+      <div class="okbox">从这里开始，就是做你自己的项目了。页面把要做的事写成了一段说明，你拿去交给自己在用的 AI（豆包、千问、Kimi、DeepSeek、ChatGPT 都行）。</div>
+      <div class="pcard" id="pcard"></div>
+      <div class="row"><button id="btn-copy-ins">📋 一键复制给 AI 的说明</button><button class="sec2" id="btn-show-ins">先看一眼说明</button></div>
+      <pre class="out hidden" id="ins-out"></pre>
+      <div class="next"><b>下一步：</b>打开你的 AI，新建一个对话，粘贴这段说明发出去。它的第一句回复应该是复述你们要做的最小版本，再只问你一个问题。做出东西、卡住了、或者还没开始，都回到这个页面点「⑧ 回来报告」。</div>
+      <p class="hint">这个页面已经记住你走到这里了。同一个浏览器再打开会接上；换手机或换电脑，用说明第一行的回访链接。</p>
+      <div class="row"><button class="sec2" id="btn-goback">我回来了，报告进度</button></div>
+    </div>
+  </section>
+
+  <section class="sec card" id="s-back" data-name="回来报告">
+    <div class="head"><h2>⑧ 回来报告：现在到哪了？</h2><button class="edit" data-edit="s-back">改</button></div>
+    <div class="sum" id="sum-back"></div>
+    <div class="body">
+      <p class="hint">点一个就行。页面读你的进度，是为了告诉你下一步怎么做，不是给你打卡。</p>
+      <div class="big">
+        <button class="bigbtn" id="st-done"><strong>做出来了</strong><small>能打开、能用了（哪怕还很简陋）</small></button>
+        <button class="bigbtn" id="st-stuck"><strong>卡住了</strong><small>报错、看不懂、AI 跑偏、GitHub 打不开……</small></button>
+        <button class="bigbtn" id="st-notyet"><strong>还没开始</strong><small>还没打开 AI，或者不知道怎么下手</small></button>
+      </div>
+      <details id="paste-wrap"><summary>可选：贴回 AI 给你的「进度回传码」，页面读得更准</summary>
+        <div class="row"><button class="sec2 small" id="btn-clip">📋 一键粘贴 AI 进度摘要</button><button class="sec2 small" id="btn-summon">复制「召唤摘要指令」</button></div>
+        <p class="hint">AI 聊久了忘了格式？把「召唤摘要指令」发给它，它会重新按固定格式输出。浏览器不让读剪贴板时，直接长按下面的框粘贴。</p>
+        <textarea id="paste" rows="6" placeholder="【另存人生·进度回传码】&#10;状态：……&#10;公开链接：……"></textarea>
+        <div class="row"><button class="small" id="btn-parse">读一下</button></div>
+        <div id="parse-out"></div>
+      </details>
+      <div id="back-out"></div>
+    </div>
+  </section>
+
+  <section class="sec card" id="s-ev" data-name="做成了什么">
+    <div class="head"><h2>⑨ 你做成了什么</h2><button class="edit" data-edit="s-ev">改</button></div>
+    <div class="sum" id="sum-ev"></div>
+    <div class="body">
+      <p class="hint">「作品做完」和「能力有了证据」是两件事，分开看。私人工具停在「做出来、自己用着」也完全算数。</p>
+      <div class="qt">作品</div>
+      <div class="choices">
+        <label class="choice"><input type="checkbox" id="ev-made" />做出来了：双击能打开，我亲手用过一次</label>
+        <label class="choice"><input type="checkbox" id="ev-rerun" />回来再用一次能跑：关掉再打开，换一个新输入，它照样能用</label>
+      </div>
+      <div class="qt">证据（想公开时再填）</div>
+      <label class="field"><span class="h">公开链接（例如 https://你的用户名.github.io/项目名/）</span><input type="text" id="ev-link" placeholder="还没发布就空着" /></label>
+      <label class="field"><span class="h">真实数据（达到任意一级就算）</span>
+        <select id="ev-tier">
+          <option value="0">还没有数据</option>
+          <option value="1">L1｜我自己真用了 3 次以上（记下次数、省了多久）</option>
+          <option value="2">L2｜1–3 个人试过，给了反馈</option>
+          <option value="3">L3｜公开数据：平台互动数 / GitHub 自带数据 / 访问计数</option>
+        </select></label>
+      <label class="field"><span class="h">数据凭证（一句话，写清是什么、多少）</span><input type="text" id="ev-data" placeholder="例如：自己用了 4 次，每次省了大约 10 分钟" /></label>
+      <label class="field"><span class="h">一句能写进简历或作品集的证据句（由你的 AI 写，基于真实数据、不夸大）</span><textarea id="ev-sent" rows="2"></textarea></label>
+      <div class="row"><button class="sec2 small" id="btn-sent-ins">复制「请 AI 写证据句」的指令</button></div>
+      <div class="qt">这份数据你自己觉得</div>
+      <div class="choices">
+        <label class="choice"><input type="radio" name="evq" value="ok" checked />够用了，先这样</label>
+        <label class="choice"><input type="radio" name="evq" value="meh" />有点一般，想再优化一下</label>
+      </div>
+      <div class="row"><button id="btn-ev">看看下一步</button></div>
+      <div id="ev-out"></div>
+    </div>
+  </section>
+
+  <section class="sec card" id="s-asset" data-name="轻量化资产页">
+    <div class="head"><h2>我的轻量化资产页</h2><button class="edit" data-edit="s-asset">看</button></div>
+    <div class="sum" id="sum-asset"></div>
+    <div class="body">
+      <p class="hint" id="asset-lead"></p>
+      <div class="assets" id="assets"></div>
+      <div id="hook"></div>
+      <div class="qt">接下来，三条路都可以，没有哪条更对</div>
+      <div class="big">
+        <button class="bigbtn" id="ex-more"><strong>🌱 继续攒一件轻资产</strong><small id="ex-more-sub">再挑一件小事做。</small></button>
+        <button class="bigbtn" id="ex-job"><strong>💼 顺手拿去投个机会（可选）</strong><small>点开才给：证据句 + 链接拼成的一段话。</small></button>
+        <button class="bigbtn" id="ex-rest"><strong>☕ 今天先存盘，去过生活</strong><small>复制一条存档链接，随时回来都能接上。</small></button>
+      </div>
+      <div id="ex-out"></div>
+    </div>
+  </section>
+
+  <section class="card" id="s-save">
+    <details><summary>存档与恢复</summary>
+      <p class="hint">进度存在这台设备的这个浏览器里，同时也写在网址最后的 <code>#state=</code> 里。清除浏览器数据、换手机或换电脑时，没有存档链接，进度就找不回来了。</p>
+      <div class="row"><button class="sec2 small" id="btn-export">复制存档链接</button><button class="ghost small" id="btn-reset">清空，从头再来</button></div>
+      <label class="field" style="margin-top:10px"><span class="h">从存档链接恢复：把以前复制的链接（或 #state= 后面那串）贴进来</span><input type="text" id="restore-in" /></label>
+      <div class="row"><button class="sec2 small" id="btn-restore">恢复</button></div>
+      <div class="err" id="err-restore"></div>
+    </details>
+  </section>
+
+  <footer>另存人生 v0.0.7 测试版 · 单个静态网页，不联网、不统计、不上传你写的任何内容。我们陪你培养创造和转化的能力，不承诺求职结果。</footer>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+(function () {
+  "use strict";
+  var VERSION = "0.0.7";
+  var LS_KEY = "lingcun_v007_state";
+
+  /* JD 分析库：科技AI · IP/内容营销（JD分析库/科技AI_IP内容营销_v0.0.6.md，8 份官网原文，抓取 2026-10-23）。
+     rank 只在内部决定顺序和「先露哪 4 项」，页面上不显示。 */
+  var JD_LIB = {
+    ipcm: {
+      name: "科技AI · IP/内容营销",
+      date: "2026-10-23",
+      sources: [
+        ["字节跳动（飞书）", "头部", "内容营销经理（AI/Agent方向）", "https://jobs.bytedance.com/experienced/position/7647823220040763701/detail"],
+        ["阿里巴巴（千问事业部）", "头部", "AI内容营销专家", "https://talent.alibaba.com/off-campus/position-detail?positionId=100018560022"],
+        ["腾讯（腾讯云）", "头部", "腾讯云海外社媒传播经理", "https://careers.tencent.com/jobdesc.html?postId=2079091692916621312"],
+        ["月之暗面（Kimi）", "中腰部", "AI Specialist｜AI内容营销达人", "https://app.mokahr.com/social-recruitment/moonshot/148506#/job/d1b7bdde-1de9-45fc-a049-60080b7b1b42"],
+        ["MiniMax", "中腰部", "内容营销专家（2024 年旧帖仍挂着）", "https://vrfi1sk8a0.jobs.feishu.cn/index/position/7324949109025016103/detail"],
+        ["智谱（Z.ai）", "中腰部", "海外开发者社区运营专家", "https://zhipu-ai.jobs.feishu.cn/index/position/7613707379762989355/detail"],
+        ["生数科技（Vidu）", "中腰部", "内容营销与产品传播【Vidu S】", "https://shengshu.jobs.feishu.cn/index/position/7678006709743421715/detail"],
+        ["美图", "中腰部", "IP 企划与孵化（IP Producer）", "https://hr.meitu.com/en/jobSocial/95b41748-5998-40c4-afb8-a068f83f1e8c"]
+      ],
+      axes: [
+        { id: "mx", rank: 0, name: "账号 / 内容矩阵运营（含「IP 群」）", cnt: 6, who: "阿里、腾讯、月之暗面、智谱、生数、美图",
+          quote: "月之暗面：「参与搭建 Kimi 的 KOL 内容矩阵」；阿里：「独立搭建品牌KOS矩阵」",
+          ev: "运营过官方或个人账号，有粉丝/互动数据", tr: "品牌公众号/小红书多账号排期；带团队分账号做内容；展会/活动的多渠道宣传", pend: "是否自己定过账号分工与人设",
+          fix: "用 2–3 个小号或栏目做一个「矩阵小样」，写清每个号的定位", kw: ["账号", "矩阵", "公众号", "小红书", "抖音", "视频号", "B站", "粉丝", "起号", "博主", "自媒体"] },
+        { id: "tr", rank: 1, name: "把技术/产品讲成普通人听得懂的内容", cnt: 6, who: "字节、腾讯、月之暗面、MiniMax、智谱、生数",
+          quote: "月之暗面：「能把复杂的 AI 概念翻译成普通人爱听、听得懂的语言」",
+          ev: "写过科技/产品解读、教程", tr: "把复杂产品/展品/专业知识讲给普通观众（导览、讲解词、产品手册）", pend: "对 AI 产品的理解深度",
+          fix: "选一个 AI 功能做「一页图文 + 60 秒脚本」", kw: ["讲解", "教程", "科普", "讲给", "解读", "说明书", "培训", "导览", "讲课", "老师"] },
+        { id: "pf", rank: 2, name: "平台生态与网感", cnt: 7, who: "字节、阿里、腾讯、月之暗面、智谱、生数、美图",
+          quote: "字节：「具备强网感和内容判断力」",
+          ev: "有爆款或稳定数据的帖子", tr: "长期深度使用某平台；做过选题会、热点跟进", pend: "对目标平台算法规则是否熟",
+          fix: "拆 3 条同类爆款，写出「开头、冲突、结尾」为何有效", kw: ["爆款", "热点", "梗", "流量", "播放", "点赞", "评论区", "网感", "选题"] },
+        { id: "wk", rank: 3, name: "可展示作品 + 选题→脚本→制作→复盘全流程", cnt: 6, who: "字节、阿里、月之暗面、智谱、生数、美图",
+          quote: "字节：「有从选题、脚本、制作到投放复盘的完整案例，能提供代表作品」",
+          ev: "有可公开作品集/账号链接", tr: "品牌物料、展览文案、活动视频的全流程参与", pend: "本人贡献边界说不说得清",
+          fix: "把一件旧作品重写成「选题→脚本→成品→数据」一页案例", kw: ["作品", "作品集", "脚本", "剪辑", "拍", "文案", "写稿", "策划案", "成片"] },
+        { id: "dt", rank: 4, name: "数据复盘、用数据改内容", cnt: 7, who: "字节、阿里、腾讯、月之暗面、智谱、生数、美图",
+          quote: "月之暗面：「用数据驱动内容迭代」", ev: "做过周报/月报并据此调整", tr: "活动到场、销售、问卷数据的复盘", pend: "用的是不是内容指标（阅读、互动、转化）",
+          fix: "给一条自己的内容做一次 7 天复盘", kw: ["数据", "复盘", "周报", "月报", "报表", "转化", "增长", "分析"] },
+        { id: "ai", rank: 5, name: "AI 工具重度使用（AI Native）", cnt: 7, who: "字节、阿里、月之暗面、MiniMax、智谱、生数、美图",
+          quote: "字节：「AI工具重度使用者，能用AI提升选题、脚本、素材分析…效率」", ev: "日常用 AI 出稿、出图、剪辑", tr: "用过任何自动化/模板化提效工具", pend: "能否说出具体工作流",
+          fix: "用 AI 做完一条内容并记录步骤", kw: ["AI", "ChatGPT", "豆包", "Kimi", "千问", "DeepSeek", "自动化", "提示词", "剪映"] },
+        { id: "kol", rank: 6, name: "KOL / 达人 / 创作者合作", cnt: 6, who: "字节、阿里、腾讯、月之暗面、智谱、美图",
+          quote: "字节：「搭建并迭代面向KOC的投放机制」", ev: "谈过/投放过达人", tr: "对接过媒体、嘉宾、合作方、艺术家/创作者", pend: "是否懂 Brief、效果评估",
+          fix: "写一份达人 Brief 样稿", kw: ["达人", "KOL", "KOC", "博主合作", "媒体", "嘉宾", "艺术家", "创作者", "对接", "扯皮"] },
+        { id: "cp", rank: 7, name: "Campaign / 活动 / 产品发布策划", cnt: 5, who: "字节、腾讯、MiniMax、智谱、生数",
+          quote: "生数：「每次重点发布形成 1 套完整 Launch Plan」", ev: "主导过品牌活动或发布", tr: "国内外展览、线下活动、发布会执行", pend: "线上传播部分有没有参与",
+          fix: "把一次展览/活动重写成「线上+线下」Campaign 方案", kw: ["活动", "展览", "展会", "发布会", "策展", "路演", "市集", "campaign"] },
+        { id: "cm", rank: 8, name: "社区 / 社群 / 用户共创", cnt: 4, who: "字节、智谱、生数、美图",
+          quote: "字节：「搭建并迭代面向AI Builder的运营机制」", ev: "运营过社群，有活跃数据", tr: "带团队、会员/志愿者/学员群维护", pend: "线上社群规模与机制",
+          fix: "建一个小群跑 2 周共创活动", kw: ["社群", "社区", "会员", "志愿者", "学员", "带团队", "团队"] },
+        { id: "ip", rank: 9, name: "IP / 人设定义与孵化（含出镜）", cnt: 2, who: "月之暗面、美图（另有 2 份部分相关）",
+          quote: "美图：「定义 IP：让一个角色真正成立」", ev: "定义或孵化过角色/人设/账号 IP", tr: "品牌人设、吉祥物、展览主视觉与叙事、个人出镜讲解", pend: "是否做过「从设定到持续运营」",
+          fix: "给一个 AI 产品写人设卡（性格、语气、内容方向）", kw: ["IP", "人设", "角色", "吉祥物", "出镜", "形象", "世界观"] },
+        { id: "en", rank: 99, name: "英文工作 / 海外市场（条件项）", cnt: 4, who: "腾讯、智谱、生数、美图",
+          quote: "生数：「英语可作为工作语言」", ev: "英文工作经历、海外社媒运营", tr: "海外留学/展览/跨文化项目", pend: "英文写作是否到「本地化」程度",
+          fix: "把一条中文内容改写成英文平台版本", kw: ["英文", "英语", "海外", "留学", "出海", "国外", "越南", "澳洲", "澳大利亚", "东南亚", "外企"] }
+      ]
+    }
+  };
+
+  var DIRS = [
+    { id: "ipcm", name: "科技AI · IP/内容营销", cached: true, why: "你讲的经历里，内容、账号、讲解、活动这类事最多。",
+      kw: ["内容", "小红书", "抖音", "B站", "公众号", "视频", "脚本", "文案", "剪辑", "达人", "博主", "账号", "粉丝", "播放", "品牌", "IP", "直播", "选题", "新媒体", "策划", "人设", "拍"] },
+    { id: "sea", name: "科技AI · 出海营销", cached: false, why: "你讲的经历里，海外、英文、跨文化这类事比较多。",
+      kw: ["海外", "出海", "英文", "英语", "留学", "外贸", "跨境", "越南", "东南亚", "国外", "TikTok", "YouTube", "澳洲", "外企", "展会"] },
+    { id: "pm", name: "AI 产品经理", cached: false, why: "你讲的经历里，需求、产品、流程这类事比较多。",
+      kw: ["产品", "需求", "原型", "调研", "功能", "项目管理", "上线", "迭代", "开发", "程序", "流程", "系统", "交付"] },
+    { id: "other", name: "其他方向（我自己写）", cached: false, why: "", kw: [] }
+  ];
+
+  var EXP_Q = [
+    { id: "q1", core: true, t: "你做过的内容，最接近哪种？", o: ["管过一个或多个账号（品牌号/个人号），长期更新", "给活动、展览、项目做过宣传内容，但不是长期账号", "带过团队，分工做不同渠道的内容", "主要是写方案、做策划，内容由别人发", "都不太像 / 没怎么做过内容"] },
+    { id: "q2", core: true, t: "你最常做的「讲明白」是哪种？", o: ["把产品/功能讲给普通用户（文案、教程、讲解）", "把专业内容（艺术、学术、行业）讲给外行观众", "给老板/客户做提案，把复杂事说简单", "这块做得不多，但愿意试一个 AI 功能"] },
+    { id: "q6", core: true, t: "你和内容平台（小红书、抖音、B站、公众号……）的关系？", o: ["常发，有过数据不错的帖子", "常发，但数据一般", "常刷，很少发", "不太用"] },
+    { id: "q3", core: true, t: "现在能拿出来给人看的东西，最接近哪种？", o: ["有账号链接或作品集，可以直接发", "有作品，但要整理（散在电脑/公司里）", "有项目经历，作品不方便公开", "还没有，想先做一件小的"] },
+    { id: "q4", core: false, t: "线下或社群经历，哪个最像你？（可选）", o: ["主导过展览、活动或发布会", "参与执行过活动，负责其中一块", "带过社群、会员群或团队", "线上线下都做过一些", "都不太像"] },
+    { id: "q5", core: false, t: "关于「IP」，你更想做哪边？（可选）", o: ["给品牌/产品定人设、讲故事", "搭一组账号，各有分工（内容矩阵）", "自己出镜，做个人 IP", "角色/形象类 IP（吉祥物、虚拟角色）", "还没想好"] }
+  ];
+
+  /* 兜底模板：精选库_首批卡片_v0.0.6 里进库、T1–T5 跑过的卡 1–3 */
+  var TPLS = [
+    { id: "week", name: "本周行动清单", one: "把这周想做的几件事写下来、勾掉，关掉再打开还在。", fit: "事情太多理不清、想推自己动起来", demo: "https://huangchenyun25-web.github.io/lingcun/cards/week-board/", card: "精选库卡 1" },
+    { id: "habit", name: "习惯打卡", one: "每天给一两个习惯打卡，看连续了几天。", fit: "想每天动起来：学一样东西、运动、投简历", demo: "https://huangchenyun25-web.github.io/lingcun/cards/habit/", card: "精选库卡 2" },
+    { id: "pomo", name: "番茄钟", one: "25 分钟专注 + 5 分钟休息的计时器，记下今天专注了几轮。", fit: "在家坐不住、效率低", demo: "https://huangchenyun25-web.github.io/lingcun/cards/pomodoro/", card: "精选库卡 3" }
+  ];
+
+  var LABELS = ["已有证据", "可迁移", "待验证", "可怎么补"];
+  var LABEL_CLS = { "已有证据": "t1", "可迁移": "t2", "待验证": "t3", "可怎么补": "t4" };
+  var RETURN_TEMPLATE = [
+    "【另存人生·进度回传码】",
+    "状态：做出来了 / 卡住了 / 还没开始（三选一）",
+    "公开链接：（没有写「无」）",
+    "数据凭证：（写 L1/L2/L3 + 一句话，如「L1｜自己用了 3 次，每次省 10 分钟」；没有写「无」）",
+    "简历证据句：（一句话，基于真实数据，写清做了什么、用在哪、结果多少；没有数据写「无」）",
+    "当前卡点：（没有写「无」）",
+    "下一步：（一个具体动作）",
+    "【回传码结束】"
+  ].join("\n");
+  var STUCK = [
+    ["file", "不知道怎么保存、打开文件", "我不知道怎么把你的代码存成文件并打开。请只给我下一步一个动作：怎么新建文本文件、粘贴、存成 index.html（别存成 .txt），再双击打开。"],
+    ["toomuch", "AI 一次给太多，看不懂", "你一次给得太多了，我跟不上。请回到单步推进：只告诉我现在这一步做什么，用大白话，结尾只问我一个问题。"],
+    ["error", "报错 / 页面空白 / 功能不对", "页面出问题了，我把看到的情况贴在下面。请说清最可能的原因（推测要标明），只给一个修复动作，并输出完整的 index.html 全文，不要省略号。\n我看到的：____"],
+    ["github", "GitHub 打不开、注册或上传失败", "我卡在 GitHub 这一步了。请陪我排查：稍后再试 / 换网络、仓库是否 Public、文件名是否 index.html、Pages 是否选了 main 根目录、是否等够 1–2 分钟。不要建议换别的平台。先在本地双击能用就行，能打开再上传。\n我卡在：____"],
+    ["ai", "AI 跑偏了 / 不照说明做", "我们跑偏了。请重新读一遍我最开始发的「另存人生 · 给 AI 的项目说明」，按里面的最小交付标准和单步推进铁律，告诉我现在离最小版本还差哪一步，只给那一步。"],
+    ["other", "别的，我说不清", "我卡住了，但说不清在哪。请问我一个选择题，帮我判断卡在哪一步（保存文件 / 打开文件 / 功能 / 发布 / 别的），然后只给一个五分钟内能做完的小动作。"]
+  ];
+  var OPT_ACTION = {
+    0: "先拿到 L1：接下来几天自己真用 3 次，每次记一句「用来做什么、省了多久」。",
+    1: "再自己用 3 次，这次每次记下省了多少分钟；或者发给 1 个朋友，只问一句「哪一步最想改」。",
+    2: "发给 1 个还没试过的同行或朋友，只问一个问题：「哪一步你最想改？」把回答记下来。",
+    3: "把标题改成你解决的那件事（一句大白话），换一个时间再发一次，对比两次的互动数。"
+  };
+  var NEXT_TXT = {
+    "s-q": "写下三句话", "s-head": "选先动哪一头", "s-exp": "讲讲经历", "s-dir": "定一个方向", "s-match": "看对照、选题目",
+    "s-topic": "选一个题目", "s-tpl": "挑一件小东西", "s-card": "复制说明，去你的 AI 里做", "s-back": "回来点一下现在到哪了",
+    "s-ev": "填一下做成了什么", "s-asset": "选一条接下来的路"
+  };
+
+  /* ========== 状态 ========== */
+  function blank() {
+    return { v: VERSION, t: 0, open: "s-q", q: { weekly: "", keep: "", avoid: "", daily: "1 小时", days: "7 天", budget: "不花钱" },
+      head: "", exp: { mode: "choice", a: {}, talk: "", skipDir: false, showOpt: false }, dir: { main: "", alt: "", chosen: "", other: "" },
+      labels: {}, topic: { kind: "", aText: "", bAxis: "" }, tpl: "", projects: [], cur: -1 };
+  }
+  var S = blank();
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function toast(msg) { var t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toast._t); toast._t = setTimeout(function () { t.classList.remove("show"); }, 2400); }
+  function short(s, n) { s = String(s || "").replace(/\s+/g, " ").trim(); s = s.split(/[。！？；;\n]/)[0]; return s.length > n ? s.slice(0, n) + "…" : s; }
+
+  function enc(obj) {
+    var bin = unescape(encodeURIComponent(JSON.stringify(obj)));
+    return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+  function dec(str) {
+    str = String(str || "").trim();
+    var m = str.match(/state=([A-Za-z0-9\-_]+)/); if (m) str = m[1];
+    str = str.replace(/-/g, "+").replace(/_/g, "/");
+    while (str.length % 4) str += "=";
+    var obj = JSON.parse(decodeURIComponent(escape(atob(str))));
+    if (!obj || typeof obj !== "object" || !obj.q) throw new Error("bad state");
+    return obj;
+  }
+  function merge(o) {
+    var b = blank(), k, j;
+    for (k in o) b[k] = o[k];
+    ["q", "exp", "dir", "topic"].forEach(function (k2) { var d = blank()[k2]; if (!b[k2] || typeof b[k2] !== "object") b[k2] = d; for (j in d) if (b[k2][j] === undefined) b[k2][j] = d[j]; });
+    if (!Array.isArray(b.projects)) b.projects = [];
+    return b;
+  }
+  function baseUrl() { return location.href.split("#")[0]; }
+  function stateLink() { return baseUrl() + "#state=" + enc(S); }
+  function save() {
+    S.t = Date.now();
+    try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch (e) {}
+    try { history.replaceState(null, "", "#state=" + enc(S)); } catch (e) {}
+  }
+  function load() {
+    var fromHash = null, fromLS = null;
+    try { if (/state=/.test(location.hash)) fromHash = dec(location.hash); } catch (e) { fromHash = null; }
+    try { var raw = localStorage.getItem(LS_KEY); if (raw) fromLS = JSON.parse(raw); } catch (e) { fromLS = null; }
+    var pick = fromHash && fromLS ? ((fromHash.t || 0) >= (fromLS.t || 0) ? fromHash : fromLS) : (fromHash || fromLS);
+    if (pick) { S = merge(pick); return true; }
+    return false;
+  }
+  function copyText(text, okMsg) {
+    function fallback() {
+      var ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select(); var ok = false;
+      try { ok = document.execCommand("copy"); } catch (e) {}
+      document.body.removeChild(ta);
+      toast(ok ? (okMsg || "已复制") : "复制没成功，请点「先看一眼」后手动全选复制");
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { toast(okMsg || "已复制"); }, fallback);
+    else fallback();
+  }
+
+  /* ========== 路径 ========== */
+  function dirCached() { return !!(S.dir.chosen && JD_LIB[S.dir.chosen]); }
+  function path() {
+    var p = ["s-q", "s-head"];
+    if (S.head === "grow") {
+      p.push("s-exp");
+      if (!S.exp.skipDir) { p.push("s-dir"); if (dirCached()) p.push("s-match"); }
+      p.push("s-topic");
+    } else if (S.head === "idea") p.push("s-tpl");
+    if (S.head && curP()) p.push("s-card", "s-back", "s-ev");
+    return p;
+  }
+  function curP() { return S.cur >= 0 && S.cur < S.projects.length ? S.projects[S.cur] : null; }
+  function litProjects() { return S.projects.filter(function (p) { return p.made; }); }
+  function dirName(id) { if (id === "other") return S.dir.other || "其他方向"; var d = DIRS.filter(function (x) { return x.id === id; })[0]; return d ? d.name : id; }
+  function axisOf(id) { return JD_LIB.ipcm.axes.filter(function (x) { return x.id === id; })[0]; }
+  function axisName(id) { var a = axisOf(id); return a ? a.name : id; }
+
+  function go(id) {
+    S.open = id; save(); render();
+    var el = $(id); if (el && el.scrollIntoView) setTimeout(function () { try { el.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {} }, 30);
+  }
+
+  /* ========== 渲染 ========== */
+  var ALL = ["s-q", "s-head", "s-exp", "s-dir", "s-match", "s-topic", "s-tpl", "s-card", "s-back", "s-ev", "s-asset"];
+  function render() {
+    var p = path();
+    if (S.open !== "s-asset" && p.indexOf(S.open) < 0) S.open = p[p.length - 1];
+    if (S.open === "s-asset" && !litProjects().length) S.open = p[p.length - 1];
+    var openIdx = S.open === "s-asset" ? p.length : p.indexOf(S.open);
+    ALL.forEach(function (id) {
+      var el = $(id), i = p.indexOf(id);
+      el.classList.remove("show", "collapsed");
+      if (id === "s-asset") { if (litProjects().length) { el.classList.add("show"); if (S.open !== "s-asset") el.classList.add("collapsed"); } return; }
+      if (i < 0) return;
+      if (i < openIdx) el.classList.add("show", "collapsed");
+      else if (i === openIdx) el.classList.add("show");
+    });
+    renderSummaries();
+    if (S.open === "s-q") fillQ();
+    if (S.open === "s-head") renderHead();
+    if (S.open === "s-exp") renderExp();
+    if (S.open === "s-dir") renderDir();
+    if (S.open === "s-match") renderMatch();
+    if (S.open === "s-topic") renderTopic();
+    if (S.open === "s-tpl") renderTpl();
+    if (S.open === "s-card") renderCard();
+    if (S.open === "s-back") renderBack();
+    if (S.open === "s-ev") renderEv();
+    if (litProjects().length) renderAsset();
+    var steps = p.slice(); if (litProjects().length) steps.push("s-asset");
+    var cur = S.open === "s-asset" ? steps.length - 1 : steps.indexOf(S.open);
+    $("pbar").style.width = Math.round(((cur + 1) / steps.length) * 100) + "%";
+    $("ptxt").textContent = "第 " + (cur + 1) + " / " + steps.length + " 步 · " + $(S.open).getAttribute("data-name");
+    $("pnext").textContent = "现在要做：" + (NEXT_TXT[S.open] || "");
+    $("pchips").innerHTML = steps.map(function (id, i) { return '<span class="' + (i < cur ? "done" : i === cur ? "now" : "") + '">' + esc($(id).getAttribute("data-name")) + "</span>"; }).join("");
+  }
+
+  function renderSummaries() {
+    var q = S.q;
+    $("sum-q").textContent = "麻烦事：" + (short(q.avoid, 22) || "（没写）") + " · 想继续做：" + (short(q.keep, 18) || "（没写）");
+    $("sum-head").textContent = S.head === "avoid" ? "先动「不想做现在的事」：解决麻烦" : S.head === "grow" ? "先动「想做别的事」：发掘能力" : S.head === "idea" ? "先从一件今天就能开始的小项目做起" : "";
+    $("sum-exp").textContent = S.exp.skipDir ? "先不定方向，直接做解决自己问题的事" : S.exp.mode === "talk" ? "讲了一段经历（" + S.exp.talk.length + " 字）" : "答了 " + Object.keys(S.exp.a).length + " 道经历选择题";
+    $("sum-dir").textContent = S.dir.chosen ? "方向：" + dirName(S.dir.chosen) + (dirCached() ? "" : "（未缓存：对照交给你的 AI，标未核实）") : "";
+    var c = { "已有证据": 0, "可迁移": 0, "待验证": 0, "可怎么补": 0 }, k; for (k in S.labels) c[S.labels[k]]++;
+    $("sum-match").textContent = LABELS.map(function (l) { return l + " " + c[l]; }).join(" · ");
+    $("sum-topic").textContent = S.topic.kind === "A" ? "题目 A：" + short(S.topic.aText, 24) : S.topic.kind === "B" ? (dirCached() ? "题目 B：补「" + axisName(S.topic.bAxis) + "」" : "题目 B：先让 AI 收 JD 再补证据") : "";
+    var t = TPLS.filter(function (x) { return x.id === S.tpl; })[0]; $("sum-tpl").textContent = t ? "小项目：" + t.name : "";
+    var cp = curP();
+    $("sum-card").textContent = cp ? "项目：" + cp.title + "（说明已生成，点「看」可以再复制）" : "";
+    $("sum-back").textContent = cp && cp.status ? "上次报告：" + { done: "做出来了", stuck: "卡住了", notyet: "还没开始" }[cp.status] : "";
+    $("sum-ev").textContent = cp ? evState(cp).label : "";
+    $("sum-asset").textContent = "已点亮 " + litProjects().length + " 件轻资产 · 点「看」展开";
+  }
+
+  /* ---------- ① ---------- */
+  function fillQ() {
+    $("q-weekly").value = S.q.weekly; $("q-keep").value = S.q.keep; $("q-avoid").value = S.q.avoid;
+    ["daily", "days", "budget"].forEach(function (n) { document.querySelectorAll('input[name="' + n + '"]').forEach(function (r) { r.checked = r.value === S.q[n]; }); });
+  }
+  function readQ() {
+    S.q.weekly = $("q-weekly").value.trim(); S.q.keep = $("q-keep").value.trim(); S.q.avoid = $("q-avoid").value.trim();
+    ["daily", "days", "budget"].forEach(function (n) { var r = document.querySelector('input[name="' + n + '"]:checked'); if (r) S.q[n] = r.value; });
+  }
+
+  /* ---------- ② ---------- */
+  function renderHead() {
+    $("head-avoid").classList.toggle("on", S.head === "avoid"); $("head-grow").classList.toggle("on", S.head === "grow"); $("head-idea").classList.toggle("on", S.head === "idea");
+    $("head-avoid-sub").textContent = S.q.avoid ? "拿你写的「" + short(S.q.avoid, 20) + "」，做一个帮你少做一步的小工具。" : "你还没写「不想再做的麻烦事」，选这个要先回 ① 补一句。";
+  }
+
+  /* ---------- ③ 讲经历 ---------- */
+  function renderExp() {
+    var html = "";
+    EXP_Q.forEach(function (q) {
+      if (!q.core && !S.exp.showOpt) return;
+      html += '<div class="qt">' + esc(q.t) + '</div><div class="choices">';
+      q.o.forEach(function (o, i) { html += '<label class="choice"><input type="radio" name="' + q.id + '" value="' + i + '"' + (S.exp.a[q.id] === i ? " checked" : "") + " />" + esc(o) + "</label>"; });
+      html += "</div>";
+    });
+    if (!S.exp.showOpt) html += '<button class="ghost small" id="btn-optq">再答 2 道（可选，让折叠的几项更准）</button>';
+    $("exp-choice").innerHTML = html;
+    var b = $("btn-optq"); if (b) b.onclick = function () { readExp(); S.exp.showOpt = true; save(); renderExp(); };
+    $("exp-choice").querySelectorAll("input").forEach(function (r) { r.onchange = function () { readExp(); save(); }; });
+    $("talk").value = S.exp.talk;
+    setTab(S.exp.mode);
+  }
+  function setTab(m) {
+    $("tab-choice").classList.toggle("on", m === "choice"); $("tab-talk").classList.toggle("on", m === "talk");
+    $("exp-choice").classList.toggle("hidden", m !== "choice"); $("exp-talk").classList.toggle("hidden", m !== "talk");
+  }
+  function readExp() {
+    EXP_Q.forEach(function (q) { var r = document.querySelector('input[name="' + q.id + '"]:checked'); if (r) S.exp.a[q.id] = +r.value; });
+    S.exp.talk = $("talk").value.trim().slice(0, 2000);
+  }
+
+  /* ---------- 语音（浏览器自带 Web Speech API，不支持就提示用输入法话筒） ---------- */
+  var rec = null, recOn = false;
+  function setupMic() {
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    var btn = $("btn-mic");
+    if (!SR) { btn.onclick = function () { toast("这个浏览器不支持网页语音。点键盘上的小话筒说话，效果一样"); }; return; }
+    btn.onclick = function () {
+      if (recOn) { try { rec.stop(); } catch (e) {} return; }
+      rec = new SR(); rec.lang = "zh-CN"; rec.continuous = true; rec.interimResults = false;
+      rec.onresult = function (ev) {
+        var txt = "", i; for (i = ev.resultIndex; i < ev.results.length; i++) if (ev.results[i].isFinal) txt += ev.results[i][0].transcript;
+        if (txt) { var ta = $("talk"); ta.value = (ta.value ? ta.value + "，" : "") + txt; S.exp.talk = ta.value.slice(0, 2000); save(); }
+      };
+      rec.onerror = function (e) { toast(e.error === "not-allowed" ? "没拿到话筒权限，可以用键盘上的小话筒说" : "语音没听清，也可以用键盘上的小话筒说"); };
+      rec.onend = function () { recOn = false; btn.classList.remove("on"); btn.textContent = "🎙️ 点击说话，自动转文字"; };
+      try { rec.start(); recOn = true; btn.classList.add("on"); btn.textContent = "■ 说完了，点这里停"; } catch (e) { toast("语音没启动，可以用键盘上的小话筒说"); }
+    };
+  }
+
+  /* ---------- ④ 方向推荐：本地词库 + 选择题加权（测试期规则，粗） ---------- */
+  function scoreDirs() {
+    var text = ((S.exp.mode === "talk" ? S.exp.talk : "") + " " + S.q.weekly + " " + S.q.keep).toLowerCase();
+    var sc = { ipcm: 0, sea: 0, pm: 0 }, a = S.exp.a;
+    DIRS.forEach(function (d) { d.kw.forEach(function (k) { if (text.indexOf(k.toLowerCase()) >= 0) sc[d.id] += 1; }); });
+    if (S.exp.mode === "choice") {
+      if (a.q1 !== undefined && a.q1 < 4) sc.ipcm += 2;
+      if (a.q2 === 0 || a.q2 === 1) sc.ipcm += 1;
+      if (a.q2 === 2) sc.pm += 1;
+      if (a.q6 === 0 || a.q6 === 1) sc.ipcm += 1;
+      if (a.q5 !== undefined && a.q5 < 4) sc.ipcm += 1;
+    }
+    var order = ["ipcm", "sea", "pm"].sort(function (x, y) { return (sc[y] - sc[x]) || (x === "ipcm" ? -1 : y === "ipcm" ? 1 : 0); });
+    return { main: order[0], alt: order[1], sc: sc };
+  }
+  function renderDir() {
+    var r = scoreDirs(); S.dir.main = r.main; S.dir.alt = r.alt; if (!S.dir.chosen) S.dir.chosen = r.main;
+    var dm = DIRS.filter(function (d) { return d.id === r.main; })[0], da = DIRS.filter(function (d) { return d.id === r.alt; })[0];
+    var weak = r.sc[r.main] === 0;
+    $("dir-reco").innerHTML = '<div class="okbox"><b>主推：' + esc(dm.name) + "</b><br>" + esc(weak ? "你给的信息还不多，先推这个已经收好官网 JD 的方向，看着不对随时换。" : dm.why) +
+      '</div><div class="note" style="background:#fff;color:var(--ink);border-color:var(--line)"><b>备选：' + esc(da.name) + "</b>" + (da.why && r.sc[r.alt] > 0 ? "　" + esc(da.why) : "") + "</div>";
+    $("dir-list").innerHTML = DIRS.map(function (d) {
+      return '<label class="choice"><input type="radio" name="dir" value="' + d.id + '"' + (S.dir.chosen === d.id ? " checked" : "") + " /><span>" + esc(d.name) +
+        (d.id === r.main ? "（主推）" : d.id === r.alt ? "（备选）" : "") + '<br><small class="hint" style="display:inline">' + (d.cached ? "已收 8 份官网 JD，页面里直接对照" : "未缓存：对照交给你的 AI，结果标「未核实」") + "</small></span></label>";
+    }).join("");
+    $("dir-other").value = S.dir.other;
+    $("dir-other-wrap").classList.toggle("hidden", S.dir.chosen !== "other");
+    $("dir-list").querySelectorAll("input").forEach(function (x) { x.onchange = function () { S.dir.chosen = x.value; $("dir-other-wrap").classList.toggle("hidden", x.value !== "other"); save(); }; });
+  }
+
+  /* ---------- ⑤ 能力对照：四类标签，不说「不符合」 ---------- */
+  function computeLabels() {
+    var a = S.exp.a, L = {}, axes = JD_LIB.ipcm.axes;
+    if (S.exp.mode === "talk") {
+      var talk = S.exp.talk.toLowerCase();
+      axes.forEach(function (ax) {
+        var hit = ax.kw.some(function (k) { return talk.indexOf(k.toLowerCase()) >= 0; });
+        L[ax.id] = hit ? "可迁移" : (ax.rank <= 3 ? "可怎么补" : "待验证");
+      });
+      return L;
+    }
+    var link = a.q3 === 0;
+    L.mx = a.q1 === 0 ? (link ? "已有证据" : "可迁移") : (a.q1 === 1 || a.q1 === 2) ? "可迁移" : a.q1 === 3 ? "待验证" : "可怎么补";
+    L.tr = a.q2 === 0 ? (link ? "已有证据" : "可迁移") : a.q2 === 1 ? "可迁移" : a.q2 === 2 ? "待验证" : "可怎么补";
+    L.pf = a.q6 === 0 ? (link ? "已有证据" : "可迁移") : a.q6 === 1 ? "可迁移" : a.q6 === 2 ? "待验证" : "可怎么补";
+    L.wk = a.q3 === 0 ? "已有证据" : a.q3 === 1 ? "可迁移" : a.q3 === 2 ? "待验证" : "可怎么补";
+    L.dt = (a.q1 === 0 || a.q6 === 0 || a.q6 === 1) ? "待验证" : "可怎么补";
+    L.ai = "待验证";
+    L.kol = a.q1 === 2 ? "可迁移" : "待验证";
+    L.cp = (a.q4 === 0 || a.q4 === 3) ? "可迁移" : "待验证";
+    L.cm = (a.q4 === 2 || a.q4 === 3 || a.q1 === 2) ? "可迁移" : "待验证";
+    L.ip = "待验证"; L.en = "待验证";
+    return L;
+  }
+  function axisHtml(ax) {
+    var lab = S.labels[ax.id] || "待验证";
+    var detail = lab === "已有证据" ? "依据：" + ax.ev : lab === "可迁移" ? "可以带过去的：" + ax.tr : lab === "待验证" ? "还要确认：" + ax.pend : "可以这样补：" + ax.fix;
+    var sel = '<select data-ax="' + ax.id + '" aria-label="改标签">' + LABELS.map(function (l) { return "<option" + (l === lab ? " selected" : "") + ">" + l + "</option>"; }).join("") + "</select>";
+    var done = S.projects.some(function (p) { return p.kind === "B" && p.axis === ax.id && p.evidence; });
+    return '<div class="axis"><div class="top"><span class="nm">' + esc(ax.name) + '</span><span><span class="tag ' + LABEL_CLS[lab] + '">' + lab + "</span> " + sel + "</span></div>" +
+      '<div class="fix">' + esc(detail) + (done ? "（你做的项目已补上）" : "") + "</div>" + (lab !== "可怎么补" && lab !== "已有证据" ? '<div class="fix" style="color:var(--muted)">想补的话：' + esc(ax.fix) + "</div>" : "") +
+      '<div class="src">8 份官网 JD 里 ' + ax.cnt + " 份写了（" + esc(ax.who) + "）· " + esc(ax.quote) + "</div></div>";
+  }
+  function renderMatch() {
+    if (!Object.keys(S.labels).length) S.labels = computeLabels();
+    var axes = JD_LIB.ipcm.axes.slice().sort(function (x, y) { return x.rank - y.rank; });
+    var core = axes.filter(function (a) { return a.rank <= 3; }), more = axes.filter(function (a) { return a.rank > 3; });
+    $("match-core").innerHTML = core.map(axisHtml).join("");
+    $("match-more").innerHTML = more.map(axisHtml).join("");
+    $("match-more-sum").textContent = "其余 " + more.length + " 项（展开）";
+    document.querySelectorAll("#s-match select[data-ax]").forEach(function (s) { s.onchange = function () { S.labels[s.getAttribute("data-ax")] = s.value; save(); renderMatch(); renderSummaries(); }; });
+    var lib = JD_LIB.ipcm;
+    $("jd-src").innerHTML = "测试期版本：抓取 " + lib.date + "，头部 3 家 + 中腰部 5 家，全部官网原文，手动更新。<br>" +
+      lib.sources.map(function (s) { return esc(s[0]) + "（" + s[1] + "）· " + esc(s[2]) + ' · <a href="' + esc(s[3]) + '" target="_blank" rel="noopener noreferrer">官网</a>'; }).join("<br>") +
+      "<br>JD 写的是理想人选，不是录用底线；这里只用来找你身上已经有的东西。";
+  }
+
+  /* ---------- ⑥ 选题 ---------- */
+  function fixables() {
+    if (!dirCached()) return [];
+    var axes = JD_LIB.ipcm.axes.slice().sort(function (x, y) { return x.rank - y.rank; });
+    var done = S.projects.filter(function (p) { return p.kind === "B" && p.evidence; }).map(function (p) { return p.axis; });
+    var list = axes.filter(function (a) { return S.labels[a.id] === "可怎么补" && done.indexOf(a.id) < 0; });
+    if (!list.length) list = axes.filter(function (a) { return S.labels[a.id] === "待验证" && done.indexOf(a.id) < 0; }).slice(0, 4);
+    return list;
+  }
+  function renderTopic() {
+    var onlyA = S.exp.skipDir, uncached = !onlyA && !dirCached();
+    if (onlyA) S.topic.kind = "A";
+    $("topic-B").classList.toggle("hidden", onlyA);
+    $("topic-onlyA").classList.toggle("hidden", !onlyA);
+    $("topic-B-sub").textContent = uncached ? "这个方向还没收好 JD：先让你的 AI 收几份官网 JD、做对照，再从「可怎么补」里挑一项做成作品（AI 收的标「未核实」）。" : "做一件小而能公开的作品，对应「" + dirName(S.dir.chosen) + "」里的一项要求。";
+    $("topic-A").classList.toggle("on", S.topic.kind === "A"); $("topic-B").classList.toggle("on", S.topic.kind === "B");
+    $("topic-A-wrap").classList.toggle("hidden", S.topic.kind !== "A");
+    $("topic-B-wrap").classList.toggle("hidden", S.topic.kind !== "B" || uncached);
+    if (!S.topic.aText) S.topic.aText = S.q.keep ? "帮我更好地「" + short(S.q.keep, 24) + "」" : S.q.weekly ? "帮我把「" + short(S.q.weekly, 24) + "」做得省力一点" : "";
+    $("topic-A-text").value = S.topic.aText;
+    var fx = fixables();
+    if (S.topic.bAxis && !fx.some(function (a) { return a.id === S.topic.bAxis; })) S.topic.bAxis = "";
+    $("topic-B-list").innerHTML = fx.length ? fx.map(function (a) {
+      return '<label class="choice"><input type="radio" name="bax" value="' + a.id + '"' + (S.topic.bAxis === a.id ? " checked" : "") + " /><span>" + esc(a.name) + '<br><small class="hint" style="display:inline">' + esc(a.fix) + "</small></span></label>";
+    }).join("") : '<p class="hint">「可怎么补」都点亮了。可以回到对照，把某条改成「可怎么补」再来，或者选 A。</p>';
+    $("topic-B-list").querySelectorAll("input").forEach(function (x) { x.onchange = function () { S.topic.bAxis = x.value; save(); }; });
+  }
+
+  /* ---------- 兜底模板 ---------- */
+  function renderTpl() {
+    $("tpl-list").innerHTML = TPLS.map(function (t) {
+      return '<button class="bigbtn' + (S.tpl === t.id ? " on" : "") + '" data-tpl="' + t.id + '"><strong>' + esc(t.name) + "</strong><small>" + esc(t.one) + " 适合：" + esc(t.fit) + "。</small></button>";
+    }).join("");
+    $("tpl-list").querySelectorAll("[data-tpl]").forEach(function (b) { b.onclick = function () { S.tpl = b.getAttribute("data-tpl"); save(); renderTpl(); }; });
+  }
+
+  /* ========== 项目 ========== */
+  function makeProject() {
+    var p = { id: Date.now(), kind: "", title: "", problem: "", axis: "", tpl: "", dir: "", minimal: "", status: "", made: false, rerun: false, link: "", tier: 0, data: "", sentence: "", stuck: "", stuckType: "", nextAi: "", optimized: 0, evidence: false, quality: "ok" };
+    if (S.head === "avoid") {
+      p.kind = "avoid"; p.problem = S.q.avoid; p.title = "「" + short(S.q.avoid, 14) + "」省事小工具";
+      p.minimal = "一个双击就能打开的 index.html，能让「" + short(S.q.avoid, 30) + "」这件事少做至少一步；关掉再打开，数据还在。";
+    } else if (S.head === "idea") {
+      var t = TPLS.filter(function (x) { return x.id === S.tpl; })[0];
+      p.kind = "tpl"; p.tpl = t.id; p.problem = t.one; p.title = t.name;
+      p.minimal = "一个双击就能打开的 index.html，中文界面：" + t.one;
+    } else if (S.topic.kind === "A") {
+      p.kind = "A"; p.problem = S.topic.aText; p.title = "「" + short(S.topic.aText, 14) + "」小网页";
+      p.minimal = "一个双击就能打开的 index.html，只做一件事：" + short(S.topic.aText, 40) + "；关掉再打开，数据还在。";
+    } else {
+      p.kind = "B"; p.dir = S.dir.chosen;
+      if (dirCached()) {
+        var ax = axisOf(S.topic.bAxis); p.axis = ax.id; p.title = "补证据：" + ax.name; p.problem = "把「" + ax.name + "」从「可怎么补」做成一件能公开的证据";
+        p.minimal = "一件公开的小作品：" + ax.fix + "；放到 GitHub Pages 有公开链接；至少一条真实数据（L1 自己真用 3 次也算）。";
+      } else {
+        p.title = "补证据：" + dirName(S.dir.chosen); p.problem = "先摸清「" + dirName(S.dir.chosen) + "」的官网要求，再把其中一项「可怎么补」做成能公开的证据";
+        p.minimal = "第一阶段：一份标「未核实」的对照表，并选定 1 项「可怎么补」；第二阶段：一件公开的小作品 + 至少一条真实数据。";
+      }
+    }
+    var cp = curP();
+    if (cp && !cp.made && !cp.status) S.projects[S.cur] = p; else { S.projects.push(p); S.cur = S.projects.length - 1; }
+    return p;
+  }
+  function cardFields(p) {
+    return [
+      ["项目名", p.title],
+      ["解决你哪个问题", p.problem || "（第一步和 AI 一起说清）"],
+      ["你会得到", p.kind === "B" ? "一件能公开给人看的小作品，加一句基于真实数据的证据句" : "一个只做一件事、真能用的小网页"],
+      ["在哪里打开", "你电脑里的一个 index.html（双击打开）；想公开时放到 GitHub Pages，得到 https://你的用户名.github.io/项目名/"],
+      ["你输入什么", "第一步和你的 AI 一起定（页面不替你编）"],
+      ["它会做什么", p.minimal],
+      ["你能改什么", "标题、文字、颜色、要记的东西；以后让 AI 给完整新文件，整份覆盖"],
+      ["用完之后", "回到这个页面点「回来报告」，页面接着给下一步；做成了会点亮你的轻量化资产页"],
+      ["公开在哪", p.link || "还没发布（想公开时再发；私人工具可以不公开）"],
+      ["数据存在哪", "只在你这台设备的这个浏览器里（localStorage），别人打开链接看到的是空白版"],
+      ["怎样算做成", "你自己关掉再打开，换一个新输入，它照样能用（回来再用一次能跑）"]
+    ];
+  }
+  function buildInstruction(p) {
+    var L = [];
+    L.push("【另存人生 · 给 AI 的项目说明 v0.0.7】");
+    L.push("回访链接（做完或卡住时，请原样提醒我点它回去报告）：" + stateLink());
+    L.push("");
+    L.push("你好。我是零基础，会和 AI 聊天，但还没让 AI 帮我做成过东西。请你陪我把下面这个项目做到我能自己打开、自己再用一次。");
+    L.push("");
+    L.push("## 第一步（请严格照做）");
+    L.push("收到这段话后，你的第一条回复只做两件事：");
+    L.push("1. 用一句话复述我们要做的最小版本：「" + p.minimal + "」");
+    if (p.kind === "B" && !p.axis) L.push("2. 只问我一个问题：「你要我上网查官网招聘页，还是你贴 1–2 份你看到的 JD 原文给我？」");
+    else L.push("2. 只问我一个问题：「你现在用的是电脑还是手机？」（手机上不方便存文件，我们先想办法存下来，或换到电脑）");
+    L.push("我回答后，你再给第一版。");
+    L.push("");
+    L.push("## 项目卡");
+    cardFields(p).forEach(function (f) { L.push("- " + f[0] + "：" + f[1]); });
+    L.push("");
+    L.push("## 关于我（我在另存人生页面上写的原话，请别改写）");
+    if (S.q.weekly) L.push("- 每周重复在做的事：" + S.q.weekly);
+    if (S.q.keep) L.push("- 想继续做的：" + S.q.keep);
+    if (S.q.avoid) L.push("- 不想再做的麻烦事：" + S.q.avoid);
+    L.push("- 每天能花：" + S.q.daily + "；一共试：" + S.q.days + "；预算：" + S.q.budget + "（时间和预算只用来把东西做小）");
+    if (S.head === "grow" && S.exp.mode === "talk" && S.exp.talk) { L.push("- 我讲的「过去发生了什么」（语音/打字原话）："); L.push("  「" + S.exp.talk + "」"); }
+    if (S.head === "grow" && S.exp.mode === "choice") EXP_Q.forEach(function (q) { if (S.exp.a[q.id] !== undefined) L.push("- " + q.t.replace("（可选）", "") + " → " + q.o[S.exp.a[q.id]]); });
+    if (p.kind === "B" && p.axis) {
+      var ax = axisOf(p.axis);
+      L.push("");
+      L.push("## 这个项目要补的一项（来自另存人生已核实的 8 份官网 JD，" + JD_LIB.ipcm.date + " 抓取）");
+      L.push("- 方向：" + JD_LIB.ipcm.name);
+      L.push("- 要补的一项：" + ax.name + "（8 份里 " + ax.cnt + " 份写了；原文举例：" + ax.quote + "）");
+      L.push("- 建议的小作品：" + ax.fix);
+      L.push("- 我在页面上的其他对照（只供参考）：" + JD_LIB.ipcm.axes.filter(function (a) { return a.rank <= 3; }).map(function (a) { return a.name + "=" + (S.labels[a.id] || "待验证"); }).join("；"));
+      L.push("- 不要给我打分、排名，不要说「不符合」；只用「已有证据 / 可迁移 / 待验证 / 可怎么补」这四个词。");
+    }
+    if (p.kind === "B" && !p.axis) {
+      L.push("");
+      L.push("## 先帮我收这个方向的 JD（另存人生还没缓存这个方向）");
+      L.push("- 方向：" + dirName(p.dir));
+      L.push("- 只收这一个方向。名单：公认头部 3 家 + 中腰部 5 家公司的官网招聘页原文；每条写公司、岗位名、官网链接、你看到的日期。");
+      L.push("- 能打开官网的，摘近原文短引；打不开、只搜到转载的，标「未核实」。不要编链接，不要补你猜的要求。");
+      L.push("- 你不能上网就直说，改为请我贴 1–2 份我看到的 JD 原文。");
+      L.push("- 你收的全部标「未核实（AI 收集）」，和另存人生已核实的官网 JD 分开放，不要说成官网证据。");
+      L.push("- 然后按这些 JD 拆成对照项，结合我上面的原话，每项只用四类标签：已有证据 / 可迁移 / 待验证 / 可怎么补。不给我看排名，不说「不符合」。一次最多给我看 4 项，其余折叠。");
+      L.push("- 最后从「可怎么补」里给我 2 个小而能公开的作品，让我选一个再开始做。");
+    }
+    if (p.kind === "tpl") {
+      var t = TPLS.filter(function (x) { return x.id === p.tpl; })[0];
+      L.push("");
+      L.push("## 样子参考");
+      L.push("- 另存人生精选库里同类的开源小网页已经实测能跑（" + t.card + "），想看样子可以打开：" + t.demo);
+      L.push("- 但请你从零给我写一个更简单的单文件版，界面中文，只保留最核心的功能。");
+    }
+    L.push("");
+    L.push("## 做事铁律（请一直遵守，聊久了也别忘）");
+    L.push("1. 单步推进：每次回复只推进一个小步骤，结尾只问我一个确认问题；我回答后再给下一步。严禁一次把全部流程、全部代码、发布步骤一口气吐完。");
+    L.push("2. 单文件：默认只做一个 index.html，CSS 和 JS 都写在里面，数据只用 localStorage；不要 React/Vue、不要命令行、不要装软件。");
+    L.push("3. 改代码给完整代码：每次修改都输出完整的 index.html 全文，严禁省略号、严禁「其余不变」这类片段；并提醒我怎么整份覆盖本地文件（已发布的话再覆盖上传到 GitHub）。");
+    L.push("4. 不要 API 密钥、不要接模型、不要服务器和数据库；页面上不放微信号、二维码、群。");
+    L.push("5. 不加统计代码。只有我主动问「怎么看有多少人访问」时，才只推荐一种免注册的静态计数器（不蒜子 busuanzi），并告诉我它会连到第三方计数服务；不推荐要注册或备案的商业统计。");
+    L.push("6. 发布只走 GitHub 公开仓库 + GitHub Pages，全程在浏览器里做；github.com 打不开就陪我排查，不建议换别的托管平台，不教我买域名或备案。");
+    L.push("7. 不编界面、不编原因：不确定按钮在哪就说不确定，请我截图。");
+    L.push("8. 不替我编机制：我没说的功能（提醒、打卡、找人、积分……）先不加，要加先问我。");
+    L.push("");
+    L.push("## 最小交付标准（达到就算这一阶段做完）");
+    L.push("- " + p.minimal);
+    L.push("- 我能说出这是我做的、你帮了哪几步。");
+    L.push("- 回来再用一次能跑：我关掉再打开，换一个新输入，它照样能用。");
+    if (p.kind === "B") L.push("- 证据：有公开链接 + 至少一条真实数据（L1 我自己真用 3 次以上 / L2 1–3 个人试过、给了反馈 / L3 平台互动数、GitHub 自带数据或访问计数，任一级都算）。");
+    L.push("");
+    L.push("## 自检指令（我发「自检」两个字时，你就做这件事）");
+    L.push("对照上面的最小交付标准逐条检查，列出「通过 / 没通过」；没通过的，只给我下一步的一个动作。不要借机加新功能。");
+    L.push("");
+    L.push("## 恢复指令（卡住时你该怎么接）");
+    L.push("- 页面空白或报错：请我把报错原文或截图发你；说清最可能的原因（推测要标明），只给一个修复动作，并给完整文件。");
+    L.push("- 我说看不懂、太长：只给下一步一个动作，用大白话，细到按哪个按钮。");
+    L.push("- 你没法直接生成文件：把完整代码放进一个代码块，教我新建文本文件、粘贴、存成 index.html（别存成 index.html.txt）。");
+    L.push("- 同一个错误修两次还不行：换一种做法，或把这一步拆小；发布的事不换平台。");
+    L.push("- 连续两轮没有进展：停下来，输出下面的进度回传码（状态写「卡住了」），提醒我回页面点「卡住了」。");
+    L.push("");
+    L.push("## 进度回传码（重要）");
+    L.push("在这两种时候，请在回复末尾自动输出下面这个代码块，并提醒我「复制这段，点回访链接回到另存人生页面，粘贴进去」：");
+    L.push("(1) 做出了一个能打开的文件或公开链接；(2) 卡住超过 2 轮。");
+    L.push("字段固定，不要改名；没有就写「无」，不要编，不要夸大。");
+    L.push("```");
+    L.push(RETURN_TEMPLATE);
+    L.push("```");
+    L.push("");
+    L.push("另存人生只陪我培养创造和转化的能力，不承诺求职结果；请你也别替我承诺。");
+    return L.join("\n");
+  }
+  function summonText() {
+    return "请按「另存人生·进度回传码」的固定格式，把我们现在的进度输出成一个代码块。字段固定：状态 / 公开链接 / 数据凭证 / 简历证据句 / 当前卡点 / 下一步；没有就写「无」，不要编、不要夸大。格式：\n```\n" + RETURN_TEMPLATE + "\n```\n最后提醒我点这个链接回页面粘贴：" + stateLink();
+  }
+  function renderCard() {
+    var p = curP(); if (!p) return;
+    $("pcard").innerHTML = "<div style='font-weight:700;margin-bottom:6px'>【项目卡】" + esc(p.title) + "</div>" + cardFields(p).slice(1).map(function (f) { return "<div><b>" + esc(f[0]) + "</b>" + esc(f[1]) + "</div>"; }).join("");
+    if (!$("ins-out").classList.contains("hidden")) $("ins-out").textContent = buildInstruction(p);
+  }
+
+  /* ========== ⑧ 回来报告 + 回传码解析 ========== */
+  var KEYS = ["状态", "公开链接", "数据凭证", "简历证据句", "当前卡点", "下一步"];
+  function parseReturn(txt) {
+    txt = String(txt || "").replace(/\r/g, "").replace(/\*\*/g, "").replace(/`/g, "");
+    var out = {}, found = 0;
+    KEYS.forEach(function (k) {
+      var re = new RegExp("(?:^|\\n)[ \\t>*#\\-]*[【\\[]?\\s*" + k + "\\s*[】\\]]?\\s*[：:]\\s*([^\\n]*)");
+      var m = txt.match(re);
+      if (m) { found++; var v = m[1].trim(); if (/^[（(]?(无|暂无|没有|none|n\/a|-|—)[）)]?[。.]?$/i.test(v)) v = ""; out[k] = v; }
+    });
+    out._found = found;
+    var st = out["状态"] || "";
+    out._status = /卡/.test(st) ? "stuck" : /还没|未开始|没开始/.test(st) ? "notyet" : /做出|完成|上线|公开|能用|跑通/.test(st) ? "done" : "";
+    var lk = (out["公开链接"] || "").match(/https?:\/\/[^\s）)】，,]+/); out._link = lk ? lk[0] : "";
+    var dv = out["数据凭证"] || "", tm = dv.match(/L\s*([123])/i);
+    out._tier = tm ? +tm[1] : !dv ? 0 : /star|阅读|点赞|浏览|访问|PV|UV|互动|评论|收藏|转发|播放|计数/i.test(dv) ? 3 : /朋友|同事|同行|个人|人试|反馈/.test(dv) ? 2 : /自己|次/.test(dv) ? 1 : 0;
+    return out;
+  }
+  function applyParsed(r) {
+    var p = curP(); if (!p) return;
+    if (r._link) p.link = r._link;
+    if (r["数据凭证"]) { p.data = r["数据凭证"].replace(/^L\s*[123]\s*[｜|:：]?\s*/i, ""); p.tier = r._tier; }
+    if (r["简历证据句"]) p.sentence = r["简历证据句"];
+    p.stuck = r["当前卡点"] || ""; p.nextAi = r["下一步"] || "";
+    if (r._status) { p.status = r._status; if (r._status === "stuck") p.stuckType = guessStuck(p.stuck) || p.stuckType; }
+  }
+  function guessStuck(t) {
+    t = t || "";
+    if (/github|上传|仓库|pages|注册|验证邮件/i.test(t)) return "github";
+    if (/报错|空白|error|不显示|白屏|bug/i.test(t)) return "error";
+    if (/保存|存成|txt/i.test(t)) return "file";
+    if (/太长|太多|看不懂|跟不上/.test(t)) return "toomuch";
+    return "";
+  }
+  function renderBack() {
+    var p = curP(); if (!p) return;
+    ["done", "stuck", "notyet"].forEach(function (s) { $("st-" + s).classList.toggle("on", p.status === s); });
+    var out = "";
+    if (p.status === "notyet") {
+      out = '<div class="next"><b>下一步（五分钟就够）：</b>只做一件事：打开你在用的 AI，新建对话，粘贴说明发出去，等它回复第一句。</div>' +
+        '<div class="row"><button class="small" id="bk-copy">再复制一次给 AI 的说明</button><button class="sec2 small" id="bk-smaller">换一个更小的题目</button></div>' +
+        '<p class="hint">不知道用哪个 AI？你手机里已经有的那个就行（豆包、千问、Kimi、DeepSeek、ChatGPT 都可以）。</p>';
+    } else if (p.status === "stuck") {
+      var g = p.stuckType || guessStuck(p.stuck);
+      out = (p.stuck ? '<div class="note">回传码里写的卡点：' + esc(p.stuck) + "</div>" : "") + '<div class="qt">卡在哪？</div><div class="choices">' +
+        STUCK.map(function (s) { return '<label class="choice"><input type="radio" name="stk" value="' + s[0] + '"' + (g === s[0] ? " checked" : "") + " />" + esc(s[1]) + "</label>"; }).join("") + "</div>";
+      var s = STUCK.filter(function (x) { return x[0] === g; })[0];
+      if (s) out += '<div class="next"><b>下一步：</b>把下面这段恢复指令发给你的 AI，它会只给你一个动作。做完回来再点一次状态。</div><pre class="out" id="stk-txt">' + esc(s[2]) + '</pre><div class="row"><button class="small" id="bk-stk">复制恢复指令</button></div>';
+      else out += '<div class="next"><b>下一步：</b>先点上面最像的一项，页面给你一段能直接发给 AI 的恢复指令。</div>';
+    } else if (p.status === "done") {
+      out = '<div class="okbox">做出来了。这是真的做成了一件事。' + (p.link ? "<br>公开链接：" + esc(p.link) : "") + '</div><div class="next"><b>下一步：</b>到「⑨ 你做成了什么」勾一下，页面会点亮你的轻量化资产页。</div>' +
+        '<div class="row"><button id="bk-ev">去勾一下</button></div>';
+    } else {
+      out = '<div class="next"><b>下一步：</b>点上面三个按钮里最像你现在的一个。</div>';
+    }
+    if (p.nextAi && p.status !== "done") out += '<div class="note">你的 AI 建议的下一步：' + esc(p.nextAi) + "</div>";
+    $("back-out").innerHTML = out;
+    var b;
+    if ((b = $("bk-copy"))) b.onclick = function () { copyText(buildInstruction(p), "说明已复制，去你的 AI 里粘贴"); };
+    if ((b = $("bk-smaller"))) b.onclick = function () { go(S.head === "grow" ? "s-topic" : S.head === "idea" ? "s-tpl" : "s-q"); };
+    if ((b = $("bk-stk"))) b.onclick = function () { copyText($("stk-txt").textContent, "恢复指令已复制"); };
+    if ((b = $("bk-ev"))) b.onclick = function () { go("s-ev"); };
+    document.querySelectorAll('input[name="stk"]').forEach(function (r) { r.onchange = function () { p.stuckType = r.value; save(); renderBack(); }; });
+  }
+  function setStatus(s) { var p = curP(); if (!p) return; p.status = s; save(); renderBack(); renderSummaries(); }
+  function doParse() {
+    var r = parseReturn($("paste").value);
+    if (r._found < 2) { $("parse-out").innerHTML = '<div class="note">没读出回传码的字段。点上面「复制『召唤摘要指令』」发给你的 AI，让它按固定格式重新输出，再贴回来。也可以直接点上面三个状态按钮。</div>'; return; }
+    applyParsed(r);
+    $("parse-out").innerHTML = '<div class="pcard">' + KEYS.map(function (k) { return "<div><b>" + k + "</b>" + esc(r[k] || "（无）") + "</div>"; }).join("") + "</div>";
+    save(); renderBack(); renderSummaries();
+  }
+
+  /* ========== ⑨ 成果与证据：作品完成 ≠ 能力证据 ========== */
+  function evState(p) {
+    if (!p.made) return { key: "none", label: "还没确认做出来" };
+    if (p.evidence) return { key: "ev", label: "已有证据（L" + p.tier + "）" };
+    if (p.link && !p.tier) return { key: "linkonly", label: "已有链接、待补数据" };
+    if (!p.link && p.tier) return { key: "dataonly", label: "作品完成 · 有数据，未公开" };
+    return { key: "made", label: p.rerun ? "作品完成 · 回来再用一次能跑" : "作品完成 · 待回来再用一次" };
+  }
+  function renderEv() {
+    var p = curP(); if (!p) return;
+    $("ev-made").checked = !!p.made || p.status === "done"; $("ev-rerun").checked = !!p.rerun; $("ev-link").value = p.link || ""; $("ev-tier").value = String(p.tier || 0);
+    $("ev-data").value = p.data || ""; $("ev-sent").value = p.sentence || "";
+    document.querySelectorAll('input[name="evq"]').forEach(function (r) { r.checked = r.value === (p.quality || "ok"); });
+  }
+  function readEv() {
+    var p = curP(); if (!p) return;
+    p.made = $("ev-made").checked; p.rerun = $("ev-rerun").checked; p.link = $("ev-link").value.trim(); p.tier = +$("ev-tier").value;
+    p.data = $("ev-data").value.trim(); p.sentence = $("ev-sent").value.trim();
+    var q = document.querySelector('input[name="evq"]:checked'); p.quality = q ? q.value : "ok";
+    if (p.made) p.status = "done";
+  }
+  var NATURE = ["", "L1 自己的真实使用记录", "L2 1–3 个人试用后的反馈", "L3 公开数据"];
+  var LIMIT = ["", "它证明你能做出来、而且真的用起来了；还不能说明别人也需要它。", "它证明有人愿意试、给了反馈；样本很小，不代表规模。", "它证明公开后有人看到、有互动；互动数不等于能力本身，要配上你做了什么一起讲。"];
+  function evaluate() {
+    readEv(); var p = curP(); if (!p) return;
+    var m = [];
+    if (!p.made) {
+      $("ev-out").innerHTML = '<div class="next"><b>下一步：</b>还没做出来也没关系。回到「⑧ 回来报告」点「卡住了」或「还没开始」，页面给你一个五分钟内能做的小动作。</div><div class="row"><button class="small" id="ev-toback">回到 ⑧</button></div>';
+      $("ev-toback").onclick = function () { go("s-back"); }; save(); render(); return;
+    }
+    var hasLink = !!p.link, hasData = p.tier > 0;
+    p.evidence = hasLink && hasData;
+    m.push('<div class="okbox">作品完成：<b>' + esc(p.title) + "</b>。这是你自己做出来的东西，已经点亮在你的轻量化资产页。" + (p.rerun ? "" : "<br>还差一步验收：过几天关掉再打开，换一个新输入用一次，回来勾上「回来再用一次能跑」。不限定哪天，你定。") + "</div>");
+    if (p.evidence) {
+      if (p.kind === "B" && p.axis) {
+        S.labels[p.axis] = "已有证据";
+        m.push('<div class="okbox">对照升级：「' + esc(axisName(p.axis)) + '」<span class="tag t4">可怎么补</span> → <span class="tag t1">已有证据</span><br>证据性质：' + esc(NATURE[p.tier]) + "。局限：" + esc(LIMIT[p.tier]) + "</div>");
+      } else if (p.kind === "B") {
+        m.push('<div class="note">这件有证据了（' + esc(NATURE[p.tier]) + "），对应的是你 AI 收集的「未核实」对照，和官网核实的分开记。局限：" + esc(LIMIT[p.tier]) + "</div>");
+      } else {
+        m.push('<div class="note">这件有证据了（' + esc(NATURE[p.tier]) + "）。局限：" + esc(LIMIT[p.tier]) + "</div>");
+      }
+      if (p.sentence) m.push('<div class="next"><b>你的证据句：</b>' + esc(p.sentence) + "</div>");
+      else m.push('<div class="note">还没有证据句。点上面「复制『请 AI 写证据句』的指令」发给你的 AI，把它写的那句贴进框里。下面是页面按你填的内容拼的草稿，只当参考：<br>「' + esc(draftSentence(p)) + "」</div>");
+      if (p.quality === "meh" && p.optimized < 1) {
+        p.optimized = 1;
+        m.push('<div class="next"><b>下一步（只优化这一次）：</b>' + esc(OPT_ACTION[p.tier]) + "做完回来更新数据。之后不管数据怎样，都直接放行。</div>");
+      } else if (p.quality === "meh") {
+        m.push('<div class="next"><b>下一步：</b>已经优化过一次，这件先放行。数据一般不影响它是你的资产，接下来换一件。</div>');
+      } else {
+        m.push('<div class="next"><b>下一步：</b>' + (p.kind === "B" && fixables().length ? "换「可怎么补」里的下一项，或者先存盘休息，都在下面的资产页里。" : "到下面的资产页，选一条接下来的路。") + "</div>");
+      }
+    } else if (hasLink) {
+      m.push('<div class="note">现在是「已有链接、待补数据」。不是没做成，只是证据还差一半。</div><div class="next"><b>下一步：</b>' + esc(OPT_ACTION[0]) + "</div>");
+    } else if (hasData) {
+      m.push('<div class="next"><b>下一步' + (p.kind === "B" ? "" : "（可选）") + "：</b>想把它变成能给人看的证据，就请你的 AI 带你放上 GitHub Pages，拿到公开链接。" + (p.kind === "B" ? "" : "私人工具不公开也完全可以。") + "</div>");
+    } else {
+      m.push('<div class="next"><b>下一步' + (p.kind === "B" ? "" : "（可选）") + "：</b>" + (p.kind === "B" ? "这件是补证据的项目：先请你的 AI 带你发到 GitHub Pages 拿到公开链接，再自己真用 3 次记下来（L1）。" : "想让别人也看到，就请你的 AI 带你发到 GitHub Pages；不想公开，就先自己用着。") + "</div>");
+    }
+    m.push('<div class="row"><button class="small" id="ev-toasset">去我的轻量化资产页</button></div>');
+    save(); render();
+    $("ev-out").innerHTML = m.join("");
+    $("ev-toasset").onclick = function () { go("s-asset"); };
+  }
+  function draftSentence(p) {
+    var what = p.kind === "B" && p.axis ? "围绕「" + axisName(p.axis) + "」" : "";
+    return "我用 AI " + what + "从零做了「" + p.title.replace(/[「」]/g, "") + "」" + (p.link ? "（" + p.link + "）" : "") + (p.data ? "，" + p.data : "") + "。";
+  }
+  function sentenceIns() {
+    var p = curP();
+    return "请帮我写一句能放进简历或作品集的证据句。要求：基于真实数据、不夸大；写清我做了什么、解决了什么问题、数据是多少、数据是哪一级（L1 自己使用 / L2 少数人试用 / L3 公开数据）。不要用「精通」「显著提升」这类没有数据撑着的词。\n项目：" + (p ? p.title : "") + "\n公开链接：" + ((p && p.link) || "无") + "\n数据：" + ((p && p.data) || "无");
+  }
+
+  /* ========== 轻量化资产页 ========== */
+  function kindName(k) { return { avoid: "把麻烦交给工具", A: "解决自己的问题", B: "补证据", tpl: "今天就能开始的小项目" }[k] || ""; }
+  function renderAsset() {
+    var lit = litProjects(), grey = [];
+    if (S.head === "grow" && dirCached() && Object.keys(S.labels).length) grey = JD_LIB.ipcm.axes.filter(function (a) { return S.labels[a.id] === "可怎么补"; });
+    var N = lit.length + grey.length;
+    $("asset-lead").textContent = "v0.1 · 已点亮 " + lit.length + (grey.length ? " / " + N : "") + " 件。每做成一件，就多一张卡。不用全部补完，现在这一页就已经是你的了。";
+    $("assets").innerHTML = lit.map(function (p) {
+      var st = evState(p);
+      return '<div class="asset"><h4>' + esc(p.title) + '</h4><div class="badges"><span class="badge">' + esc(kindName(p.kind)) + '</span><span class="badge' + (p.rerun ? "" : " wait") + '">' + (p.rerun ? "回来再用一次能跑" : "待回来再用一次") + '</span><span class="badge' + (p.evidence ? "" : " wait") + '">' + esc(st.label) + "</span></div>" +
+        (p.link ? "<div>🔗 " + esc(p.link) + "</div>" : "") + (p.data ? "<div>数据：" + (p.tier ? "L" + p.tier + "｜" : "") + esc(p.data) + "</div>" : "") + (p.sentence ? "<div>「" + esc(p.sentence) + "」</div>" : "") + "</div>";
+    }).join("") + grey.map(function (a) { return '<div class="asset grey"><h4>待点亮</h4><div>' + esc(a.name) + "</div><div style='font-size:.8rem'>" + esc(a.fix) + "</div></div>"; }).join("");
+    var autoDone = lit.some(function (p) { return p.kind === "avoid"; });
+    $("hook").innerHTML = autoDone && S.head !== "grow" ? '<div class="next"><b>顺着往下想：</b>改变生活常常就两步：先把不想做的交给工具，再去试试想做的别的事。你已经把一件麻烦事交出去了，手里也腾出了一点心力。要不要看看你有哪些能力可以迁移？' +
+      '<div class="row"><button class="small" id="hook-grow">看看我有哪些能力可以迁移</button></div></div>' : "";
+    var b = $("hook-grow"); if (b) b.onclick = startGrow;
+    $("ex-more-sub").textContent = S.head === "grow" && !S.exp.skipDir ? "从剩下的「可怎么补」或自己的问题里，再挑一件小事做。" : "再挑一件小事：另一件麻烦事，或者去试试想做的别的事。";
+  }
+  function startGrow() { S.head = "grow"; S.exp.skipDir = false; S.topic = { kind: "", aText: "", bAxis: "" }; go("s-exp"); }
+
+  /* ========== 事件 ========== */
+  function bind() {
+    document.querySelectorAll("[data-edit]").forEach(function (b) { b.onclick = function () { go(b.getAttribute("data-edit")); }; });
+    $("btn-q").onclick = function () {
+      readQ();
+      if (!S.q.weekly && !S.q.keep && !S.q.avoid) { $("err-q").textContent = "三句话至少写一句。实在写不出来，点下面「我暂时没想法」。"; return; }
+      $("err-q").textContent = ""; go("s-head");
+    };
+    $("btn-idea1").onclick = function () { readQ(); S.head = "idea"; go("s-tpl"); };
+    ["weekly", "keep", "avoid"].forEach(function (k) { $("q-" + k).oninput = function () { readQ(); save(); }; });
+    document.querySelectorAll('#s-q input[type=radio]').forEach(function (r) { r.onchange = function () { readQ(); save(); }; });
+    $("head-avoid").onclick = function () {
+      if (!S.q.avoid) { $("err-head").textContent = "「不想再做的麻烦事」还空着：先回 ① 补一句，或者选另外两个。"; return; }
+      $("err-head").textContent = ""; S.head = "avoid"; makeProject(); go("s-card");
+    };
+    $("head-grow").onclick = function () { $("err-head").textContent = ""; startGrow(); };
+    $("head-idea").onclick = function () { $("err-head").textContent = ""; S.head = "idea"; go("s-tpl"); };
+    $("tab-choice").onclick = function () { readExp(); S.exp.mode = "choice"; save(); setTab("choice"); };
+    $("tab-talk").onclick = function () { readExp(); S.exp.mode = "talk"; save(); setTab("talk"); };
+    $("talk").oninput = function () { S.exp.talk = $("talk").value.slice(0, 2000); save(); };
+    $("btn-exp").onclick = function () {
+      readExp();
+      if (S.exp.mode === "choice") { var miss = EXP_Q.filter(function (q) { return q.core && S.exp.a[q.id] === undefined; }); if (miss.length) { $("err-exp").textContent = "还有 " + miss.length + " 道没选。"; return; } }
+      else if (S.exp.talk.length < 10) { $("err-exp").textContent = "再多讲几句吧，十来个字就够。"; return; }
+      $("err-exp").textContent = ""; S.exp.skipDir = false; S.labels = {}; S.dir.chosen = ""; S.topic.kind = ""; go("s-dir");
+    };
+    $("btn-skipdir").onclick = function () { readExp(); S.exp.skipDir = true; S.topic.kind = "A"; go("s-topic"); };
+    $("dir-other").oninput = function () { S.dir.other = $("dir-other").value.trim(); save(); };
+    $("btn-dir").onclick = function () {
+      var r = document.querySelector('input[name="dir"]:checked'); if (r) S.dir.chosen = r.value;
+      if (S.dir.chosen === "other" && !S.dir.other) { $("err-dir").textContent = "写一下你想去的方向。"; return; }
+      $("err-dir").textContent = "";
+      S.labels = dirCached() ? computeLabels() : {};
+      if (!dirCached()) S.topic.kind = "B";
+      go(dirCached() ? "s-match" : "s-topic");
+    };
+    $("btn-match").onclick = function () { go("s-topic"); };
+    $("topic-A").onclick = function () { S.topic.kind = "A"; save(); renderTopic(); renderSummaries(); };
+    $("topic-B").onclick = function () { if (S.exp.skipDir) return; S.topic.kind = "B"; save(); renderTopic(); renderSummaries(); };
+    $("topic-A-text").oninput = function () { S.topic.aText = $("topic-A-text").value.trim(); save(); };
+    $("btn-topic").onclick = function () {
+      if (!S.topic.kind) { $("err-topic").textContent = "选 A 或 B。"; return; }
+      if (S.topic.kind === "A" && !S.topic.aText) { $("err-topic").textContent = "写一句这个小网页帮你做什么。"; return; }
+      if (S.topic.kind === "B" && dirCached() && !S.topic.bAxis) { $("err-topic").textContent = "挑一项来补。"; return; }
+      $("err-topic").textContent = ""; makeProject(); go("s-card");
+    };
+    $("btn-tpl").onclick = function () { if (!S.tpl) { $("err-tpl").textContent = "先点一件。"; return; } $("err-tpl").textContent = ""; makeProject(); go("s-card"); };
+    $("btn-copy-ins").onclick = function () { var p = curP(); if (p) { save(); copyText(buildInstruction(p), "说明已复制，去你的 AI 里粘贴"); } };
+    $("btn-show-ins").onclick = function () { var o = $("ins-out"); o.classList.toggle("hidden"); if (!o.classList.contains("hidden")) o.textContent = buildInstruction(curP()); };
+    $("btn-goback").onclick = function () { go("s-back"); };
+    $("st-done").onclick = function () { setStatus("done"); };
+    $("st-stuck").onclick = function () { setStatus("stuck"); };
+    $("st-notyet").onclick = function () { setStatus("notyet"); };
+    $("btn-summon").onclick = function () { copyText(summonText(), "召唤摘要指令已复制，发给你的 AI"); };
+    $("btn-clip").onclick = function () {
+      if (!navigator.clipboard || !navigator.clipboard.readText) { toast("这个浏览器不让网页读剪贴板，请长按框里粘贴"); return; }
+      navigator.clipboard.readText().then(function (t) { $("paste").value = t; doParse(); }, function () { toast("没拿到剪贴板权限，请长按框里粘贴"); });
+    };
+    $("btn-parse").onclick = doParse;
+    $("btn-ev").onclick = evaluate;
+    $("btn-sent-ins").onclick = function () { readEv(); save(); copyText(sentenceIns(), "已复制，发给你的 AI"); };
+    $("ex-more").onclick = function () {
+      $("ex-out").innerHTML = "";
+      S.topic = { kind: "", aText: "", bAxis: "" };
+      if (S.head === "grow" && !S.exp.skipDir) go("s-topic");
+      else { toast("改一下三句话里的麻烦事，或者选另一头"); go("s-q"); }
+    };
+    $("ex-job").onclick = function () {
+      var lines = litProjects().filter(function (p) { return p.sentence || p.link; }).map(function (p) { return "· " + (p.sentence || ("我用 AI 做了「" + p.title.replace(/[「」]/g, "") + "」")) + (p.link ? "（" + p.link + "）" : ""); });
+      var txt = lines.length ? "我最近用 AI 做了几件小东西：\n" + lines.join("\n") : "";
+      $("ex-out").innerHTML = '<details open><summary>拿去探探路（只是一段话，不代表任何结果）</summary>' + (txt ? '<pre class="out" id="job-txt">' + esc(txt) + '</pre><div class="row"><button class="small" id="job-copy">复制这段</button></div>' : '<p class="hint">还没有证据句或公开链接。去「⑨ 你做成了什么」请你的 AI 写一句证据句，这里就会有内容。</p>') +
+        '<p class="hint">另存人生不承诺求职结果。这段话只是让你手里多一件能拿出来的东西，用不用、什么时候用，你来定。</p></details>';
+      var b = $("job-copy"); if (b) b.onclick = function () { copyText(txt, "已复制"); };
+    };
+    $("ex-rest").onclick = function () {
+      save(); var link = stateLink(); copyText(link, "存档链接已复制");
+      $("ex-out").innerHTML = '<div class="okbox">存好了。今天就到这儿，去过生活吧。下次回来：同一个浏览器直接打开这一页就能接上；换设备就打开这条存档链接（建议发给自己，或存进备忘录）。</div><pre class="out">' + esc(link) + "</pre>";
+    };
+    $("btn-export").onclick = function () { save(); copyText(stateLink(), "存档链接已复制"); };
+    $("btn-reset").onclick = function () {
+      if (!window.confirm("确定清空这台设备上的进度吗？没有存档链接就找不回来了。")) return;
+      try { localStorage.removeItem(LS_KEY); } catch (e) {}
+      S = blank(); try { history.replaceState(null, "", baseUrl()); } catch (e) {}
+      $("resume").classList.add("hidden"); go("s-q");
+    };
+    $("btn-restore").onclick = function () {
+      try { S = merge(dec($("restore-in").value)); $("err-restore").textContent = ""; save(); render(); toast("已恢复"); }
+      catch (e) { $("err-restore").textContent = "这串读不出来，检查一下是不是完整复制了。"; }
+    };
+    setupMic();
+  }
+
+  /* ========== 启动 ========== */
+  var restored = load();
+  bind();
+  render();
+  if (restored && S.t && S.open !== "s-q") {
+    var where = $(S.open) ? $(S.open).getAttribute("data-name") : "";
+    $("resume").innerHTML = "欢迎回来。上次停在「" + esc(where) + "」。<b>现在要做：</b>" + esc(NEXT_TXT[S.open] || "") + '。<div class="row"><button class="small" id="rs-go">接着做</button><button class="ghost small" id="rs-new">从头再来</button></div>';
+    $("resume").classList.remove("hidden");
+    $("rs-go").onclick = function () { $("resume").classList.add("hidden"); go(S.open); };
+    $("rs-new").onclick = function () { $("btn-reset").click(); };
+  }
+  window.__lingcun = { state: function () { return S; }, parseReturn: parseReturn, enc: enc, dec: dec, instruction: function () { return buildInstruction(curP()); }, stateLink: stateLink };
+})();
+</script>
+</body>
+</html>
