@@ -1,14 +1,14 @@
 # 另存人生 · 免费体验额度中转（Cloudflare Worker）
+# 已部署：https://lingcun-relay.lingcun.workers.dev（账户 huangchenyun25@gmail.com，2026-10-24）
 # 密钥不写在这里：部署前运行  npx wrangler secret put DEEPSEEK_API_KEY
 name = "lingcun-relay"
 main = "worker.js"
 compatibility_date = "2025-07-01"
 
-# 每日限额用的 KV。先运行  npx wrangler kv namespace create QUOTA
-# 再把它给出的 id 填到下面（现在是占位）
+# 每日限额用的 KV（2026-10-24 已建好：lingcun-relay-QUOTA）。id 不是机密
 [[kv_namespaces]]
 binding = "QUOTA"
-id = "REPLACE_WITH_KV_NAMESPACE_ID"
+id = "7da795f6d4134df5abd1b77686b05adc"
 
 [vars]
 ALLOWED_ORIGINS = "https://huangchenyun25-web.github.io"

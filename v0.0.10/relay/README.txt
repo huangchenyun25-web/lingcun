@@ -31,21 +31,38 @@
   npx wrangler secret put DEEPSEEK_API_KEY
   npx wrangler secret put IP_SALT          （随便一串字，建议设）
 
-部署步骤（这一版还没有部署，下面是给你自己操作的）
---------------------------------------------------
-1. 装好 Node.js，在这个 relay 文件夹里运行：
-     npx wrangler login
-2. 建一个 KV 存每日计数：
-     npx wrangler kv namespace create QUOTA
-   把它给出的 id 填进 wrangler.toml 里 REPLACE_WITH_KV_NAMESPACE_ID 的位置。
-3. 设密钥（见上面）。
-4. 按需要改 wrangler.toml 里的 [vars]：DAILY_LIMIT、GLOBAL_DAILY_LIMIT、MAX_BODY_BYTES 等。
-5. 部署：
-     npx wrangler deploy
-   它会给你一个地址，比如 https://lingcun-relay.你的子域.workers.dev
-6. 把这个地址填进网页源码 _build/p2.js 里的 RELAY_URL = "" 这一行，重新 build，再发布网页。
-   RELAY_URL 为空时，网页会说「免费体验额度还没开通」，只能用自己的密钥。
-7. 在 DeepSeek 后台给这个密钥设个余额提醒；想收紧就把 DAILY_LIMIT / GLOBAL_DAILY_LIMIT 调小再 deploy。
+现在的部署（2026-10-24）
+------------------------
+- Worker 名：lingcun-relay（Cloudflare 账户 huangchenyun25@gmail.com）
+- 地址：https://lingcun-relay.lingcun.workers.dev   （workers.dev 子域：lingcun）
+  健康检查：https://lingcun-relay.lingcun.workers.dev/health
+- KV：lingcun-relay-QUOTA，id 7da795f6d4134df5abd1b77686b05adc（已填进 wrangler.toml）
+- 生效的限额：每人每天 40 次（DAILY_LIMIT），全站每天 3000 次（GLOBAL_DAILY_LIMIT），
+  请求体最大 256KB，最多 8 条消息，max_tokens 上限 8192。
+- 来源白名单：https://huangchenyun25-web.github.io，加上 localhost / 127.0.0.1 和本地文件（Origin: null）。
+- 网页里的 RELAY_URL 已经填成上面的地址（_build/p2.js）。
+- 这次是用 Cloudflare 的 API 部署的（没用 wrangler deploy），内容和 wrangler.toml 一致。
+- 机密（DEEPSEEK_API_KEY、IP_SALT）用 wrangler secret put 设好了：用的是一枚 Cloudflare API 令牌，
+  通过环境变量 CLOUDFLARE_API_TOKEN 和 CLOUDFLARE_ACCOUNT_ID 传给 wrangler（不用 wrangler login）。密钥不在任何文件里。
+- 2026-10-24 线上实测：经 https://lingcun-relay.lingcun.workers.dev 发一次流式请求，返回 200、DeepSeek 正常分段输出，
+  X-Quota-Remaining 是 39。
+
+怎么改密钥（DEEPSEEK_API_KEY / IP_SALT）
+---------------------------------------
+方法一（网页，最简单）：登录 https://dash.cloudflare.com → Workers 和 Pages → lingcun-relay →
+  设置（Settings）→ 变量和机密（Variables and Secrets）→ 找到 DEEPSEEK_API_KEY →「编辑」，
+  类型选「机密（Secret）」，粘贴密钥 → 部署（Deploy）。IP_SALT 同理（随便一串长的随机字符）。
+方法二（命令行）：在这个 relay 文件夹里
+  npx wrangler login              （或者不登录：先设环境变量 CLOUDFLARE_API_TOKEN 和 CLOUDFLARE_ACCOUNT_ID）
+  npx wrangler secret put DEEPSEEK_API_KEY
+  npx wrangler secret put IP_SALT
+  注意：当前文件夹里要有 node_modules（比如先 npm i wrangler），否则 wrangler 可能报 EACCES /node_modules/.cache。
+改完立即生效，不用重新部署代码。改限额：改 wrangler.toml 的 [vars] 后 npx wrangler deploy，
+或在上面同一个页面里改对应的「文本」变量。
+
+以后更新代码
+------------
+在这个 relay 文件夹里 npx wrangler login 之后 npx wrangler deploy（会沿用已有的 secret）。
 
 本机测试（不联网、不花钱）
 --------------------------
