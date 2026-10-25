@@ -330,6 +330,9 @@
   .result .hint2, .hint2 { position: absolute; left: 26px; bottom: 22px; display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 400; color: var(--sub); letter-spacing: .16em; }
   .hint2::before { content: ""; width: 12px; height: 1px; background: rgba(35,28,69,.5); }
   .result .preview { height: 420px; margin-top: 4px; }
+  .result.fold { cursor: pointer; }
+  .result.fold .rbody { max-height: 172px; overflow: hidden; -webkit-mask-image: linear-gradient(180deg, #000 62%, transparent); mask-image: linear-gradient(180deg, #000 62%, transparent); }
+  .result .foldbtn { position: absolute; right: 22px; bottom: 16px; min-height: 32px; padding: 4px 2px; background: none; box-shadow: none; color: var(--ink); font-size: 12px; font-weight: 400; letter-spacing: .16em; border-radius: 0; border-bottom: 1px solid var(--line2); }
   .editbar { margin-top: 26px; padding: 18px 20px 20px; }
   .editbar .q-sn { font-size: 12px; font-weight: 400; color: var(--sub); letter-spacing: .1em; }
   .editbar .row { margin-top: 12px; }
@@ -1891,12 +1894,15 @@
     if (!M) { ui.sn[p.id] = { list: [], sel: -1 }; return '<div class="gl result" id="ck-result"><div class="kick">' + esc(p.title || CATS[p.cat].name) + " · v" + (p.revs + 1) + "</div>" + previewTag("ck-prev") + '<div class="hint2">' + (o && o.html !== undefined ? "试一试，想改哪里写一句" : "看一看，想改哪里写一句") + "</div></div>"; }
     var st = ui.sn[p.id] && ui.sn[p.id].rev === p.revs ? ui.sn[p.id] : { sel: -1 };
     h += '<div class="gl result ugc" id="ck-result"><div class="kick">' + esc(p.title || CATS[p.cat].name) + " · v" + (p.revs + 1) + "</div>";
+    h += '<div class="rbody" id="ck-body">';
     M.forEach(function (x) {
       if (x.k === "h") { h += '<div class="sh">' + esc(x.t) + "</div>"; return; }
       h += '<p class="para">' + splitSent(x.t).map(function (sn) { var i = n++; list.push({ t: sn, part: x.part }); return '<span class="sn' + (i === st.sel ? " sel" : "") + '" data-sn="' + i + '" tabindex="0" role="button" aria-pressed="' + (i === st.sel) + '">' + pt(sn) + "</span>"; }).join("") + "</p>";
     });
     ui.sn[p.id] = { list: list, sel: st.sel < list.length ? st.sel : -1, rev: p.revs };
-    return h + '<div class="hint2">点一句，改一处</div></div>';
+    /* 第 5 屏默认只露前几行（底部淡出），长的才给「展开 / 收起」 */
+    var chars = list.reduce(function (a, x) { return a + x.t.length; }, 0) + M.filter(function (x) { return x.k === "h"; }).length * 16;
+    return h + '</div><div class="hint2">点一句，改一处</div>' + (chars > 90 ? '<button class="foldbtn" id="ck-fold" aria-controls="ck-body" aria-expanded="false">展开</button>' : "") + "</div>";
   }
   function editBar(p, fixOpts) {
     var st = ui.sn[p.id], one = st && st.sel >= 0 ? st.list[st.sel] : null, tool = !sentModel(p);
@@ -1934,6 +1940,18 @@
       '<div class="err" id="ck-err"></div><div class="dock"><button class="main" id="ck-next">就它了</button></div>';
     B.innerHTML = h;
     var pv = $("ck-prev"); if (pv) { if (!textMode) setPreview("ck-prev", renderOut(p, false)); else $("ck-look").ontoggle = function () { if (this.open && !pv.srcdoc) setPreview("ck-prev", renderOut(p, false)); }; }
+    /* 收着时：点卡片任何地方（或「展开」）先展开，不会误选句子；展开后点句子照常改这一句，点「收起」收回去 */
+    (function () {
+      var R = $("ck-result"), fb = $("ck-fold"); if (!R || !fb) return;
+      ui.ckOpen = ui.ckOpen || {};
+      var setF = function (open) { ui.ckOpen[p.id] = open; R.classList.toggle("fold", !open); fb.setAttribute("aria-expanded", String(open)); fb.textContent = open ? "收起" : "展开"; };
+      setF(!!ui.ckOpen[p.id] || (ui.sn[p.id] && ui.sn[p.id].sel >= 0));
+      fb.onclick = function (ev) { ev.stopPropagation(); setF(!ui.ckOpen[p.id]); if (!ui.ckOpen[p.id]) try { R.scrollIntoView({ behavior: smooth(), block: "nearest" }); } catch (e) {} };
+      R.addEventListener("click", function (ev) { if (R.classList.contains("fold") && ev.target !== fb) { ev.stopPropagation(); ev.preventDefault(); setF(true); } }, true);
+      var ptr = false; R.addEventListener("pointerdown", function () { ptr = true; setTimeout(function () { ptr = false; }, 600); }, true);
+      /* 只有键盘（Tab）把焦点移进收着的卡片时才自动展开；鼠标 / 手指按下时交给上面的 click，免得一按就既展开又选中 */
+      R.addEventListener("focusin", function (ev) { if (R.classList.contains("fold") && ev.target !== fb && !ptr) setF(true); });
+    })();
     var selAt = function (i) { var st = ui.sn[p.id]; st.sel = st.sel === i ? -1 : i; renderCheck(); appendAsk("check"); if (st.sel >= 0) { var r = $("sn-req"); if (r) try { r.focus({ preventScroll: true }); $("sn-bar").scrollIntoView({ behavior: smooth(), block: "nearest" }); } catch (e) {} } };
     B.querySelectorAll("[data-sn]").forEach(function (x) { x.onclick = function () { selAt(+x.getAttribute("data-sn")); }; x.onkeydown = function (ev) { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); selAt(+x.getAttribute("data-sn")); } }; });
     if ($("sn-x")) $("sn-x").onclick = function () { ui.sn[p.id].sel = -1; renderCheck(); appendAsk("check"); };
@@ -2451,7 +2469,7 @@
     B.classList.toggle("night", scr === "land" || scr === "map");
     var p = curP(), st = p ? S.stage : "pick";
     STAGES.forEach(function (x) { var el = $("s-" + x.id); if (el) el.classList.toggle("now", x.id === st); });
-    var hh = $("h-" + st), t = headText(scr); if (hh && t) { if (hh.getAttribute("data-t") !== t) { hh.innerHTML = t; hh.setAttribute("data-t", t); } hh.classList.add("h1"); }
+    var hh = $("h-" + st), t = headText(scr); if (hh && t) { if (hh.getAttribute("data-t") !== t || hh.innerHTML !== t) { hh.innerHTML = t; hh.setAttribute("data-t", t); } hh.classList.add("h1"); }
     var pos = rulerPos(scr), d = $("ruler-done"), c = $("ruler-cur");
     if (d) d.style.width = (pos * 148 / 16).toFixed(1) + "px"; if (c) c.style.left = (pos * 148 / 16).toFixed(1) + "px";
     var mf = $("menu-btn"); if (mf) mf.classList.toggle("hidden", scr === "land");
