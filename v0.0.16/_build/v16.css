@@ -1,0 +1,34 @@
+/* v0.0.16：入口 2A、结果三行、分享卡、庆祝档、Rive 降级位、静音 */
+.homelead{text-align:center;margin:8px 12px 18px;max-width:28em}
+.homelead .hl{font-family:LCHead,LCHeadX,sans-serif;font-size:22px;line-height:1.35;letter-spacing:.04em;color:var(--ink,#231C45);margin:0 0 8px}
+.homelead .hs{font-size:13px;line-height:1.55;color:var(--sub,rgba(35,28,69,.62));margin:0}
+.dock #pk-start{min-width:12em}
+.exchips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 4px 4px;justify-content:center}
+.exchips button{font:inherit;font-size:12px;line-height:1.35;padding:8px 12px;border-radius:16px;border:1px solid rgba(35,28,69,.18);background:rgba(255,255,255,.55);color:var(--ink,#231C45);max-width:100%;text-align:left}
+.exchips button:active{background:rgba(201,184,245,.35)}
+.swapbar{margin:14px 0 4px;text-align:center}
+.swapbar .hint{font-size:12px;color:var(--sub,rgba(35,28,69,.62));margin:0 0 6px}
+.threelines{margin:0 0 14px}
+.threelines .tl{display:grid;grid-template-columns:auto 1fr auto;gap:4px 10px;align-items:start;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.45);border:1px solid rgba(35,28,69,.1);margin:0 0 8px}
+.threelines .tl .lbl{font-size:11px;letter-spacing:.08em;color:var(--sub,rgba(35,28,69,.62));grid-column:1/-1}
+.threelines .tl .v{font-size:14px;line-height:1.45;color:var(--ink,#231C45)}
+.threelines .tl.main .v{font-family:LCHead,LCHeadX,sans-serif;font-size:20px;letter-spacing:.03em}
+.threelines .tl .ed{font-size:12px;color:var(--sub,rgba(35,28,69,.62));background:none;border:0;padding:0;cursor:pointer;text-decoration:underline}
+.threelines .tl .ed:focus{outline:2px solid #C9B8F5}
+.formnote{font-size:12px;color:var(--sub,rgba(35,28,69,.62));margin:0 0 10px;text-align:center}
+.ck-edit{margin:8px 0 12px}
+.ck-edit input{width:100%;box-sizing:border-box;font:inherit;padding:10px 12px;border-radius:12px;border:1px solid rgba(35,28,69,.18);background:rgba(255,255,255,.7)}
+.cele{text-align:center;margin:8px 0 12px}
+.cele .ct{font-family:LCHead,LCHeadX,sans-serif;font-size:20px;letter-spacing:.04em;margin:8px 0 0}
+.rivebox{width:160px;height:160px;margin:0 auto;position:relative}
+.rivebox canvas{width:100%;height:100%;display:block}
+.rivebox.small{width:96px;height:96px}
+.hold-rive{width:220px;height:220px;margin:0 auto 8px;position:relative}
+.hold-rive canvas{width:100%;height:100%;display:block}
+.hold-rive .hb-fall{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0}
+.hold-rive.fallback .hb-fall{opacity:1;pointer-events:auto}
+.mutechip{font-size:13px}
+.sc-ask{margin-top:10px;font-size:14px;line-height:1.5;color:var(--ink,#231C45);opacity:.85}
+.sc-lines{margin:10px 0;font-size:13px;line-height:1.55}
+.sc-lines .slbl{font-size:11px;letter-spacing:.06em;color:var(--sub,rgba(35,28,69,.62));margin-top:6px}
+</style></head>
