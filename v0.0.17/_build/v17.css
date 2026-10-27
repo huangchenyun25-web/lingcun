@@ -1,0 +1,26 @@
+/* v0.0.17：宽屏入口两栏（左：问句 + 按住说话；右：打字、例子、说明、更多、回去）。手机不变 */
+.pk-l, .pk-r { display: contents; }
+.pk-r > .vz-type { display: block; margin: 26px auto 0; }
+#b-pick:has(#vz[data-st="rec"]) .pk-r > .vz-type, #b-pick:has(#vz[data-st="near"]) .pk-r > .vz-type { visibility: hidden; }
+#b-pick:has(#vz[data-st="done"]) .pk-r > .vz-type { display: none; }
+@media (min-width: 900px) {
+  :root { --pkw: min(960px, calc(100vw - 96px)); }
+  #s-pick.idea.now { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto 1fr; column-gap: clamp(48px, 6vw, 96px); width: var(--pkw); margin-left: calc((100% - var(--pkw)) / 2); }
+  #s-pick.idea > .head { grid-column: 1; grid-row: 1; padding-top: clamp(112px, 19vh, 180px); }
+  #s-pick.idea > .body { display: contents; }
+  #s-pick.idea .pk-l { display: block; grid-column: 1; grid-row: 2; }
+  #s-pick.idea .pk-r { display: flex; flex-direction: column; align-items: flex-start; grid-column: 2; grid-row: 1 / span 2; padding-top: calc(clamp(112px, 19vh, 180px) + 6px); min-width: 0; }
+  #s-pick.idea .pk-l .vz { margin-top: clamp(24px, 5vh, 56px); }
+  #s-pick.idea .pk-l .vz[data-st="done"] { margin-top: clamp(18px, 3vh, 32px); }
+  #s-pick.idea .pk-l .vz[data-st="done"] .vz-btn { display: none; }
+  #s-pick.idea .pk-l #pk-typebox { margin-top: clamp(28px, 5vh, 56px); }
+  #s-pick.idea .pk-r > .vz-type { margin: 0 0 6px; }
+  #s-pick.idea .pk-r .exchips { justify-content: flex-start; margin: 10px 0 6px; }
+  #s-pick.idea .pk-r .netline { margin-top: 14px; text-align: left; }
+  #s-pick.idea .pk-r .more { align-self: stretch; }
+  body.scr-idea { min-height: 0; }
+  body.scr-idea .wrap { padding-bottom: 48px; min-height: calc(100vh - clamp(18px, 6vh, 50px)); min-height: calc(100svh - clamp(18px, 6vh, 50px)); }
+  body.scr-idea .menufig { left: calc((var(--max) - 48px - var(--pkw)) / 2 + 8px); }
+  body.scr-idea .glows .g1 { transform: translateX(calc(var(--pkw) / -2 + 40px)); }
+}
+</style></head>
