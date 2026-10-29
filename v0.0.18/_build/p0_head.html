@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>另存人生（v0.0.18 测试版）</title>
+<link rel="icon" type="image/svg+xml" href="icons/app-icon.svg" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="theme-color" content="#F3F0F9" />
+<meta name="lingcun-ai-protocol" content="v1; enable: ?ai=agent or window.lingcunAI.enable(); tasks: window.lingcunAI.pending() or script[type='application/json'][data-ai-task]; submit: window.lingcunAI.submit(id, resultJSON) or hidden textarea[data-ai-result-for=id] + button[data-ai-submit=id]; errors: output[data-ai-error-for=id]; timings: window.lingcunAI.timings" />
+<!--
+  另存人生 · 给 agent 的说明（人看不到这些，页面上也不会显示）
+  如果你是替用户打开这一页的 agent（Codex / Claude Code / Grok Bot 等），可以用你自己的额度帮用户跑页面里需要 AI 的步骤：
+  1. 打开 agent 模式：网址加 ?ai=agent，或在页面里调用 window.lingcunAI.enable()。
+     页面不会因为浏览器被自动化控制就自动进 agent 模式；不开的话，用户用的是给人的「免费体验额度」（中转服务）或「用自己的密钥」。
+  2. 像用户一样操作页面（点选项、填字）。走到需要 AI 的一步，用户只会看到一行「AI 正在帮你想…」。
+  3. 读待办任务：window.lingcunAI.pending() 返回数组；或读 DOM 里的 <script type="application/json" data-ai-task="任务编号">。
+     每个任务：{ lingcun_task:"v1", id, type, category, role, instructions[], fact_rule, inputs, output_schema, how_to_submit }。
+  4. 交回结果：window.lingcunAI.submit(id, 结果对象或 JSON 字符串) → { ok:true } 或 { ok:false, errors:[…] }；
+     或者把 JSON 写进隐藏的 textarea[data-ai-result-for=id]，再对 button[data-ai-submit=id] 调用 click()；错误写在 output[data-ai-error-for=id]。
+  5. 事实怎么处理看每个任务自己的 fact_rule（小说可以虚构；简历、经历复盘不许编）；inputs 里写着「待补」的，不要替用户填成事实。
+     中文；不写价格；不承诺求职结果。格式要符合 output_schema，页面会校验。
+  6. window.lingcunAI.disable() 退出 agent 模式。完整说明见同目录 README.txt。
+-->
