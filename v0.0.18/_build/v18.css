@@ -1,0 +1,148 @@
+/* v0.0.18：人生试玩。首页 / 带上过去 / 留下放下 / 好奇方向 / 一条尝试 / 另存成功 / 分享卡。
+   H1：「改」和同类小操作是小描边控件，不再用主按钮的高度和实心底。 */
+body.v18 .ruler { display: none; }
+body.v18 .sec.now { animation: none; }
+body.v18 .menufig { display: block !important; right: 8px; left: auto; top: calc(clamp(18px, 6vh, 50px) + 28px); width: 52px; height: 52px; overflow: hidden; z-index: 8; }
+body.v18 .menufig svg { width: 52px; height: 52px; }
+body.v18.scr-idea .menufig { right: 8px; left: auto; }
+body.v18 .ask { display: none !important; }
+body.v18 #s-pick > .head,
+body.v18 #s-pick.idea > .head { padding-top: clamp(8px, 2.5vh, 28px); padding-right: 72px; }
+body.v18 #s-material > .head,
+body.v18 #s-draft > .head { padding-right: 72px; }
+body.v18 #s-material > .head,
+body.v18 #s-draft > .head,
+body.v18 #s-check > .head,
+body.v18 #s-save > .head { padding-top: clamp(8px, 2vh, 28px); }
+body.v18.scr-check #s-check > .head,
+body.v18.scr-ok #s-save > .head,
+body.v18.scr-share #s-save > .head { display: none; }
+body.v18 #h-pick, body.v18 #h-material, body.v18 #h-draft {
+  font-size: clamp(28px, 6.4vw, 36px); line-height: 1.28; letter-spacing: .02em; max-width: 11em; text-wrap: balance;
+}
+body.v18 .v18sub { margin: 12px 0 0; font-size: 14px; line-height: 1.55; color: var(--sub); max-width: 22em; }
+body.v18 .dock .main { letter-spacing: .18em; }
+body.v18 .dock .sec2 { flex: 1; height: 58px; border-radius: 29px; background: rgba(255,255,255,.55); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); letter-spacing: .12em; font-size: 16px; }
+
+/* 带上过去 */
+body.v18 #b-pick { display: flex; flex-direction: column; }
+body.v18 .pk-seg { order: 1; display: flex; gap: 0; margin: 18px 0 8px; padding: 4px; border-radius: 999px; background: rgba(255,255,255,.55); box-shadow: inset 0 0 0 1px rgba(35,28,69,.08); }
+body.v18 .pk-seg button { flex: 1; min-height: 40px; height: 40px; border-radius: 999px; background: transparent; color: var(--ink); box-shadow: none; letter-spacing: .08em; font-size: 14px; font-weight: 400; }
+body.v18 .pk-seg button.on { background: var(--btn); color: #fff; }
+body.v18 .vz { order: 2; }
+body.v18 .exchips { order: 3; display: flex; flex-direction: column; align-items: stretch; gap: 10px; margin: 8px 0 4px; }
+body.v18 .exchips button { min-height: 0; height: auto; padding: 12px 16px; border-radius: 18px; background: rgba(255,255,255,.78); color: var(--ink); box-shadow: inset 0 0 0 1px rgba(35,28,69,.08); letter-spacing: .02em; font-size: 14px; font-weight: 400; line-height: 1.45; text-align: left; }
+body.v18 #pk-type { order: 4; width: 100%; margin-top: 12px; min-height: 52px; height: 52px; border-radius: 26px; background: rgba(255,255,255,.45); color: var(--ink); box-shadow: inset 0 0 0 1.5px rgba(35,28,69,.35); letter-spacing: .2em; font-size: 16px; }
+body.v18 #pk-type .dk { display: none; }
+body.v18 #pk-typebox { order: 5; }
+body.v18 #pk-err, body.v18 #b-pick .netline { order: 6; }
+body.v18 .pk-voice .vz-type { display: none !important; }
+body.v18 #pk-err { min-height: 1.2em; margin: 8px 2px 0; font-size: 13px; color: #6b4a6a; }
+body.v18 #pk-back { order: 8; }
+
+/* 留下与放下 */
+.frag { margin: 0 0 10px; padding: 12px 14px 12px; border-radius: 18px; background: rgba(255,255,255,.72); box-shadow: inset 0 0 0 1px rgba(35,28,69,.06); }
+.frag .fn { font-size: 15px; letter-spacing: .04em; margin-bottom: 8px; }
+.frag .fbtns { display: flex; gap: 8px; }
+.frag .chipbtn { flex: 1; min-height: 36px; height: 36px; border-radius: 18px; background: rgba(255,255,255,.9); color: var(--ink); box-shadow: inset 0 0 0 1px rgba(35,28,69,.16); letter-spacing: .12em; font-size: 14px; font-weight: 400; }
+.frag .chipbtn.is-keep.on { background: #C9B8F5; color: var(--ink); box-shadow: none; }
+.frag .chipbtn.is-drop.on { background: #E4E1EA; color: var(--ink); box-shadow: none; }
+.bags { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0 8px; }
+.bags .bag { min-height: 88px; padding: 12px 12px 10px; border-radius: 16px; background: rgba(255,255,255,.72); box-shadow: inset 0 0 0 1px rgba(35,28,69,.06); }
+.bags .bag b { display: block; font-weight: 400; font-size: 13px; letter-spacing: .12em; margin-bottom: 6px; }
+.bags .bag span { display: block; font-size: 13px; line-height: 1.45; color: var(--ink); }
+.bags .bag em { font-style: normal; color: var(--faint); font-size: 12px; }
+.ownrow { margin: 8px 0 4px; }
+.ownrow input { margin-top: 6px; }
+.weaknote { margin: 8px 0; font-size: 13px; color: var(--sub); }
+
+/* 好奇方向 */
+.dirlead { margin: 4px 0 14px; font-size: 14px; color: var(--sub); line-height: 1.55; }
+.dirchips { display: flex; flex-wrap: wrap; gap: 10px; }
+.dirchips button { min-height: 40px; height: 40px; padding: 0 16px; border-radius: 20px; background: rgba(255,255,255,.8); color: var(--ink); box-shadow: inset 0 0 0 1px rgba(35,28,69,.14); letter-spacing: .06em; font-size: 15px; font-weight: 400; }
+.dirchips button.on { background: var(--btn); color: #fff; box-shadow: none; }
+.dir-other { margin-top: 14px; }
+
+/* 这一版尝试 */
+.kicker { margin: 4px 0 10px; font-size: 13px; color: var(--sub); letter-spacing: .04em; }
+.trycard { padding: 16px 16px 18px; border-radius: 18px; background: rgba(255,255,255,.82); box-shadow: inset 0 0 0 1px rgba(35,28,69,.06); }
+.trycard .lbl { margin-bottom: 8px; }
+.tryline { margin: 0; font-family: var(--HD); font-size: clamp(22px, 5.2vw, 28px); line-height: 1.35; letter-spacing: .02em; }
+.basis { margin: 14px 2px 8px; font-size: 14px; line-height: 1.7; }
+.basis b { font-weight: 400; display: inline-block; width: 3em; color: var(--ink); letter-spacing: .08em; }
+.basis span { color: var(--sub); }
+.enough { display: flex; align-items: center; gap: 8px; width: 100%; margin: 8px 0 0; padding: 12px 14px; border-radius: 14px; background: rgba(201,184,245,.28); color: var(--ink); box-shadow: none; letter-spacing: .02em; font-size: 14px; font-weight: 400; text-align: left; line-height: 1.5; min-height: 0; height: auto; }
+.enough .en-t { flex: 1; }
+.stuck { margin: 12px 2px 0; font-size: 13px; color: var(--sub); line-height: 1.55; }
+.stuck button { background: none; box-shadow: none; color: var(--ink); min-height: 0; padding: 0 2px; letter-spacing: 0; font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+.editbox { margin-top: 12px; }
+.editbox .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+#try-edit { display: block; margin: 16px auto 0; background: none; box-shadow: none; color: var(--sub); min-height: 0; padding: 4px 8px; letter-spacing: .08em; font-size: 14px; text-decoration: underline; text-underline-offset: 4px; }
+
+/* 另存成功 */
+.okscreen { text-align: center; padding-top: clamp(12px, 4vh, 36px); }
+.okorb { width: 168px; height: 168px; margin: 8px auto 18px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #F7F4FF 0%, #D9CEF8 42%, #C9B8F5 70%, #B7A4EE 100%); box-shadow: 0 18px 40px rgba(140,120,200,.28); }
+.okorb.pop { animation: okpop .6s cubic-bezier(.2,.8,.2,1); }
+@keyframes okpop { from { transform: scale(.86); opacity: .4; } to { transform: none; opacity: 1; } }
+.okscreen h2 { margin: 0 0 10px; font-family: var(--HD); font-size: 32px; letter-spacing: .06em; font-weight: 400; }
+.okscreen .oksub { margin: 0 auto; max-width: 16em; color: var(--sub); font-size: 15px; line-height: 1.55; }
+.kaitu { margin: 14px auto 0; max-width: 16em; color: var(--faint); font-size: 13px; line-height: 1.6; }
+#ok-review { margin-top: 18px; background: none; box-shadow: none; color: var(--sub); min-height: 0; letter-spacing: .08em; font-size: 14px; text-decoration: underline; text-underline-offset: 4px; }
+body.v18.scr-ok .dock, body.v18.scr-share .dock { flex-direction: column; }
+body.v18.scr-ok .dock .main, body.v18.scr-share .dock .main { width: 100%; }
+body.v18.scr-ok #ok-map, body.v18 #share-back { width: 100%; max-width: var(--max); margin: 0 auto; display: flex; }
+
+/* 分享卡 */
+.sharecard.v18 { background: #fff; box-shadow: 0 12px 32px rgba(60,45,120,.1), inset 0 0 0 1px rgba(35,28,69,.05); text-align: left; }
+.sharecard.v18 .sc-title { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.sharecard.v18 .sc-row { margin: 12px 0; }
+.sharecard.v18 .sc-row .slbl { font-size: 12px; color: var(--sub); letter-spacing: .06em; }
+.sharecard.v18 .sc-row .sv { margin-top: 2px; font-size: 16px; line-height: 1.45; }
+.sharecard.v18 .sc-row.is-off { display: none; }
+.sharecard.v18 .sc-ask { margin-top: 8px; padding-top: 12px; border-top: 1px dashed rgba(35,28,69,.25); font-family: var(--HD); font-size: 20px; letter-spacing: .04em; }
+.sharecard.v18 .sc-tools { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+.unhide { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 8px 0 0; }
+.shareacts { display: flex; gap: 10px; margin-top: 16px; }
+.shareacts button { flex: 1; min-height: 52px; height: 52px; border-radius: 26px; }
+.shareacts .sec2 { background: rgba(255,255,255,.7); box-shadow: inset 0 0 0 1.5px rgba(35,28,69,.45); letter-spacing: .08em; }
+
+/* H1：改 / 编辑 / 隐藏 一律小次级控件，不继承主按钮 44px 实心胶囊 */
+button.gai,
+button.ed,
+button.mini,
+button[data-re],
+button[data-cre],
+.sharecard.v18 .mini,
+.enough .mini {
+  box-sizing: border-box !important;
+  min-height: 22px !important;
+  height: 22px !important;
+  width: auto !important;
+  max-width: 76px;
+  flex: none !important;
+  padding: 0 8px !important;
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  letter-spacing: .04em !important;
+  line-height: 20px !important;
+  border-radius: 11px !important;
+  background: transparent !important;
+  color: rgba(35, 28, 69, .62) !important;
+  box-shadow: inset 0 0 0 1px rgba(35, 28, 69, .32) !important;
+  text-decoration: none !important;
+}
+
+@media (min-width: 900px) {
+  body.v18 #pk-type .ph { display: none; }
+  body.v18 #pk-type .dk { display: inline; }
+  body.v18.scr-idea #s-pick.idea > .head { padding-top: clamp(12px, 4vh, 48px); }
+  body.v18 #s-pick.idea .pk-r { padding-top: clamp(72px, 10vh, 96px); align-items: stretch; }
+  body.v18 .menufig { position: fixed; top: 16px; right: 20px; }
+  body.v18 .exchips { gap: 12px; }
+  body.v18.scr-pick .wrap, body.v18.scr-ok .wrap, body.v18.scr-share .wrap { max-width: 480px; }
+}
+@media (max-height: 760px) and (min-width: 900px) {
+  body.v18 .vz-btn, body.v18 .vz-btn svg { width: 168px; height: 168px; }
+  body.v18 .vz-btn::before { left: 34px; top: 34px; width: 100px; height: 100px; }
+}
+</style></head>
