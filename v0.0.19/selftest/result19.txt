@@ -1,0 +1,50 @@
+PASS	构建 BUILD_OK	PALETTE_OK | BUILD_OK
+PASS	无旧色板	
+PASS	无旧 rgba	
+PASS	无毛玻璃无 blur()	
+PASS	色板记号 --bg:#5E72B5	
+PASS	色板记号 --bg-d:#4A5C9B	
+PASS	色板记号 --cream:#F7F0DF	
+PASS	色板记号 --cream-d:#E9DDBF	
+PASS	色板记号 --cream-hi:#FFFBF1	
+PASS	色板记号 --ink:#232B55	
+PASS	普通输入候选 ≥16 且不重复	{"n":46,"w":45,"e":44,"nu":true,"wu":true,"eu":true,"ns":true,"ws":true,"es":true,"userFirst":true,"hasDir":true}
+PASS	弱输入候选 ≥16	45
+PASS	空输入候选 ≥16	44
+PASS	用户的词排在方向词前面	
+PASS	首页标题对比度	{"fg":[255,255,255],"bg":[94,114,181],"fs":28}
+PASS	进入时 8 张贴纸	
+PASS	下一步起初禁用	
+PASS	8 张不重叠且不超出手机宽	{"n":8,"overlap":false,"wide":true,"w":390}
+PASS	贴纸 touch-action none	none
+PASS	拖动时原贴纸变淡	0.3
+PASS	拖动时页面不滚动	
+PASS	松在外面会回到原位	{"there":true,"op":"1","chip":false,"lock":false}
+PASS	拖到背包时背包高亮	
+PASS	放进背包后补上一张	现场观察,讲故事,活动策划,线下活动策划,现场和讲故事,做内容,协调供应商,带团队
+PASS	背包里有刚放下的词	
+PASS	点小标签回到对话框	
+PASS	只放下时下一步可点	
+PASS	空背包提示并留在这一屏	
+PASS	键盘打开带走放下取消	
+PASS	键盘确认放进背包	
+PASS	取消不放进背包	
+PASS	更多可以加词	
+PASS	自己的词不重复	
+PASS	更多可以直接放进纸箱	
+PASS	换一批留下已放下的	
+PASS	换一批换掉还在对话框里的	想跑步,迈不出第一步,老是往后放,对科技好奇,带新人,写复盘,熬夜改稿,跑客户
+PASS	重画后小标签还在	
+PASS	方向说明对比度	{"fg":[255,255,255],"bg":[94,114,181],"fs":14}
+PASS	尝试用上带走的词	
+PASS	尝试正文对比度	{"fg":[35,43,85],"bg":[247,240,223],"fs":22}
+PASS	分享图是蓝底奶油面	{"edge":[94,114,181],"paper":[247,240,223]}
+PASS	星图打得开	
+PASS	手机全程无报错	
+PASS	桌面首页主按钮在首屏	
+PASS	桌面带上过去仍是两栏	{"gap":76.796875,"lw":441.59375,"rw":441.609375}
+PASS	桌面也是 8 张	
+PASS	桌面换一批后带走还在	
+PASS	桌面全程无报错	
+PASS	减少动态效果时贴纸不浮动	none
+PASS	箱图标三态已截图	
