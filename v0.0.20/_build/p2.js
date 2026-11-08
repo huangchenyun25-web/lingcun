@@ -13,6 +13,7 @@
   (function () { var m = /[?&]relay=([^&#]+)/.exec(location.search); if (m) { var u = decodeURIComponent(m[1]); if (u === "off") RELAY_URL = ""; else if (/^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?\/?$/.test(u)) RELAY_URL = u.replace(/\/+$/, ""); } })();
   var RELAY_MODEL = "deepseek-flash";
   /* 第 108 条④ + #24：联网说明分两件事说清 */
+  var LIVE_AI = false; /* 这一轮关掉全部模型请求。要恢复真实调用，只能以后单独打开这一处。 */
   var NET_NOTICE = "生成和修改时，你提供的相关内容会发送给 AI 服务处理：默认经过另存人生的中转服务转给 DeepSeek（中转不保存内容）；用自己的密钥时，直接从你的浏览器发给你选的那家。额外搜索网上资料，只在你主动选择并确认搜索内容后进行。";
   var WAIT_LIMIT = 10000, AGENT_LIMIT = 180000; /* v0.0.13（#39）：agent 模式也有超时（三分钟） */ /* 第 102 条 / #9：10 秒是等待体验的阈值，不是完成承诺 */
   var SKIP = "不确定，先跳过", OTHER = "其他，我自己写", PEND = "待补";
@@ -134,6 +135,7 @@
     }
     function run(task, slot) {
       return new Promise(function (resolve) {
+        if (typeof LIVE_AI !== "undefined" && LIVE_AI === false) { resolve(null); return; }
         if (task.key) Object.keys(tasks).forEach(function (id) { if (tasks[id].task.key === task.key) { stopTimers(tasks[id]); delete tasks[id]; } });
         var rec = { id: task.type + "-" + (++seq), task: task, slot: slot, resolve: resolve };
         tasks[rec.id] = rec; attempt(rec);

@@ -8,6 +8,7 @@ const fs = require("fs");
 const URL = "file://" + path.resolve(__dirname, "../page/index.html");
 const OUT = __dirname;
 const R = [];
+const NET = [];
 const EXAMPLES = [];
 const ok = (name, cond, info) => {
   R.push([cond ? "PASS" : "FAIL", name, info === undefined ? "" : String(info)]);
@@ -50,6 +51,12 @@ async function page(b, o) {
   }
   const p = await ctx.newPage();
   p.errs = [];
+  p.net = [];
+  await p.route("**/*", (route) => {
+    const u = route.request().url();
+    if (/^https?:/i.test(u)) { p.net.push(u); NET.push(u); return route.abort(); }
+    return route.continue();
+  });
   p.on("pageerror", (e) => p.errs.push(e.message));
   p.on("console", (m) => {
     if (m.type() === "error" && !/net::ERR|Failed to load resource|CORS policy|origin 'null'/.test(m.text())) p.errs.push("console: " + m.text());
@@ -104,7 +111,7 @@ async function place(p, label, set) {
     });
   });
   const expect = {
-    "标点两句": ["刚刚去景德镇做了几个盘子", "想写一个跟五大名窑相"],
+    "标点两句": ["刚刚去景德镇做了几个盘子", "想写一个跟五大名窑相…"],
     "未见过的说法": ["以前做过几场线下的活动", "也在现场讲过故事"],
     "混着好几件事": ["会修自行车", "但讨厌每天加班", "想试试周末摆摊"],
     "另一件不相干的事": ["上周在阳台种了三盆薄荷", "周末想做成茶"],
@@ -117,7 +124,7 @@ async function place(p, label, set) {
   cases.forEach((c) => {
     const want = expect[c.name];
     const leak = leaked(c.list, c.idea);
-    const sub = c.list.every((w) => c.idea.replace(/\u2026|\.{3,}|…/g, "").indexOf(w) >= 0);
+    const sub = c.list.every((w) => c.idea.indexOf(w) >= 0);
     ok("分句 " + c.name, c.list.join("|") === want.join("|") && leak.length === 0 && sub && c.weak === (c.list.length < 2), c.list.join("|") + (leak.length ? " LEAK " + leak.join(",") : ""));
     EXAMPLES.push(c.name + "\n  输入：" + (c.idea || "（空）") + "\n  碎片：" + (c.list.join(" / ") || "（没有）") + "\n  需要补一句：" + (c.weak ? "是" : "否"));
   });
@@ -356,6 +363,22 @@ async function place(p, label, set) {
   ok("减少动态效果时唱片不转", anim.name === "none" && /按住说话/.test(anim.label || ""), anim.name);
   await still.ctx.close();
 
+  const resign = await page(b, { mobile: true });
+  await resign.click("#pk-start");
+  await sleep(80);
+  await resign.click("#pk-type");
+  await sleep(40);
+  await resign.fill("#pk-idea", "我想离职，钱够半年，也确认不想留在这行业");
+  await resign.click("#pk-go");
+  await sleep(250);
+  const view = await resign.evaluate(() => window.__lingcun20.record());
+  const intent = (view && view.intents || []).map((x) => x.text + "/" + x.polarity).sort().join("|");
+  const constraint = (view && view.constraints || []).map((x) => x.text).join("|");
+  ok("页面读的是同一份状态", intent === "也确认不想留在这行业/dont|我想离职/want" && constraint === "钱够半年" && (view.facts || []).length === 0 && (view.unknowns || []).length === 0 && (view.inferences || []).length === 0, JSON.stringify(view));
+  const shown = await labels(resign);
+  ok("贴纸只来自当前事实和意愿", shown.slice().sort().join("|") === ["我想离职", "钱够半年", "也确认不想留在这行业"].sort().join("|"), shown.join("|"));
+  await resign.ctx.close();
+  ok("这轮没有发出任何网页请求", NET.length === 0, NET.slice(0, 4).join(" "));
   await b.close();
   fs.writeFileSync(path.join(OUT, "examples20.txt"), EXAMPLES.join("\n\n") + "\n");
   fs.writeFileSync(path.join(OUT, "result20.txt"), R.map((x) => x.join("\t")).join("\n") + "\n");

@@ -10,6 +10,7 @@ const { execSync } = require("child_process");
 const URL = "file://" + path.resolve(__dirname, "../page/index.html");
 const OUT = __dirname;
 const R = [];
+const NET = [];
 const ok = (name, cond, info) => {
   R.push([cond ? "PASS" : "FAIL", name, info === undefined ? "" : String(info)]);
   console.log(cond ? "PASS" : "FAIL", name, info === undefined ? "" : info);
@@ -49,6 +50,12 @@ async function page(b, o) {
   });
   const p = await ctx.newPage();
   p.errs = [];
+  p.net = [];
+  await p.route("**/*", (route) => {
+    const u = route.request().url();
+    if (/^https?:/i.test(u)) { p.net.push(u); NET.push(u); return route.abort(); }
+    return route.continue();
+  });
   p.on("pageerror", (e) => p.errs.push(e.message));
   p.on("console", (m) => {
     if (m.type() === "error" && !/net::ERR|Failed to load resource|CORS policy|origin 'null'/.test(m.text())) p.errs.push("console: " + m.text());
@@ -368,11 +375,17 @@ async function placeTap(p, label, set) {
       return '<div style="text-align:center"><img src="../page/icons/' + f + '" width="128" height="128" style="image-rendering:pixelated"><div style="color:#fff;margin-top:8px">' + n + "</div></div>";
     }).join("") + "</body>");
   const iconPage = await (await b.newContext({ viewport: { width: 640, height: 280 } })).newPage();
+  await iconPage.route("**/*", (route) => {
+    const u = route.request().url();
+    if (/^https?:/i.test(u)) { NET.push(u); return route.abort(); }
+    return route.continue();
+  });
   await iconPage.goto("file://" + preview);
   await iconPage.screenshot({ path: path.join(OUT, "箱图标三态.png") });
   ok("箱图标三态已截图", fs.existsSync(path.join(OUT, "箱图标三态.png")));
   await iconPage.context().close();
 
+  ok("这轮没有发出任何网页请求", NET.length === 0, NET.slice(0, 4).join(" "));
   await b.close();
   const bad = R.filter((x) => x[0] === "FAIL");
   fs.writeFileSync(path.join(OUT, "result19.txt"), R.map((x) => x.join("\t")).join("\n") + "\n");
