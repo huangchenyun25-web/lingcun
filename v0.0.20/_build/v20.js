@@ -129,23 +129,50 @@
       if (v.attemptFrom === "ai" && v.aiStop) v.enough = "今天做到这儿就够了：" + v.aiStop;
       else if (!v.enough || /做完这一件就停/.test(v.enough)) v.enough = "今天做到这儿就够了：做完你认可的这一件就停。";
       p.out = { title: v.title, first_step: v.attempt, star: v.enough, summary: v.attempt };
+      if (v.premise) p.out.premise = { verdict: v.premise.verdict, verified: !!v.premise.verified, question: v.premise.question || "", pending: !!v.premise.pending, inputRev: v.premise.inputRev, userOwned: !!v.premise.userOwned };
+    }
+    function premiseCandidate(v, text, author) {
+      return { text: text, author: author, needs: [], uses: [] };
     }
     function ensureAttempt(p) {
       if (!p || !p.v18 || !p.v18.direction) return;
       var v = p.v18;
       if (!v.record) ensureRecord(p);
-      if (v.edited) { syncOut(p); return; }
+      if (v.edited) {
+        v.premise = LingcunPremises.review(v.record, premiseCandidate(v, v.attempt || "", "user"));
+        v.premise.userOwned = true;
+        v.premise.verified = false;
+        syncOut(p);
+        return;
+      }
+      if (v.candidatePack && v.candidatePack.length) {
+        var skipped = !!(v.premise && v.premise.skipped);
+        v.premise = LingcunPremises.settle(v.record, v.candidatePack);
+        if (skipped) { v.premise.skipped = true; v.premise.verified = false; v.premise.pending = true; }
+        var shown = v.premise.display;
+        var shownText = shown && (shown.text || shown.action);
+        if (shownText) {
+          v.attemptFrom = "manual";
+          v.pool = [shownText];
+          v.poolSig = shownText;
+          v.ix = 0;
+          v.attempt = shownText;
+        }
+        syncOut(p);
+        return;
+      }
       var sig = attemptSig(v);
       if (LIVE_AI && v.attemptFrom === "ai" && v.aiSig === sig && v.aiAttempts && v.aiAttempts.length) {
-        var ix = v.ix || 0;
-        if (ix >= v.aiAttempts.length) ix = 0;
-        v.ix = ix;
-        v.pool = v.aiAttempts.map(function (a) { return a.text; });
-        v.poolSig = v.pool.join("\n");
-        v.attempt = v.pool[ix];
-        v.aiWhy = v.aiAttempts[ix].why;
-        v.aiObserve = v.aiAttempts[ix].observe;
-        v.aiStop = v.aiAttempts[ix].stop;
+        v.candidatePack = v.aiAttempts;
+        v.premise = LingcunPremises.settle(v.record, v.candidatePack);
+        var picked = v.premise.display;
+        var pickedText = picked && (picked.text || picked.action);
+        if (pickedText) {
+          v.pool = [pickedText];
+          v.poolSig = pickedText;
+          v.ix = 0;
+          v.attempt = pickedText;
+        }
         syncOut(p);
         return;
       }
@@ -156,6 +183,7 @@
       v.poolSig = line;
       v.ix = 0;
       v.attempt = line;
+      v.premise = LingcunPremises.review(v.record, premiseCandidate(v, line, "manual"));
       syncOut(p);
       kickAttempts(p);
     }
@@ -338,7 +366,8 @@
     var FACT = { type: "object", required: ["id", "kind", "text", "start", "end"], properties: { id: STR(12), kind: { type: "string", enum: ["said", "keep", "change", "constraint"] }, text: STR(80), start: { type: "integer", minimum: 0 }, end: { type: "integer", minimum: 0 } } };
     var INF = { type: "object", required: ["id", "text", "start", "end"], properties: { id: STR(12), text: STR(40), start: { type: "integer", minimum: 0 }, end: { type: "integer", minimum: 0 } } };
     var UNDER_SCHEMA = { type: "object", required: ["facts", "inferences", "unknowns"], properties: { facts: { type: "array", maxItems: 8, items: FACT }, inferences: { type: "array", maxItems: 3, items: INF }, unknowns: { type: "array", maxItems: 4, items: STR(40) }, question: STR0(80), question_why: STR0(80) } };
-    var ATT_SCHEMA = { type: "object", required: ["attempts"], properties: { attempts: { type: "array", minItems: 2, maxItems: 3, items: { type: "object", required: ["text", "why", "observe", "stop", "uses"], properties: { text: STR(80), why: STR(80), observe: STR(60), stop: STR(60), uses: { type: "array", minItems: 1, maxItems: 4, items: STR(12) } } } } } };
+    var NEED = { type: "object", required: ["resource"], properties: { resource: STR(20), key: { type: "boolean" }, claim: STR(12), evidenceId: STR(20) } };
+    var ATT_SCHEMA = { type: "object", required: ["attempts"], properties: { attempts: { type: "array", minItems: 2, maxItems: 3, items: { type: "object", required: ["text", "why", "observe", "stop", "uses"], properties: { text: STR(80), why: STR(80), observe: STR(60), stop: STR(60), uses: { type: "array", minItems: 1, maxItems: 4, items: STR(12) }, needs: { type: "array", maxItems: 6, items: NEED } } } } } };
     function contradicts(facts, answer, text) {
       var bag = (facts || []).map(function (f) { return f.text; }).join("\n") + "\n" + (answer || "");
       var bare = String(text || "").replace(/「[^」]*」/g, "");
@@ -389,30 +418,13 @@
       return "try";
     }
     function screenAttempts(source, attempts) {
-      var banned = ["教程", "收藏", "伴侣", "老公", "老婆", "课程"];
+      var state = LingcunUserState.ingest(source || "", "screen");
       return (attempts || []).filter(function (a) {
-        if (!a || !a.text) return false;
-        var blob = a.text + (a.stop || "");
-        if (/离职|不想留|离开这/.test(source) && /别想离职|先别离职|不要离职|先留着|别想离开|先别想离职/.test(blob)) return false;
-        if (/预算为\s*0|预算是\s*0|不想花钱|没有钱|没钱/.test(source) && /买|下单|付费|报名/.test(a.text)) return false;
-        if (/不能用烤箱|没有烤箱|不用烤箱/.test(source) && /用烤箱|打开烤箱|买烤箱/.test(a.text)) return false;
-        var invented = banned.some(function (w) { return blob.indexOf(w) >= 0 && source.indexOf(w) < 0; });
-        return !invented;
+        return a && a.text && LingcunPremises.review(state, a).verdict === "show";
       });
     }
     function orderAttempts(source, facts, attempts) {
-      var now = (facts || []).filter(function (f) { return /现在|其实只想|改成/.test(f.text); });
-      var focus = now.length ? now[now.length - 1].text : "";
-      return attempts.slice().sort(function (a, b) {
-        function rank(x) {
-          var t = x.text || "";
-          var s = 0;
-          if (focus && t.indexOf(focus.slice(0, Math.min(4, focus.length))) >= 0) s -= 2;
-          if (/翻一遍|现有的|厨房|材料/.test(t) && /预算为\s*0|不能用烤箱/.test(source)) s += 2;
-          return s;
-        }
-        return rank(a) - rank(b);
-      });
+      return (attempts || []).slice();
     }
     function citeAttempts(mind, out) {
       var facts = mind.facts || [];
@@ -473,7 +485,7 @@
         "三条之间要有实质差别，例如弄清一件已有的事、减去一件、或先保持原样观察。不要都写成今天做一件小事。",
         "why 说明它接上了哪句原话。observe 是做完能看到的现象。stop 是停下或改的条件。",
         "若原话里有不想辞职、不想花钱、没精力、不想再学，就不要建议相反的事。对方已经确认要离开时，stop 不能写成放弃离开。",
-        "不要假定对方拥有原文没写的东西，例如教程、收藏、相机、烤箱、食材、课程或可以分担的人。预算为 0 或不能用某工具时，做法必须在不购买、不用该工具时也能成立。",
+        "needs 列出这一步真正要用、而原文没有写明已经有的东西。没有就给空数组。不要把没在当前原话里出现的东西写成已经有。claim 不会被当成证据。",
         "原文若同时有「上次」和「现在」，以现在这句为准。上次的内容只能对照，不能当成这次要做的事。",
         "reference 不是用户事实。"
       ];
@@ -550,20 +562,19 @@
       var task = taskOf("v20_attempts", "写几种小尝试", "按已核对的原话写不同的小尝试", attemptInstructions(), inputs, ATT_SCHEMA, "v20a:" + p.id + ":" + token + ":" + sig.length);
       runTask(task, 28000, function (out) {
         if (!curP() || curP() !== p || p.v18.mindToken !== token || attemptSig(p.v18) !== sig || p.v18.edited) { p.v18.aiPending = ""; return; }
-        if (out) {
-          citeAttempts(p.v18.mind, out);
-          out.attempts = orderAttempts(p.v18.mind.source || "", p.v18.mind.facts || [], screenAttempts(p.v18.mind.source || "", out.attempts));
-        }
-        var bad = out && out.attempts && out.attempts.length >= 2 ? checkAttempts(p.v18.mind, out) : ["没有两条都守住原话限制的做法"];
+        if (out) citeAttempts(p.v18.mind, out);
+        var format = out && out.attempts ? validate(out, ATT_SCHEMA) : ["没有做法"];
         p.v18.aiPending = "";
-        if (bad.length) {
-          p.v18.aiErrors = bad;
+        if (format.length || !out || !out.attempts) {
+          p.v18.aiErrors = format.length ? format : ["没有做法"];
           p.v18.aiRejectedPreview = ((out && out.attempts) || []).map(function (a) { return a && a.text; });
           save();
           if (S.stage === "check") renderCheck();
           return;
         }
         p.v18.aiAttempts = out.attempts;
+        p.v18.candidatePack = out.attempts;
+        p.v18.premise = LingcunPremises.settle(p.v18.record, out.attempts);
         p.v18.aiErrors = [];
         p.v18.aiSig = sig;
         p.v18.attemptFrom = "ai";
@@ -688,12 +699,51 @@
       var v = p.v18, k = $("try-kicker");
       if (v.attemptFrom === "manual" && k) k.textContent = (v.unlike ? "没有另一条理解出来的做法。可以改这句，或换方向。" : "按原话整理，不是理解。") + "方向只是在试的组合。";
       else if (v.attemptFrom === "ai" && k) k.textContent = (v.aiMode === "mock" ? "测试用模拟，不是真实模型。" : "模型给出的一种做法。格式核过，并不证明它真的懂。") + (v.unlike ? "已换一条。" : "");
+      paintPremise(v);
       var card = document.querySelector(".trycard");
       if (!card || v.attemptFrom !== "ai") return;
       var extra = document.createElement("div");
       extra.className = "v20-extra";
       extra.innerHTML = "<p><b>为何</b> " + esc(v.aiWhy || "") + "</p><p><b>看什么</b> " + esc(v.aiObserve || "") + "</p><p><b>何时停</b> " + esc(v.aiStop || "") + "</p>";
       card.appendChild(extra);
+    }
+    function paintPremise(v) {
+      var card = document.querySelector(".trycard");
+      if (!card || !v.premise) return;
+      var old = $("premise-note");
+      if (old && old.parentNode) old.parentNode.removeChild(old);
+      var chosen = v.premise.display || v.premise;
+      var needs = chosen.needs || v.premise.needs || [];
+      var bits = needs.map(function (n) {
+        return n.resource + " " + n.status + (n.evidenceText ? "「" + n.evidenceText + "」" : "");
+      });
+      var box = document.createElement("div");
+      box.id = "premise-note";
+      box.className = "v20-extra";
+      var html = "<p>" + esc((v.premise.userOwned ? v.premise.note : (chosen.note || v.premise.note || ""))) + "</p>";
+      if (bits.length) html += "<p>前提 " + esc(bits.join("；")) + "</p>";
+      if (v.premise.question && !v.premise.skipped) html += '<p id="premise-q">' + esc(v.premise.question) + '</p><input id="premise-in" maxlength="80" aria-label="补充这一处条件"><button type="button" class="v20-mini" id="premise-answer">记下这句</button>';
+      if (v.premise.question && !v.premise.skipped) html += '<button type="button" class="v20-mini" id="premise-skip">先不回答</button>';
+      box.innerHTML = html;
+      card.appendChild(box);
+      var ans = $("premise-answer");
+      if (ans) ans.onclick = function () {
+        var t = ($("premise-in") && $("premise-in").value || "").trim();
+        if (!t) return;
+        LingcunUserState.addUtterance(v.record, t, "premise");
+        v.board = null;
+        if (v.candidatePack && v.candidatePack.length) v.premise = LingcunPremises.settle(v.record, v.candidatePack);
+        save();
+        renderCheck();
+      };
+      var skip = $("premise-skip");
+      if (skip) skip.onclick = function () {
+        v.premise.skipped = true;
+        v.premise.verified = false;
+        v.premise.pending = true;
+        save();
+        renderCheck();
+      };
     }
     renderCheck = (function (prev) {
       return function () {
@@ -784,6 +834,31 @@
       retrieveRef: retrieveRef,
       manualLine: function () { var p = curP(); return p && p.v18 ? manualLine(p.v18) : ""; },
       record: function () { var p = curP(); return p && p.v18 && p.v18.record ? LingcunUserState.view(p.v18.record) : null; },
-      liveAi: function () { return LIVE_AI; }
+      liveAi: function () { return LIVE_AI; },
+      reviewCandidates: function (candidates) { var p = curP(); return p && p.v18 && p.v18.record ? LingcunPremises.settle(p.v18.record, candidates || []) : null; },
+      applyCandidates: function (candidates) {
+        var p = curP();
+        if (!p || !p.v18) return null;
+        if (!p.v18.record) ensureRecord(p);
+        p.v18.edited = false;
+        p.v18.candidatePack = candidates || [];
+        ensureAttempt(p);
+        save();
+        if (S.stage === "check") renderCheck();
+        return { premise: p.v18.premise, attempt: p.v18.attempt, out: p.out && p.out.premise || null, record: LingcunUserState.view(p.v18.record) };
+      },
+      answerPremise: function (text) {
+        var p = curP();
+        if (!p || !p.v18 || !p.v18.record) return null;
+        LingcunUserState.addUtterance(p.v18.record, text, "premise");
+        if (p.v18.candidatePack && p.v18.candidatePack.length) p.v18.premise = LingcunPremises.settle(p.v18.record, p.v18.candidatePack);
+        var shown = p.v18.premise && p.v18.premise.display;
+        var shownText = shown && (shown.text || shown.action);
+        if (!p.v18.edited && shownText) p.v18.attempt = shownText;
+        syncOut(p);
+        save();
+        if (S.stage === "check") renderCheck();
+        return { premise: p.v18.premise, attempt: p.v18.attempt, record: LingcunUserState.view(p.v18.record) };
+      }
     };
   })();

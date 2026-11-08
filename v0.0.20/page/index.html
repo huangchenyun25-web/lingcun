@@ -1495,7 +1495,7 @@ body.v20 .v20-extra b { font-weight: 600; }
   (function () { var m = /[?&]relay=([^&#]+)/.exec(location.search); if (m) { var u = decodeURIComponent(m[1]); if (u === "off") RELAY_URL = ""; else if (/^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?\/?$/.test(u)) RELAY_URL = u.replace(/\/+$/, ""); } })();
   var RELAY_MODEL = "deepseek-flash";
   /* 第 108 条④ + #24：联网说明分两件事说清 */
-  var LIVE_AI = false; /* 这一轮关掉全部模型请求。要恢复真实调用，只能以后单独打开这一处。 */
+  var LIVE_AI = false; /* 只挡住真实传输。行动前提检查不靠这个开关，恢复传输要以后单独打开。 */
   var NET_NOTICE = "生成和修改时，你提供的相关内容会发送给 AI 服务处理：默认经过另存人生的中转服务转给 DeepSeek（中转不保存内容）；用自己的密钥时，直接从你的浏览器发给你选的那家。额外搜索网上资料，只在你主动选择并确认搜索内容后进行。";
   var WAIT_LIMIT = 10000, AGENT_LIMIT = 180000; /* v0.0.13（#39）：agent 模式也有超时（三分钟） */ /* 第 102 条 / #9：10 秒是等待体验的阈值，不是完成承诺 */
   var SKIP = "不确定，先跳过", OTHER = "其他，我自己写", PEND = "待补";
@@ -6234,6 +6234,293 @@ var LingcunUserState = (function () {
     frameOf: frameOf
   };
 })();
+/* 行动前提。只核对声明过的条件能不能在当前自述里对上。
+   对得上原句也不等于读懂了整句话。未知既不是有，也不是没有。 */
+var LingcunPremises = (function () {
+  var VAGUE = { "有": 1, "的": 1, "了": 1, "我": 1, "你": 1, "要": 1, "用": 1, "把": 1, "在": 1, "和": 1, "或": 1, "是": 1, "这": 1, "那": 1 };
+  function viewOf(state) { return LingcunUserState.view(state); }
+  function isDenial(text) {
+    var t = String(text || "").replace(/^(也|还|又|而且|并且|但是|但|就)/, "");
+    return /^(我|你)?(没有|没法|不能|不用|别|不要|不想|不愿|并非|不是|没)/.test(t) || /为0|是0/.test(t);
+  }
+  function denialCore(text) {
+    var t = String(text || "").replace(/^(也|还|又|而且|并且|但是|但|就)/, "");
+    var m = t.match(/^(?:我|你)?(?:真的|其实|确认)?(?:没有|没法|不能用|不能|不用|别用|别|不要|不想|不愿|并非|不是|没)(.+)$/);
+    if (m) return m[1].replace(/[了的吗呢啊吧]/g, "").trim();
+    var z = t.match(/^(.+?)(?:为0|是0)$/);
+    return z ? z[1].replace(/[了的吗呢啊吧]/g, "").trim() : "";
+  }
+  function usable(resource) {
+    var r = String(resource || "").trim();
+    if (!r || VAGUE[r]) return "";
+    return r;
+  }
+  function bucketOf(view, id) {
+    var keys = ["facts", "constraints", "intents", "inferences"], i, j;
+    for (i = 0; i < keys.length; i++) for (j = 0; j < view[keys[i]].length; j++) if (view[keys[i]][j].id === id) return { key: keys[i], item: view[keys[i]][j] };
+    for (i = 0; i < view.history.length; i++) if (view.history[i].id === id) return { key: "history", item: view.history[i] };
+    return null;
+  }
+  function external(item) {
+    if (!item) return false;
+    var s = item.sourceId || "";
+    return s === "research" || s === "ref" || s === "pool" || item.external === true || item.bucket === "research";
+  }
+  function affirms(item, resource) {
+    if (!item || external(item)) return false;
+    if (item.bucket !== "fact" && item.bucket !== "constraint") return false;
+    if (item.status && item.status !== "current") return false;
+    if (String(item.text || "").indexOf(resource) < 0) return false;
+    if (isDenial(item.text)) return false;
+    return true;
+  }
+  function denies(item, resource) {
+    if (!item || external(item)) return false;
+    if (item.status && item.status !== "current") return false;
+    if ((item.bucket !== "constraint" && !(item.bucket === "intent" && item.polarity === "dont")) ) return false;
+    if (!isDenial(item.text)) return false;
+    if (String(item.text).indexOf(resource) < 0) return false;
+    var core = denialCore(item.text);
+    return !core || core.indexOf(resource) >= 0 || resource.indexOf(core) >= 0;
+  }
+  function citeOf(view, id) {
+    if (!id) return { id: "", ok: false, reason: "没有指向当前原话" };
+    var found = bucketOf(view, id);
+    if (!found) return { id: id, ok: false, reason: "当前记录里没有这条" };
+    if (found.key === "history") return { id: id, ok: false, text: found.item.text, bucket: "history", reason: "这是旧版本，不能当作现在的条件" };
+    if (found.key === "inferences" || found.item.status === "unconfirmed") return { id: id, ok: false, text: found.item.text, bucket: "inference", reason: "这还是待确认推测，不是自述" };
+    if (external(found.item)) return { id: id, ok: false, text: found.item.text, bucket: "research", reason: "研究或案例不是这个人的条件" };
+    if (found.key !== "facts" && found.key !== "constraints" && found.key !== "intents") return { id: id, ok: false, text: found.item.text, reason: "不是当前自述" };
+    return { id: id, ok: true, text: found.item.text, bucket: found.key, rev: found.item.rev };
+  }
+  function checkNeed(view, need) {
+    var resource = usable(need && need.resource);
+    var key = !need || need.key !== false;
+    var claim = need && need.claim || "";
+    var base = { resource: resource || String(need && need.resource || ""), key: key, claim: claim, evidenceId: "", evidenceText: "", evidenceBucket: "", evidenceRev: 0 };
+    if (!resource) {
+      base.status = "unknown";
+      base.reason = "这个前提太笼统，对不上具体原话";
+      return base;
+    }
+    var cited = need && need.evidenceId ? citeOf(view, need.evidenceId) : null;
+    var i, affirmed = null, denied = null;
+    var pool = view.facts.concat(view.constraints, view.intents);
+    for (i = 0; i < pool.length; i++) {
+      if (!denied && denies(pool[i], resource)) denied = pool[i];
+      if (!affirmed && affirms(pool[i], resource)) affirmed = pool[i];
+    }
+    if (affirmed && denied) {
+      base.status = "conflict";
+      base.evidenceId = affirmed.id;
+      base.evidenceText = affirmed.text;
+      base.evidenceBucket = affirmed.bucket;
+      base.evidenceRev = affirmed.rev;
+      base.reason = "原话里既有「" + affirmed.text + "」，也有「" + denied.text + "」，没有替你选";
+      return base;
+    }
+    if (denied) {
+      base.status = "denied";
+      base.evidenceId = denied.id;
+      base.evidenceText = denied.text;
+      base.evidenceBucket = denied.bucket;
+      base.evidenceRev = denied.rev;
+      base.reason = "当前原话限制了「" + resource + "」";
+      return base;
+    }
+    if (affirmed) {
+      base.status = "met";
+      base.evidenceId = affirmed.id;
+      base.evidenceText = affirmed.text;
+      base.evidenceBucket = affirmed.bucket;
+      base.evidenceRev = affirmed.rev;
+      base.reason = cited && cited.id !== affirmed.id ? "声称的那条对不上，改对上了当前自述「" + affirmed.text + "」" : "对上当前自述「" + affirmed.text + "」";
+      return base;
+    }
+    if (cited && !cited.ok) {
+      base.status = "invalid";
+      base.evidenceId = need.evidenceId;
+      base.evidenceText = cited.text || "";
+      base.evidenceBucket = cited.bucket || "";
+      base.reason = cited.reason;
+      return base;
+    }
+    if (cited && cited.ok) {
+      base.status = "invalid";
+      base.evidenceId = need.evidenceId;
+      base.evidenceText = cited.text || "";
+      base.evidenceBucket = cited.bucket || "";
+      base.reason = "指向的原话没有说有「" + resource + "」";
+      return base;
+    }
+    var weak = view.inferences.concat(view.history).filter(function (item) { return String(item.text || "").indexOf(resource) >= 0; })[0];
+    base.status = "unknown";
+    if (weak) {
+      base.status = "invalid";
+      base.evidenceId = weak.id || "";
+      base.evidenceText = weak.text;
+      base.evidenceBucket = weak.status === "current" ? "inference" : (weak.status || "history");
+      base.reason = weak.status === "current" ? "只有待确认推测提到「" + resource + "」，不能当成已经有" : "只有旧版本提到「" + resource + "」，不能当成现在有";
+      return base;
+    }
+    base.reason = claim === "have" ? "声称已有「" + resource + "」，但当前原话里没有" : "当前原话没说有没有「" + resource + "」";
+    return base;
+  }
+  function implicitDenials(view, text) {
+    var out = [], seen = {};
+    view.constraints.concat(view.intents).forEach(function (item) {
+      if (!isDenial(item.text) || external(item)) return;
+      var core = usable(denialCore(item.text));
+      if (!core || seen[core]) return;
+      if (String(text || "").indexOf(core) < 0) return;
+      seen[core] = 1;
+      out.push({ resource: core, key: true, from: item.id, evidenceText: item.text });
+    });
+    return out;
+  }
+  function uncheckedLimits(view, text, needs) {
+    var named = {};
+    (needs || []).forEach(function (n) { if (n.resource) named[n.resource] = 1; });
+    var out = [];
+    view.constraints.concat(view.intents).forEach(function (item) {
+      if (!isDenial(item.text)) return;
+      var core = denialCore(item.text);
+      if (!core) return;
+      if (String(text || "").indexOf(core) >= 0) return;
+      if (named[core]) return;
+      out.push(item.text);
+    });
+    return out;
+  }
+  function quoteFrom(view) {
+    var i;
+    for (i = 0; i < view.intents.length; i++) if (view.intents[i].polarity === "want" && !isDenial(view.intents[i].text)) return view.intents[i].text;
+    for (i = 0; i < view.facts.length; i++) if (!isDenial(view.facts[i].text)) return view.facts[i].text;
+    return "";
+  }
+  function alternativeFor(view, resource) {
+    var quote = quoteFrom(view);
+    var text = quote ? ("先不做还要额外条件的那一步。只留下原话「" + quote + "」，改成你确定做得到的事。") : "先不做还要额外条件的那一步。改成你确定做得到的事。";
+    return {
+      text: text,
+      action: text,
+      author: "premise-alt",
+      needs: [],
+      avoids: resource,
+      verdict: "show",
+      verified: false,
+      note: "这条替代不依赖还没确认的条件。程序没有把它核对成已经可行。"
+    };
+  }
+  function review(state, candidate) {
+    var view = viewOf(state);
+    var action = String(candidate && candidate.text || "");
+    var author = candidate && candidate.author || "candidate";
+    var declared = (candidate && candidate.needs || []).map(function (n) { return checkNeed(view, n); });
+    var declaredName = {};
+    declared.forEach(function (n) { declaredName[n.resource] = 1; });
+    if (!candidate || !candidate.exempt) {
+      implicitDenials(view, action).forEach(function (imp) {
+        if (declaredName[imp.resource]) return;
+        var row = checkNeed(view, { resource: imp.resource, key: true });
+        if (row.status !== "denied" && row.status !== "conflict") {
+          row.status = "denied";
+          row.evidenceText = imp.evidenceText;
+          row.evidenceId = imp.from;
+          row.reason = "做法里用到了你限制过的「" + imp.resource + "」";
+        }
+        declared.push(row);
+      });
+    }
+    var cites = (candidate && candidate.uses || []).map(function (id) { return citeOf(view, id); });
+    (candidate && candidate.research || []).forEach(function (r) {
+      cites.push({ id: r && (r.id || r) || "research", ok: false, bucket: "research", text: r && r.text || "", reason: "研究或案例不是这个人的条件" });
+    });
+    var limits = uncheckedLimits(view, action, declared);
+    var denied = declared.filter(function (n) { return n.key && (n.status === "denied" || n.status === "conflict"); });
+    var unknown = declared.filter(function (n) { return n.key && (n.status === "unknown" || n.status === "invalid"); });
+    var badCites = cites.length && cites.every(function (c) { return !c.ok; });
+    var verdict = "show";
+    var question = "";
+    var alternative = null;
+    var note = "";
+    if (author === "user") {
+      note = "这是你写的，没有改写。";
+      if (denied.length) note += "它碰到了你写过的限制，还不能当成已经可行。";
+      else if (unknown.length) note += "有条件还没在当前原话里确认。";
+      else note += "程序没有把它核对成已经可行。";
+      verdict = denied.length ? "revise" : (unknown.length ? "clarify" : "show");
+      if (unknown.length) question = "你写的这一步要有「" + unknown[0].resource + "」。你现在有吗？没有就可以改一句。";
+      alternative = (denied.length || unknown.length) ? alternativeFor(view, (denied[0] || unknown[0]).resource) : null;
+    } else if (denied.length || badCites) {
+      verdict = "revise";
+      var why = denied[0] ? denied[0].reason : "依据的不是当前自述";
+      note = "这条先不拿来做。" + why;
+      alternative = alternativeFor(view, denied[0] ? denied[0].resource : "");
+    } else if (unknown.length) {
+      verdict = "clarify";
+      question = "这一步要有「" + unknown[0].resource + "」。你现在的原话里还没有。你有，还是先换一条不靠它的做法？";
+      note = "只问这一处。其他没写进原话的生活细节没有追问。";
+      alternative = alternativeFor(view, unknown[0].resource);
+    } else if (!declared.length) {
+      note = "这条没有声明要额外的东西。程序只核对了声明和你已经写明的限制，没有读懂整句话。";
+      if (limits.length) note += "还没能确定它是否碰到「" + limits[0] + "」。";
+    } else {
+      note = "声明的前提都能对上当前自述。这只说明这些条件有原话，不是整句都读懂了。";
+    }
+    var verified = author !== "user" && verdict === "show" && declared.length > 0 && declared.every(function (n) { return !n.key || n.status === "met"; }) && !badCites;
+    return {
+      action: action,
+      author: author,
+      needs: declared,
+      cites: cites,
+      uncheckedLimits: limits,
+      verdict: verdict,
+      question: author === "user" ? question : question,
+      alternative: alternative,
+      verified: !!verified,
+      userOwned: author === "user",
+      note: note,
+      inputRev: state.inputRev
+    };
+  }
+  function settle(state, candidates) {
+    var results = (candidates || []).map(function (c) { return review(state, c); });
+    var shown = results.filter(function (r) { return r.verdict === "show" && r.author !== "user"; });
+    var clarify = results.filter(function (r) { return r.verdict === "clarify"; })[0] || null;
+    var revise = results.filter(function (r) { return r.verdict === "revise"; })[0] || null;
+    var verdict = "show", display = null, question = "", alternative = null;
+    if (shown.length) {
+      display = shown[0];
+      verdict = "show";
+    } else if (clarify) {
+      display = clarify.alternative;
+      verdict = "clarify";
+      question = clarify.question;
+      alternative = clarify.alternative;
+    } else if (revise) {
+      display = revise.alternative;
+      verdict = "revise";
+      alternative = revise.alternative;
+    }
+    return {
+      inputRev: state.inputRev,
+      results: results,
+      verdict: verdict,
+      display: display,
+      question: question,
+      alternative: alternative,
+      verified: !!(display && display.verified),
+      pending: verdict !== "show",
+      skipped: false
+    };
+  }
+  function answer(state, candidates, text) {
+    LingcunUserState.addUtterance(state, text, "premise");
+    return settle(state, candidates);
+  }
+  return { review: review, settle: settle, answer: answer, isDenial: isDenial };
+})();
   /* ================= v0.0.20：原话接下去。
      碎片只来自用户这一次写下的分句（标点切开；超过 16 字、又没有「但是 / 以及」这类连词的，不猜着切开）。
      不调用职业词库，也不把方向词写成用户的经历。不够两条时，请对方加一个词或回去改一句，不另开问卷。
@@ -6365,23 +6652,50 @@ var LingcunUserState = (function () {
       if (v.attemptFrom === "ai" && v.aiStop) v.enough = "今天做到这儿就够了：" + v.aiStop;
       else if (!v.enough || /做完这一件就停/.test(v.enough)) v.enough = "今天做到这儿就够了：做完你认可的这一件就停。";
       p.out = { title: v.title, first_step: v.attempt, star: v.enough, summary: v.attempt };
+      if (v.premise) p.out.premise = { verdict: v.premise.verdict, verified: !!v.premise.verified, question: v.premise.question || "", pending: !!v.premise.pending, inputRev: v.premise.inputRev, userOwned: !!v.premise.userOwned };
+    }
+    function premiseCandidate(v, text, author) {
+      return { text: text, author: author, needs: [], uses: [] };
     }
     function ensureAttempt(p) {
       if (!p || !p.v18 || !p.v18.direction) return;
       var v = p.v18;
       if (!v.record) ensureRecord(p);
-      if (v.edited) { syncOut(p); return; }
+      if (v.edited) {
+        v.premise = LingcunPremises.review(v.record, premiseCandidate(v, v.attempt || "", "user"));
+        v.premise.userOwned = true;
+        v.premise.verified = false;
+        syncOut(p);
+        return;
+      }
+      if (v.candidatePack && v.candidatePack.length) {
+        var skipped = !!(v.premise && v.premise.skipped);
+        v.premise = LingcunPremises.settle(v.record, v.candidatePack);
+        if (skipped) { v.premise.skipped = true; v.premise.verified = false; v.premise.pending = true; }
+        var shown = v.premise.display;
+        var shownText = shown && (shown.text || shown.action);
+        if (shownText) {
+          v.attemptFrom = "manual";
+          v.pool = [shownText];
+          v.poolSig = shownText;
+          v.ix = 0;
+          v.attempt = shownText;
+        }
+        syncOut(p);
+        return;
+      }
       var sig = attemptSig(v);
       if (LIVE_AI && v.attemptFrom === "ai" && v.aiSig === sig && v.aiAttempts && v.aiAttempts.length) {
-        var ix = v.ix || 0;
-        if (ix >= v.aiAttempts.length) ix = 0;
-        v.ix = ix;
-        v.pool = v.aiAttempts.map(function (a) { return a.text; });
-        v.poolSig = v.pool.join("\n");
-        v.attempt = v.pool[ix];
-        v.aiWhy = v.aiAttempts[ix].why;
-        v.aiObserve = v.aiAttempts[ix].observe;
-        v.aiStop = v.aiAttempts[ix].stop;
+        v.candidatePack = v.aiAttempts;
+        v.premise = LingcunPremises.settle(v.record, v.candidatePack);
+        var picked = v.premise.display;
+        var pickedText = picked && (picked.text || picked.action);
+        if (pickedText) {
+          v.pool = [pickedText];
+          v.poolSig = pickedText;
+          v.ix = 0;
+          v.attempt = pickedText;
+        }
         syncOut(p);
         return;
       }
@@ -6392,6 +6706,7 @@ var LingcunUserState = (function () {
       v.poolSig = line;
       v.ix = 0;
       v.attempt = line;
+      v.premise = LingcunPremises.review(v.record, premiseCandidate(v, line, "manual"));
       syncOut(p);
       kickAttempts(p);
     }
@@ -6574,7 +6889,8 @@ var LingcunUserState = (function () {
     var FACT = { type: "object", required: ["id", "kind", "text", "start", "end"], properties: { id: STR(12), kind: { type: "string", enum: ["said", "keep", "change", "constraint"] }, text: STR(80), start: { type: "integer", minimum: 0 }, end: { type: "integer", minimum: 0 } } };
     var INF = { type: "object", required: ["id", "text", "start", "end"], properties: { id: STR(12), text: STR(40), start: { type: "integer", minimum: 0 }, end: { type: "integer", minimum: 0 } } };
     var UNDER_SCHEMA = { type: "object", required: ["facts", "inferences", "unknowns"], properties: { facts: { type: "array", maxItems: 8, items: FACT }, inferences: { type: "array", maxItems: 3, items: INF }, unknowns: { type: "array", maxItems: 4, items: STR(40) }, question: STR0(80), question_why: STR0(80) } };
-    var ATT_SCHEMA = { type: "object", required: ["attempts"], properties: { attempts: { type: "array", minItems: 2, maxItems: 3, items: { type: "object", required: ["text", "why", "observe", "stop", "uses"], properties: { text: STR(80), why: STR(80), observe: STR(60), stop: STR(60), uses: { type: "array", minItems: 1, maxItems: 4, items: STR(12) } } } } } };
+    var NEED = { type: "object", required: ["resource"], properties: { resource: STR(20), key: { type: "boolean" }, claim: STR(12), evidenceId: STR(20) } };
+    var ATT_SCHEMA = { type: "object", required: ["attempts"], properties: { attempts: { type: "array", minItems: 2, maxItems: 3, items: { type: "object", required: ["text", "why", "observe", "stop", "uses"], properties: { text: STR(80), why: STR(80), observe: STR(60), stop: STR(60), uses: { type: "array", minItems: 1, maxItems: 4, items: STR(12) }, needs: { type: "array", maxItems: 6, items: NEED } } } } } };
     function contradicts(facts, answer, text) {
       var bag = (facts || []).map(function (f) { return f.text; }).join("\n") + "\n" + (answer || "");
       var bare = String(text || "").replace(/「[^」]*」/g, "");
@@ -6625,30 +6941,13 @@ var LingcunUserState = (function () {
       return "try";
     }
     function screenAttempts(source, attempts) {
-      var banned = ["教程", "收藏", "伴侣", "老公", "老婆", "课程"];
+      var state = LingcunUserState.ingest(source || "", "screen");
       return (attempts || []).filter(function (a) {
-        if (!a || !a.text) return false;
-        var blob = a.text + (a.stop || "");
-        if (/离职|不想留|离开这/.test(source) && /别想离职|先别离职|不要离职|先留着|别想离开|先别想离职/.test(blob)) return false;
-        if (/预算为\s*0|预算是\s*0|不想花钱|没有钱|没钱/.test(source) && /买|下单|付费|报名/.test(a.text)) return false;
-        if (/不能用烤箱|没有烤箱|不用烤箱/.test(source) && /用烤箱|打开烤箱|买烤箱/.test(a.text)) return false;
-        var invented = banned.some(function (w) { return blob.indexOf(w) >= 0 && source.indexOf(w) < 0; });
-        return !invented;
+        return a && a.text && LingcunPremises.review(state, a).verdict === "show";
       });
     }
     function orderAttempts(source, facts, attempts) {
-      var now = (facts || []).filter(function (f) { return /现在|其实只想|改成/.test(f.text); });
-      var focus = now.length ? now[now.length - 1].text : "";
-      return attempts.slice().sort(function (a, b) {
-        function rank(x) {
-          var t = x.text || "";
-          var s = 0;
-          if (focus && t.indexOf(focus.slice(0, Math.min(4, focus.length))) >= 0) s -= 2;
-          if (/翻一遍|现有的|厨房|材料/.test(t) && /预算为\s*0|不能用烤箱/.test(source)) s += 2;
-          return s;
-        }
-        return rank(a) - rank(b);
-      });
+      return (attempts || []).slice();
     }
     function citeAttempts(mind, out) {
       var facts = mind.facts || [];
@@ -6709,7 +7008,7 @@ var LingcunUserState = (function () {
         "三条之间要有实质差别，例如弄清一件已有的事、减去一件、或先保持原样观察。不要都写成今天做一件小事。",
         "why 说明它接上了哪句原话。observe 是做完能看到的现象。stop 是停下或改的条件。",
         "若原话里有不想辞职、不想花钱、没精力、不想再学，就不要建议相反的事。对方已经确认要离开时，stop 不能写成放弃离开。",
-        "不要假定对方拥有原文没写的东西，例如教程、收藏、相机、烤箱、食材、课程或可以分担的人。预算为 0 或不能用某工具时，做法必须在不购买、不用该工具时也能成立。",
+        "needs 列出这一步真正要用、而原文没有写明已经有的东西。没有就给空数组。不要把没在当前原话里出现的东西写成已经有。claim 不会被当成证据。",
         "原文若同时有「上次」和「现在」，以现在这句为准。上次的内容只能对照，不能当成这次要做的事。",
         "reference 不是用户事实。"
       ];
@@ -6786,20 +7085,19 @@ var LingcunUserState = (function () {
       var task = taskOf("v20_attempts", "写几种小尝试", "按已核对的原话写不同的小尝试", attemptInstructions(), inputs, ATT_SCHEMA, "v20a:" + p.id + ":" + token + ":" + sig.length);
       runTask(task, 28000, function (out) {
         if (!curP() || curP() !== p || p.v18.mindToken !== token || attemptSig(p.v18) !== sig || p.v18.edited) { p.v18.aiPending = ""; return; }
-        if (out) {
-          citeAttempts(p.v18.mind, out);
-          out.attempts = orderAttempts(p.v18.mind.source || "", p.v18.mind.facts || [], screenAttempts(p.v18.mind.source || "", out.attempts));
-        }
-        var bad = out && out.attempts && out.attempts.length >= 2 ? checkAttempts(p.v18.mind, out) : ["没有两条都守住原话限制的做法"];
+        if (out) citeAttempts(p.v18.mind, out);
+        var format = out && out.attempts ? validate(out, ATT_SCHEMA) : ["没有做法"];
         p.v18.aiPending = "";
-        if (bad.length) {
-          p.v18.aiErrors = bad;
+        if (format.length || !out || !out.attempts) {
+          p.v18.aiErrors = format.length ? format : ["没有做法"];
           p.v18.aiRejectedPreview = ((out && out.attempts) || []).map(function (a) { return a && a.text; });
           save();
           if (S.stage === "check") renderCheck();
           return;
         }
         p.v18.aiAttempts = out.attempts;
+        p.v18.candidatePack = out.attempts;
+        p.v18.premise = LingcunPremises.settle(p.v18.record, out.attempts);
         p.v18.aiErrors = [];
         p.v18.aiSig = sig;
         p.v18.attemptFrom = "ai";
@@ -6924,12 +7222,51 @@ var LingcunUserState = (function () {
       var v = p.v18, k = $("try-kicker");
       if (v.attemptFrom === "manual" && k) k.textContent = (v.unlike ? "没有另一条理解出来的做法。可以改这句，或换方向。" : "按原话整理，不是理解。") + "方向只是在试的组合。";
       else if (v.attemptFrom === "ai" && k) k.textContent = (v.aiMode === "mock" ? "测试用模拟，不是真实模型。" : "模型给出的一种做法。格式核过，并不证明它真的懂。") + (v.unlike ? "已换一条。" : "");
+      paintPremise(v);
       var card = document.querySelector(".trycard");
       if (!card || v.attemptFrom !== "ai") return;
       var extra = document.createElement("div");
       extra.className = "v20-extra";
       extra.innerHTML = "<p><b>为何</b> " + esc(v.aiWhy || "") + "</p><p><b>看什么</b> " + esc(v.aiObserve || "") + "</p><p><b>何时停</b> " + esc(v.aiStop || "") + "</p>";
       card.appendChild(extra);
+    }
+    function paintPremise(v) {
+      var card = document.querySelector(".trycard");
+      if (!card || !v.premise) return;
+      var old = $("premise-note");
+      if (old && old.parentNode) old.parentNode.removeChild(old);
+      var chosen = v.premise.display || v.premise;
+      var needs = chosen.needs || v.premise.needs || [];
+      var bits = needs.map(function (n) {
+        return n.resource + " " + n.status + (n.evidenceText ? "「" + n.evidenceText + "」" : "");
+      });
+      var box = document.createElement("div");
+      box.id = "premise-note";
+      box.className = "v20-extra";
+      var html = "<p>" + esc((v.premise.userOwned ? v.premise.note : (chosen.note || v.premise.note || ""))) + "</p>";
+      if (bits.length) html += "<p>前提 " + esc(bits.join("；")) + "</p>";
+      if (v.premise.question && !v.premise.skipped) html += '<p id="premise-q">' + esc(v.premise.question) + '</p><input id="premise-in" maxlength="80" aria-label="补充这一处条件"><button type="button" class="v20-mini" id="premise-answer">记下这句</button>';
+      if (v.premise.question && !v.premise.skipped) html += '<button type="button" class="v20-mini" id="premise-skip">先不回答</button>';
+      box.innerHTML = html;
+      card.appendChild(box);
+      var ans = $("premise-answer");
+      if (ans) ans.onclick = function () {
+        var t = ($("premise-in") && $("premise-in").value || "").trim();
+        if (!t) return;
+        LingcunUserState.addUtterance(v.record, t, "premise");
+        v.board = null;
+        if (v.candidatePack && v.candidatePack.length) v.premise = LingcunPremises.settle(v.record, v.candidatePack);
+        save();
+        renderCheck();
+      };
+      var skip = $("premise-skip");
+      if (skip) skip.onclick = function () {
+        v.premise.skipped = true;
+        v.premise.verified = false;
+        v.premise.pending = true;
+        save();
+        renderCheck();
+      };
     }
     renderCheck = (function (prev) {
       return function () {
@@ -7020,7 +7357,32 @@ var LingcunUserState = (function () {
       retrieveRef: retrieveRef,
       manualLine: function () { var p = curP(); return p && p.v18 ? manualLine(p.v18) : ""; },
       record: function () { var p = curP(); return p && p.v18 && p.v18.record ? LingcunUserState.view(p.v18.record) : null; },
-      liveAi: function () { return LIVE_AI; }
+      liveAi: function () { return LIVE_AI; },
+      reviewCandidates: function (candidates) { var p = curP(); return p && p.v18 && p.v18.record ? LingcunPremises.settle(p.v18.record, candidates || []) : null; },
+      applyCandidates: function (candidates) {
+        var p = curP();
+        if (!p || !p.v18) return null;
+        if (!p.v18.record) ensureRecord(p);
+        p.v18.edited = false;
+        p.v18.candidatePack = candidates || [];
+        ensureAttempt(p);
+        save();
+        if (S.stage === "check") renderCheck();
+        return { premise: p.v18.premise, attempt: p.v18.attempt, out: p.out && p.out.premise || null, record: LingcunUserState.view(p.v18.record) };
+      },
+      answerPremise: function (text) {
+        var p = curP();
+        if (!p || !p.v18 || !p.v18.record) return null;
+        LingcunUserState.addUtterance(p.v18.record, text, "premise");
+        if (p.v18.candidatePack && p.v18.candidatePack.length) p.v18.premise = LingcunPremises.settle(p.v18.record, p.v18.candidatePack);
+        var shown = p.v18.premise && p.v18.premise.display;
+        var shownText = shown && (shown.text || shown.action);
+        if (!p.v18.edited && shownText) p.v18.attempt = shownText;
+        syncOut(p);
+        save();
+        if (S.stage === "check") renderCheck();
+        return { premise: p.v18.premise, attempt: p.v18.attempt, record: LingcunUserState.view(p.v18.record) };
+      }
     };
   })();
 
