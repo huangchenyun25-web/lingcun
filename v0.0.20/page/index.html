@@ -1825,7 +1825,18 @@ body.v20 .v20-extra b { font-weight: 600; }
     /* v0.0.13（#39）：写到上限被截断（finish_reason = length）就直说，不再默默重试 */
     function cutErr() { var e = new Error("要写的内容太长，写到一半被截断了"); e.cut = true; return e; }
     function contentOf(data) { var ch = data && data.choices && data.choices[0]; if (ch && ch.finish_reason === "length") throw cutErr(); var c = ch && ch.message && ch.message.content; if (typeof c !== "string" || !c) throw new Error("服务没有返回内容"); return c; }
+    function claimModelSend(rec, tg) {
+      var gate = typeof LingcunAiBudget !== "undefined" ? LingcunAiBudget : (typeof window !== "undefined" ? window.__lingcunAiBudget : null);
+      if (!gate || typeof gate.claim !== "function") return { ok: false, reason: "no-budget-gate" };
+      return gate.claim({ route: tg && tg.relay ? "relay" : "direct", kind: rec && rec.task && rec.task.type || "", channel: "page" }) || { ok: false, reason: "no-budget-gate" };
+    }
     function fetchWith(rec, body, tg) {
+      var ticket = claimModelSend(rec, tg);
+      if (!ticket.ok) {
+        var blocked = new Error(ticket.reason === "cap" ? "这一轮的模型次数已经用完" : "模型发送没有经过共用的次数闸");
+        blocked.budget = ticket.reason || "no-budget-gate";
+        return Promise.reject(blocked);
+      }
       var ctl = window.AbortController ? new AbortController() : null; rec.ctl = ctl;
       var timer = ctl ? setTimeout(function () { ctl.abort(); }, 120000) : 0;
       return fetch(tg.url, { method: "POST", headers: tg.headers, body: JSON.stringify(body), signal: ctl ? ctl.signal : undefined })
