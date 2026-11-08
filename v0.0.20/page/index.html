@@ -1371,6 +1371,46 @@ body.v20 .v20-q { display: block; margin-top: 6px; }
 body.v20 #v20-ask { margin-top: 6px; min-height: 36px; }
 body.v20 .v20-extra { margin-top: 8px; font-size: 13px; line-height: 1.45; color: #232B55; }
 body.v20 .v20-extra b { font-weight: 600; }
+@media (max-width: 360px) {
+  body.v20 .vz-btn,
+  body.v20 .vz-btn svg { width: 132px !important; height: 132px !important; }
+  body.v20.scr-pick #h-pick { font-size: 22px; }
+}
+@media (min-width: 900px) {
+  body.v20.scr-pick .wrap,
+  body.v20.scr-ok .wrap,
+  body.v20.scr-share .wrap {
+    max-width: 920px;
+    width: min(920px, calc(100vw - 48px));
+    background: #F7F0DF;
+    margin: 16px auto 24px;
+    padding: 12px 36px 40px;
+    min-height: calc(100vh - 40px);
+    box-shadow: 8px 8px 0 #232B55;
+  }
+  body.v20.scr-pick #h-pick,
+  body.v20.scr-pick .v18sub,
+  body.v20.scr-pick .brand,
+  body.v20.scr-ok .brand,
+  body.v20.scr-share .brand {
+    color: #232B55;
+    text-shadow: none;
+  }
+  body.v20.scr-pick .rule,
+  body.v20.scr-ok .rule,
+  body.v20.scr-share .rule { background: #5E72B5; box-shadow: 3px 3px 0 #232B55; }
+  body.v20.scr-material .wrap,
+  body.v20.scr-draft .wrap,
+  body.v20.scr-check .wrap { max-width: 960px; }
+}
+body.v20 .okorb {
+  width: 64px;
+  height: 64px;
+  margin: 0;
+  border-radius: 0;
+  background: #FFFBF1;
+  box-shadow: 0 0 0 3px #232B55, 4px 4px 0 #4A5C9B;
+}
 @media (max-width: 899px) {
   body.v20.scr-ok #ok-screen { margin-right: 56px; margin-left: 0; }
 }
