@@ -22,9 +22,9 @@ PASS	成功标记是小的，看这一版在屏内	{"text":"另存成功\n\n方�
 PASS	成功页底是奶油不是发光圆	
 PASS	分享仍是这一句	
 PASS	手机这局无报错	
-PASS	桌面 标题在首屏且没被裁切	{"top":68,"bottom":181.390625,"left":424,"right":760,"w":336,"h":113.390625,"fs":28,"bg":"rgba(0, 0, 0, 0)","shadow":"none"}
+PASS	桌面 标题在首屏且没被裁切	{"top":96,"bottom":209.390625,"left":216,"right":552,"w":336,"h":113.390625,"fs":28,"bg":"rgba(0, 0, 0, 0)","shadow":"none"}
 PASS	桌面 开始这一版在首屏	gap=52
-PASS	桌面 品牌不是小色块，分隔线不横贯	{"brand":{"top":16,"bottom":40,"left":424,"right":500.8125,"w":76.8125,"h":24,"fs":20,"bg":"rgba(0, 0, 0, 0)","shadow":"none"},"rule":{"top":48,"bottom":52,"left":424,"right":500,"w":76,"h":4,"fs":16,"bg":"rgb(247, 240, 223)","shadow":"rgb(35, 43, 85) 3px 3px 0px 0px"}}
+PASS	桌面 品牌不是小色块，分隔线不横贯	{"brand":{"top":44,"bottom":68,"left":216,"right":292.8125,"w":76.8125,"h":24,"fs":20,"bg":"rgba(0, 0, 0, 0)","shadow":"none"},"rule":{"top":76,"bottom":80,"left":216,"right":292,"w":76,"h":4,"fs":16,"bg":"rgb(94, 114, 181)","shadow":"rgb(35, 43, 85) 3px 3px 0px 0px"}}
 PASS	桌面 标题原文还在	如果保留过去的经验，换一种接下来的生活，你想试试什么？
 PASS	桌面 首页没有横向溢出	
 PASS	桌面留声机仍在左栏	{"gram":true,"gap":76.796875}
