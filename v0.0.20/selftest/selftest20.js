@@ -109,7 +109,7 @@ async function place(p, label, set) {
     "混着好几件事": ["会修自行车", "但讨厌每天加班", "想试试周末摆摊"],
     "另一件不相干的事": ["上周在阳台种了三盆薄荷", "周末想做成茶"],
     "十个短句": MANY.split("，"),
-    "太长又没有连词": [],
+    "太长又没有连词": ["我把去年没写完的那篇长笔记又从头到尾看了一遍还是没决定要不要发出去"],
     "短而含糊": ["想换一种"],
     "重复字": ["嗯嗯嗯嗯嗯嗯"],
     "空": []
@@ -287,7 +287,7 @@ async function place(p, label, set) {
   await typeIdea(weak, "我把去年没写完的那篇长笔记又从头到尾看了一遍还是没决定要不要发出去");
   const wlabs = await labels(weak);
   const wbody = await weak.evaluate(() => document.body.innerText);
-  ok("太长就不猜，并留下原话", wlabs.length === 0 && /还不好分成几条/.test(wbody) && /长笔记/.test(wbody) && !/下面是示例/.test(wbody) && leaked([], "").length === 0 && wbody.indexOf("现场观察") < 0, wlabs.join(","));
+  ok("长句整句留下，不拆成词库", wlabs.length === 1 && wlabs[0].indexOf("长笔记") >= 0 && wlabs[0].indexOf("现场观察") < 0 && !/下面是示例/.test(wbody), wlabs.join(","));
   ok("太长时可以自己加", await weak.$eval("#v19-more", (e) => !e.hidden));
   await weak.ctx.close();
 

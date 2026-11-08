@@ -6002,7 +6002,7 @@ body.v20 .v20-extra b { font-weight: 600; }
      公共例子的空位见 __lingcun20.setEvidence：没有来源的不要，也不会写进贴纸、尝试或另存结果。
      这里没有语义模型。对得上，只是因为贴纸上的字能在原话里原样找到。 ================= */
   (function () {
-    var MAX = 16;
+    var MAX = 80;
     var SENT = "\u0000";
     var CONJ = /以及|然后|但是|或者|而且|不过|可是|因为|所以/g;
     var evidence = [];
@@ -6039,8 +6039,10 @@ body.v20 .v20-extra b { font-weight: 600; }
       if (src) {
         src.split(/[，。！？、；,.\n!?;:：]+/).forEach(function (clause) {
           if (!clause) return;
-          if (clause.length <= MAX) { keepSpan(clause, spans); return; }
+          if (clause.length <= MAX) { spans.push(clause); return; }
+          var before = spans.length;
           splitLong(clause, spans);
+          if (spans.length === before) spans.push(clause.slice(0, MAX));
         });
       }
       var list = uniq(spans);
@@ -6103,7 +6105,7 @@ body.v20 .v20-extra b { font-weight: 600; }
       }).filter(function (f) { return f.start >= 0; });
     }
     function manualMind(source) {
-      return { source: source, rev: 1, mode: "manual", status: aiReady() ? "pending" : "offline", facts: manualFacts(source), inferences: [], unknowns: [], question: "", question_why: "", answer: "", requested: false, errors: [] };
+      return { source: source, rev: 1, mode: "manual", status: aiReady() ? "pending" : "offline", pace: derivePace(source), facts: manualFacts(source), inferences: [], unknowns: [], question: "", question_why: "", answer: "", requested: false, errors: [] };
     }
     function aiReady() { return !!(typeof navigator === "undefined" || navigator.onLine) && AI && AI.mode && AI.mode(); }
     function attemptSig(v) {
@@ -6214,6 +6216,10 @@ body.v20 .v20-extra b { font-weight: 600; }
         var more = $("v19-more");
         if (more) more.hidden = false;
       }
+      if (v.mind && v.mind.pace && v.mind.pace !== "try") {
+        var goBtn = $("frag-go");
+        if (goBtn) goBtn.disabled = true;
+      }
       var real = ((v.board && v.board.seq) || []).filter(function (w) { return w && w !== SENT; });
       var swap = $("frag-swap");
       if (swap) swap.classList.toggle("hidden", real.length <= 8);
@@ -6244,11 +6250,20 @@ body.v20 .v20-extra b { font-weight: 600; }
       });
       if (m.unknowns && m.unknowns.length) html += '<p class="v20-unk">还不清楚：' + esc(m.unknowns.join("；")) + "</p>";
       if (m.ref) html += '<p class="v20-ref">对照，不是你的经历：' + esc(m.ref.pattern) + (m.ref.excerpt ? " 「" + esc(m.ref.excerpt) + "」" : "") + " " + esc(m.ref.limits) + "</p>";
-      if (m.question && !m.answer) {
+      if (m.pace === "vent") html += "<p>你写了先不要分析。可以停在这里，不必做成一条尝试，也不会把这句存成以后的方向。</p><button type=\"button\" id=\"v20-hold\">先停在这里</button>";
+      else if (m.pace === "hold") html += "<p>这里不能判断身体情况，也不会把担心写成诊断。如果身体让你不放心，优先联系你当地能找到的专业帮助。可以先停在这里，不必做尝试。</p><button type=\"button\" id=\"v20-hold\">先停在这里</button>";
+      if (m.question && !m.answer && m.pace === "try") {
         html += '<label class="v20-q">' + esc(m.question) + '<input id="v20-ans" type="text" maxlength="80" placeholder="一句话就好" /></label><button type="button" id="v20-ask">用这句回答</button>';
       } else if (m.answer) html += "<p>你补了一句：" + esc(m.answer) + "</p>";
       box.innerHTML = html;
       host.insertBefore(box, host.firstChild);
+      var hold = $("v20-hold");
+      if (hold) hold.onclick = function () {
+        p.paused = true;
+        S.cur = -1;
+        ui.pickStep = "home";
+        go("pick");
+      };
       var ask = $("v20-ask");
       if (ask) ask.onclick = function () {
         var input = $("v20-ans");
@@ -6288,7 +6303,7 @@ body.v20 .v20-extra b { font-weight: 600; }
         };
       });
     }
-    var FACT = { type: "object", required: ["id", "kind", "text", "start", "end"], properties: { id: STR(12), kind: { type: "string", enum: ["said", "keep", "change", "constraint"] }, text: STR(40), start: { type: "integer", minimum: 0 }, end: { type: "integer", minimum: 0 } } };
+    var FACT = { type: "object", required: ["id", "kind", "text", "start", "end"], properties: { id: STR(12), kind: { type: "string", enum: ["said", "keep", "change", "constraint"] }, text: STR(80), start: { type: "integer", minimum: 0 }, end: { type: "integer", minimum: 0 } } };
     var INF = { type: "object", required: ["id", "text", "start", "end"], properties: { id: STR(12), text: STR(40), start: { type: "integer", minimum: 0 }, end: { type: "integer", minimum: 0 } } };
     var UNDER_SCHEMA = { type: "object", required: ["facts", "inferences", "unknowns"], properties: { facts: { type: "array", maxItems: 8, items: FACT }, inferences: { type: "array", maxItems: 3, items: INF }, unknowns: { type: "array", maxItems: 4, items: STR(40) }, question: STR0(80), question_why: STR0(80) } };
     var ATT_SCHEMA = { type: "object", required: ["attempts"], properties: { attempts: { type: "array", minItems: 2, maxItems: 3, items: { type: "object", required: ["text", "why", "observe", "stop", "uses"], properties: { text: STR(80), why: STR(80), observe: STR(60), stop: STR(60), uses: { type: "array", minItems: 1, maxItems: 4, items: STR(12) } } } } } };
@@ -6334,6 +6349,38 @@ body.v20 .v20-extra b { font-weight: 600; }
       (out.inferences || []).forEach(function (f, i) { spanOk(f, "inferences[" + i + "]"); });
       if (out.question && out.facts && out.facts.length && /转行|辞职|裸辞/.test(out.question) && !/辞职|转行|离开/.test(source)) er.push("问题把原文没有的去向塞进来了");
       return er;
+    }
+    function derivePace(source, stated) {
+      if (/别做分析|只是吐槽|只是想说|先不要行动|先不要建议/.test(source)) return "vent";
+      if (/什么都不想做|身体[^。，]{0,12}担心|担心[^。，]{0,8}身体/.test(source)) return "hold";
+      if (stated === "vent" || stated === "hold" || stated === "try") return stated;
+      return "try";
+    }
+    function screenAttempts(source, attempts) {
+      var banned = ["教程", "收藏", "伴侣", "老公", "老婆", "课程"];
+      return (attempts || []).filter(function (a) {
+        if (!a || !a.text) return false;
+        var blob = a.text + (a.stop || "");
+        if (/离职|不想留|离开这/.test(source) && /别想离职|先别离职|不要离职|先留着|别想离开|先别想离职/.test(blob)) return false;
+        if (/预算为\s*0|预算是\s*0|不想花钱|没有钱|没钱/.test(source) && /买|下单|付费|报名/.test(a.text)) return false;
+        if (/不能用烤箱|没有烤箱|不用烤箱/.test(source) && /用烤箱|打开烤箱|买烤箱/.test(a.text)) return false;
+        var invented = banned.some(function (w) { return blob.indexOf(w) >= 0 && source.indexOf(w) < 0; });
+        return !invented;
+      });
+    }
+    function orderAttempts(source, facts, attempts) {
+      var now = (facts || []).filter(function (f) { return /现在|其实只想|改成/.test(f.text); });
+      var focus = now.length ? now[now.length - 1].text : "";
+      return attempts.slice().sort(function (a, b) {
+        function rank(x) {
+          var t = x.text || "";
+          var s = 0;
+          if (focus && t.indexOf(focus.slice(0, Math.min(4, focus.length))) >= 0) s -= 2;
+          if (/翻一遍|现有的|厨房|材料/.test(t) && /预算为\s*0|不能用烤箱/.test(source)) s += 2;
+          return s;
+        }
+        return rank(a) - rank(b);
+      });
     }
     function citeAttempts(mind, out) {
       var facts = mind.facts || [];
@@ -6381,7 +6428,8 @@ body.v20 .v20-extra b { font-weight: 600; }
         "facts.text 必须等于 user_text.slice(start, end)。start、end 是 JavaScript 字符下标，中文一个字算 1。先从原文抄出连续片段，再填下标。不要改写，不要加书名号，不要补充对方没写的经历。例如原文「今天很累」，整句的 start 是 0、end 是 4。",
         "kind：said 是说过的事，keep 是想留的，change 是想改的，constraint 是限制（时间、钱、精力、不想做的）。",
         "inferences 是你的推测，必须同样贴着原文位置，不能写成已经发生的事实。没把握就放进 unknowns。",
-        "question 最多一句，而且只有答案会改变建议时才问。不要默认对方想转行、辞职或换职业。多数时候 question 用空字符串。",
+        "question 最多一句，而且只有答案会改变建议时才问。不要默认对方想转行、辞职或换职业。对方已经说清要离开或只要吐槽时，不要再追问。多数时候 question 用空字符串。",
+        "若对方明确不要分析、只是吐槽、或什么都不想做，在 unknowns 里写明先不要给行动，不要把担心身体写成诊断。",
         "reference 若存在，只是公开摘录，不是这个人的履历，不能写进 facts。"
       ];
     }
@@ -6392,7 +6440,9 @@ body.v20 .v20-extra b { font-weight: 600; }
         "每条 text 是一个人做得到的低风险动作，并包含它所 uses 的那条原文里的连续几个字。",
         "三条之间要有实质差别，例如弄清一件已有的事、减去一件、或先保持原样观察。不要都写成今天做一件小事。",
         "why 说明它接上了哪句原话。observe 是做完能看到的现象。stop 是停下或改的条件。",
-        "若原话里有不想辞职、不想花钱、没精力、不想再学，就不要建议相反的事。",
+        "若原话里有不想辞职、不想花钱、没精力、不想再学，就不要建议相反的事。对方已经确认要离开时，stop 不能写成放弃离开。",
+        "不要假定对方拥有原文没写的东西，例如教程、收藏、相机、烤箱、食材、课程或可以分担的人。预算为 0 或不能用某工具时，做法必须在不购买、不用该工具时也能成立。",
+        "原文若同时有「上次」和「现在」，以现在这句为准。上次的内容只能对照，不能当成这次要做的事。",
         "reference 不是用户事实。"
       ];
     }
@@ -6437,6 +6487,7 @@ body.v20 .v20-extra b { font-weight: 600; }
       }
       var m = v.mind;
       if (m.requested || m.mode === "ai" || m.mode === "mock") return;
+      m.pace = derivePace(src, m.pace);
       if (!aiReady()) { m.mode = "manual"; m.status = "offline"; return; }
       m.requested = true;
       m.status = "pending";
@@ -6469,6 +6520,7 @@ body.v20 .v20-extra b { font-weight: 600; }
         p.v18.mind.unknowns = out.unknowns || [];
         p.v18.mind.question = out.question || "";
         p.v18.mind.question_why = out.question_why || "";
+        p.v18.mind.pace = derivePace(src, out.pace);
         p.v18.mind.errors = [];
         p.v18.mind.rev++;
         applyFactsToBoard(p, (out.facts || []).map(function (f) { return f.text; }));
@@ -6490,8 +6542,11 @@ body.v20 .v20-extra b { font-weight: 600; }
       var task = taskOf("v20_attempts", "写几种小尝试", "按已核对的原话写不同的小尝试", attemptInstructions(), inputs, ATT_SCHEMA, "v20a:" + p.id + ":" + token + ":" + sig.length);
       runTask(task, 28000, function (out) {
         if (!curP() || curP() !== p || p.v18.mindToken !== token || attemptSig(p.v18) !== sig || p.v18.edited) { p.v18.aiPending = ""; return; }
-        if (out) citeAttempts(p.v18.mind, out);
-        var bad = out ? checkAttempts(p.v18.mind, out) : ["empty"];
+        if (out) {
+          citeAttempts(p.v18.mind, out);
+          out.attempts = orderAttempts(p.v18.mind.source || "", p.v18.mind.facts || [], screenAttempts(p.v18.mind.source || "", out.attempts));
+        }
+        var bad = out && out.attempts && out.attempts.length >= 2 ? checkAttempts(p.v18.mind, out) : ["没有两条都守住原话限制的做法"];
         p.v18.aiPending = "";
         if (bad.length) {
           p.v18.aiErrors = bad;
@@ -6501,6 +6556,7 @@ body.v20 .v20-extra b { font-weight: 600; }
           return;
         }
         p.v18.aiAttempts = out.attempts;
+        p.v18.aiErrors = [];
         p.v18.aiSig = sig;
         p.v18.attemptFrom = "ai";
         p.v18.aiMode = p.v18.mind.aiMode || AI.mode();
