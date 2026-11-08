@@ -144,7 +144,7 @@ async function flow(p, tag) {
   await p.click("#try-no");
   await sleep(150);
   const line2 = await text(p, "#try-line");
-  ok(tag + " 不像我会换一句", line2 !== line1 && /已换一条/.test(await text(p, "#try-kicker")));
+  ok(tag + " 离线没有第二条理解", line2 === line1 && /没有另一条|不是理解/.test(await text(p, "#try-kicker")), await text(p, "#try-kicker"));
   await p.click("#try-no");
   await sleep(150);
   ok(tag + " 两次不像给出路", /换个方向|带走/.test(await text(p, "#try-stuck")) && (await text(p, "#try-no")).trim() === "换方向");

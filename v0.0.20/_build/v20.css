@@ -180,6 +180,37 @@ body.v20 .okmark .px-dot { animation: pxblink 1.2s steps(2) infinite; }
   to { fill: #F7F0DF; }
 }
 
+body.v20 .v20-mind {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  background: #F7F0DF;
+  color: #232B55;
+  box-shadow:
+    0 -3px 0 0 #232B55,
+    0 3px 0 0 #232B55,
+    -3px 0 0 0 #232B55,
+    3px 0 0 0 #232B55;
+}
+body.v20 .v20-mind p,
+body.v20 .v20-mind li { color: #232B55; font-size: 13px; line-height: 1.45; }
+body.v20 .v20-mind ul { margin: 6px 0; padding-left: 1.1em; }
+body.v20 .v20-mode { margin: 0 0 6px; font-weight: 600; }
+body.v20 .v20-inf, body.v20 .v20-unk, body.v20 .v20-ref { margin: 4px 0; }
+body.v20 .v20-mini {
+  min-height: 22px !important;
+  height: 22px !important;
+  padding: 0 6px !important;
+  font-size: 12px !important;
+  letter-spacing: 0 !important;
+  background: transparent !important;
+  color: #232B55 !important;
+  box-shadow: none !important;
+  text-decoration: underline;
+}
+body.v20 .v20-q { display: block; margin-top: 6px; }
+body.v20 #v20-ask { margin-top: 6px; min-height: 36px; }
+body.v20 .v20-extra { margin-top: 8px; font-size: 13px; line-height: 1.45; color: #232B55; }
+body.v20 .v20-extra b { font-weight: 600; }
 @media (max-width: 899px) {
   body.v20.scr-ok #ok-screen { margin-right: 56px; margin-left: 0; }
 }

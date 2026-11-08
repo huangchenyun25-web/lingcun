@@ -198,7 +198,7 @@ async function place(p, label, set) {
   await phone.click("#dir-go");
   await sleep(200);
   const line = await text(phone, "#try-line");
-  ok("尝试引用带走的原话", line.indexOf("会修自行车") >= 0 && line.indexOf("擅长") < 0 && line.indexOf("现场观察") < 0, line);
+  ok("尝试引用带走的原话", line.indexOf("会修自行车") >= 0 && line.indexOf("不是你的经历") >= 0 && line.indexOf("擅长") < 0 && line.indexOf("现场观察") < 0, line);
   await phone.click("#try-yes");
   await sleep(250);
   await shot(phone, "手机_另存成功");
@@ -220,7 +220,7 @@ async function place(p, label, set) {
   ok("另存成功写出方向和这一步", /另存成功/.test(saved.text) && /方向是「身体」/.test(saved.text) && /会修自行车/.test(saved.text) && /看这一版/.test(saved.text), saved.text.replace(/\n/g, " / "));
   ok("成功标记是小的，看这一版在屏内", saved.mark <= 80 && saved.mark >= 48 && saved.reviewIn && saved.tag === "P", JSON.stringify(saved));
   ok("成功页底是奶油不是发光圆", saved.bg === "rgb(247, 240, 223)");
-  EXAMPLES.push("走完一局 · 打字\n  输入：会修自行车，但讨厌每天加班，想试试周末摆摊\n  碎片：" + bike.join(" / ") + "\n  带走：会修自行车；放下：但讨厌每天加班；方向：身体\n  尝试：" + line);
+  EXAMPLES.push("走完一局 · 打字 · 断网整理\n  输入：会修自行车，但讨厌每天加班，想试试周末摆摊\n  碎片：" + bike.join(" / ") + "\n  带走：会修自行车；放下：但讨厌每天加班；方向：身体\n  尝试：" + line);
   await phone.click("#ok-share");
   await sleep(120);
   ok("分享仍是这一句", (await text(phone, "#share-card")).indexOf("会修自行车") >= 0);
@@ -252,7 +252,7 @@ async function place(p, label, set) {
   await desk.click("#dir-go");
   await sleep(180);
   const line2 = await text(desk, "#try-line");
-  ok("第二局尝试仍引用原话", line2.indexOf("上周在阳台种了三盆薄荷") >= 0 && line2.indexOf("会修自行车") < 0, line2);
+  ok("第二局尝试仍引用原话", line2.indexOf("上周在阳台种了三盆薄荷") >= 0 && line2.indexOf("不是你的经历") >= 0 && line2.indexOf("会修自行车") < 0, line2);
   await desk.click("#try-yes");
   await sleep(200);
   await shot(desk, "桌面_另存成功");
