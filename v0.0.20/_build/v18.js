@@ -317,7 +317,14 @@
       $("dir-go").onclick = function () {
         if (!v.direction || !v.direction.id) { $("dir-err").textContent = "先选一个方向"; return; }
         if (v.direction.id === "other" && !(v.direction.custom && v.direction.custom.trim())) { $("dir-err").textContent = "其他方向写一个词"; return; }
-        buildPool(v); v.ix = 0; v.unlike = 0; v.edited = false; applyIx(p);
+        var dirKey = v.direction.id + "\n" + (v.direction.custom || "");
+        if (v.epochDir && v.epochDir !== dirKey) {
+          if (v.edited && v.attempt) v.handDraft = { text: v.attempt, editRev: v.editRev || 0, stale: true, note: "这句是按上一版写的，要重新确认后才能当作现在的做法" };
+          v.edited = false;
+          v.candidatePack = [];
+          v.aiAttempts = null;
+        }
+        if (!(v.edited && v.epochDir === dirKey)) { buildPool(v); v.ix = 0; v.unlike = 0; applyIx(p); }
         bump("direction_picked"); bump("attempt_ok"); touchV(p); go("check");
         maybePolish(p);
       };
@@ -375,7 +382,7 @@
       if ($("try-use")) $("try-use").onclick = function () {
         var t = $("try-in").value.trim().slice(0, 80);
         if (!t) { $("try-err").textContent = "写一句想试的。"; return; }
-        v.edited = true; v.attempt = t; v.pool[v.ix] = t; if (p.out) { p.out.first_step = t; p.out.summary = t; }
+        v.edited = true; v.editRev = (v.editRev || 0) + 1; v.attempt = t; v.pool[v.ix] = t; v.reqN = (v.reqN || 0) + 1; v.appliedReq = v.reqN; if (p.out) { p.out.first_step = t; p.out.summary = t; }
         ui.v18edit = false; touchV(p); renderCheck();
       };
       if ($("try-ai")) $("try-ai").onclick = function () {
@@ -399,6 +406,7 @@
       $("try-no").onclick = function () {
         if (v.unlike >= 2) { go("draft"); return; }
         v.unlike += 1;
+        if (v.edited && v.attempt) v.handDraft = { text: v.attempt, editRev: v.editRev || 0, stale: true, note: "这句是按上一版写的，要重新确认后才能当作现在的做法" };
         var prev = v.attempt;
         v.ix = (v.ix + 1) % v.pool.length;
         if (v.pool[v.ix] === prev) { v.pool.push(compose(v, v.pool.length + v.unlike)); v.ix = v.pool.length - 1; }
@@ -411,9 +419,13 @@
 
     function doSave(p) {
       var v = v18of(p);
+      var gate = (typeof LingcunEpoch !== "undefined") ? LingcunEpoch.canSave(p) : { ok: true };
+      if (!gate.ok) { v.saveNote = gate.reason; try { toast(gate.reason); } catch (e) {} if (S.stage === "check") renderCheck(); return; }
+      v.saveNote = "";
       if (!v.title) v.title = defaultTitle(v);
       p.title = v.title;
       p.out = { title: v.title, first_step: v.attempt, star: v.enough, summary: v.attempt };
+      if (typeof LingcunEpoch !== "undefined") LingcunEpoch.freeze(p);
       var first = !p.landed;
       p.saved = true; p.savedAt = Date.now();
       if (first) { p.landed = true; p.landedAt = Date.now(); p.planet = nextPlanet(); bump("completed"); bump("save_ok"); }
@@ -424,9 +436,9 @@
 
     function sharePlain(p) {
       var v = v18of(p), pl = planetOf(p.planet), lines = ["另存人生 · 第 " + (p.planet + 1) + " 次 · " + pl.n, "「" + (v.title || defaultTitle(v)) + "」"];
-      if (!v.hide.take) lines.push("", "我想带走", join(v.take) || "（还没有）");
-      if (!v.hide.leave) lines.push("", "我想放下", join(v.leave) || "（这次没有放下）");
-      if (!v.hide.attempt) lines.push("", "我想试试", v.attempt || "");
+      if (!v.hide.take) lines.push("", "我想带走", join((p.frozen && p.frozen.take) || v.take) || "（还没有）");
+      if (!v.hide.leave) lines.push("", "我想放下", join((p.frozen && p.frozen.leave) || v.leave) || "（这次没有放下）");
+      if (!v.hide.attempt) lines.push("", "我想试试", (p.frozen && p.frozen.attempt) || v.attempt || "");
       lines.push("", "你会带走什么？", "", "另存人生 · " + fmtDot(p.landedAt));
       return lines.join("\n");
     }
@@ -454,9 +466,9 @@
       if (!v.title) v.title = defaultTitle(v);
       var h = '<div class="sharecard v18" id="share-card"><div class="sc-brand"><b>另存人生</b><span>第 ' + (p.planet + 1) + " 次 · " + esc(pl.n) + "</span></div>";
       h += '<div class="sc-title"><span id="scv-title">「' + esc(v.title) + '」</span><button type="button" class="mini" data-ed="title">编辑</button></div>';
-      h += fieldRow("take", "我想带走", join(v.take) || "（还没有）", v);
-      h += fieldRow("leave", "我想放下", join(v.leave) || "（这次没有放下）", v);
-      h += fieldRow("attempt", "我想试试", v.attempt || "", v);
+      h += fieldRow("take", "我想带走", join((p.frozen && p.frozen.take) || v.take) || "（还没有）", v);
+      h += fieldRow("leave", "我想放下", join((p.frozen && p.frozen.leave) || v.leave) || "（这次没有放下）", v);
+      h += fieldRow("attempt", "我想试试", (p.frozen && p.frozen.attempt) || v.attempt || "", v);
       h += '<div class="sc-ask">你会带走什么？</div><div class="sc-foot"><span>另存人生 · ' + esc(fmtDot(p.landedAt)) + "</span><span></span></div></div>";
       h += '<div class="unhide" id="sc-unhide"></div>';
       h += '<div id="sc-editor"></div>';
@@ -498,7 +510,7 @@
       $("sc-in-ok").onclick = function () {
         var t = $("sc-in").value.trim();
         if (key === "title") { if (!t) { toast("标题留一个词"); return; } v.title = t.slice(0, 24); v.titleEdited = true; p.title = v.title; }
-        else if (key === "attempt") { if (!t) { toast("尝试留一句"); return; } v.attempt = t.slice(0, 80); v.edited = true; if (p.out) p.out.first_step = v.attempt; }
+        else if (key === "attempt") { if (!t) { toast("尝试留一句"); return; } v.attempt = t.slice(0, 80); v.edited = true; if (p.frozen) p.frozen = { epochSeq: p.frozen.epochSeq, attempt: v.attempt, title: p.frozen.title, idea: p.frozen.idea, direction: p.frozen.direction, take: (p.frozen.take || []).slice(), leave: (p.frozen.leave || []).slice(), inputRev: p.frozen.inputRev, premise: p.frozen.premise }; if (p.out) p.out.first_step = v.attempt; }
         else {
           var arr = t.split(/[、,，]/).map(function (x) { return x.trim(); }).filter(Boolean).slice(0, 6);
           v[key] = arr;
@@ -518,7 +530,7 @@
       function block(label, text) { x.font = "400 26px " + F; x.globalAlpha = .6; x.fillText(label, 120, ty + 20); x.globalAlpha = 1; x.font = "400 36px " + F; ty += 70; wrapLines(x, text, W - 240, 3).forEach(function (l) { x.fillText(l, 120, ty); ty += 50; }); ty += 16; }
       if (!v.hide.take) block("我想带走", join(v.take) || "（还没有）");
       if (!v.hide.leave) block("我想放下", join(v.leave) || "（这次没有放下）");
-      if (!v.hide.attempt) block("我想试试", v.attempt || "");
+      if (!v.hide.attempt) block("我想试试", (p.frozen && p.frozen.attempt) || v.attempt || "");
       x.strokeStyle = "rgba(35,28,69,.35)"; x.setLineDash([8, 8]); x.beginPath(); x.moveTo(120, ty + 10); x.lineTo(W - 120, ty + 10); x.stroke(); x.setLineDash([]);
       x.fillStyle = INK; x.font = "48px " + HF; x.fillText("你会带走什么？", 120, ty + 80);
       x.globalAlpha = .6; x.font = "400 26px " + F; x.fillText("另存人生 · " + fmtDot(p.landedAt), 120, H - 140); x.globalAlpha = 1;
@@ -558,7 +570,7 @@
       return function (x) {
         var p = x.p; if (!p || !p.v18) return orig(x);
         var st = statusOf(p), pl = p.landed ? planetOf(p.planet) : null, v = v18of(p);
-        var name = v.title || short(v.attempt || p.idea || "这一版", 18);
+        var name = (p.frozen && p.frozen.title) || v.title || short((p.frozen && p.frozen.attempt) || v.attempt || p.idea || "这一版", 18);
         return '<button class="bagcard ' + st.k + (x.i === S.cur ? " cur" : "") + '" data-bag-card="' + x.i + '"' + (pl ? ' data-planet="' + p.planet + '"' : ' data-sailing="1"') + ">" +
           (pl ? '<span class="orb" style="--c:' + pl.c + ";--c2:" + pl.c2 + '" aria-hidden="true"></span><span class="pn">' + esc(pl.n) + "</span>" : '<span class="orb ship" aria-hidden="true"></span><span class="pn">进行中</span>') +
           '<span class="bc-n">' + esc(name) + '</span><span class="bc-s">' + esc(summaryOf(p)) + '</span><span class="bc-m"><span class="tag ' + st.k + '">' + esc(st.t) + "</span> " + esc(dirLabel(v) || "这一版") + " · " + esc(fmtTime(p.updatedAt)) + (x.i === S.cur ? " · 正在做" : "") + "</span></button>";
@@ -569,7 +581,7 @@
         var p = S.projects[i]; if (!p || !p.v18) return orig(i);
         var v = v18of(p), B = $("bag-body"), st = statusOf(p);
         B.innerHTML = '<button class="ghost small" id="bd-back" type="button">回到星图</button><div class="bd-h" id="bd-title">' + esc(v.title || short(v.attempt || "这一版", 18)) + '</div><div class="hint"><span class="tag ' + st.k + '">' + esc(st.t) + "</span> " + esc(dirLabel(v) || "") + "</div>" +
-          '<p class="bd-s">' + esc(v.attempt || "") + "</p><p class=\"hint\">带走：" + esc(join(v.take) || "—") + " · 放下：" + esc(join(v.leave) || "—") + "</p>" +
+          '<p class="bd-s">' + esc((p.frozen && p.frozen.attempt) || v.attempt || "") + "</p><p class=\"hint\">带走：" + esc(join((p.frozen && p.frozen.take) || v.take) || "—") + " · 放下：" + esc(join((p.frozen && p.frozen.leave) || v.leave) || "—") + "</p>" +
           '<div class="big bd-acts"><button class="bigbtn" id="bd-edit" type="button"><strong>看这一版</strong><small>回到这条尝试。</small></button><button class="bigbtn" id="bd-home" type="button"><strong>开始新的一版</strong><small>原来的留在星图里。</small></button></div>';
         $("bd-back").onclick = function () { bagView.open = -1; renderBag(); };
         $("bd-edit").onclick = function () { closeBag(); S.cur = i; p.paused = false; if (p.landed) { ui.view[p.id] = "ok"; go("save"); } else go(p.stage || "check"); };

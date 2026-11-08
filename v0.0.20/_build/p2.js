@@ -135,6 +135,7 @@
     }
     function run(task, slot) {
       return new Promise(function (resolve) {
+        if (typeof LingcunTransport !== "undefined" && LingcunTransport.handler) { LingcunTransport.handler(task, resolve); return; }
         if (typeof LIVE_AI !== "undefined" && LIVE_AI === false) { resolve(null); return; }
         if (task.key) Object.keys(tasks).forEach(function (id) { if (tasks[id].task.key === task.key) { stopTimers(tasks[id]); delete tasks[id]; } });
         var rec = { id: task.type + "-" + (++seq), task: task, slot: slot, resolve: resolve };
