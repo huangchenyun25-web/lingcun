@@ -148,6 +148,14 @@
         syncOut(p);
         return;
       }
+      if (!wantsAction(v)) {
+        v.attempt = "";
+        v.pool = [];
+        v.attemptFrom = "withhold";
+        v.attemptEpoch = v.epochSeq || 0;
+        syncOut(p);
+        return;
+      }
       if (v.candidatePack && v.candidatePack.length) {
         var skipped = !!(v.premise && v.premise.skipped);
         v.premise = LingcunPremises.settle(v.record, v.candidatePack);
@@ -198,21 +206,45 @@
       return {
         source: record.text, rev: record.inputRev, mode: "manual", status: "offline",
         facts: view.facts.concat(view.constraints), intents: view.intents, inferences: view.inferences,
-        unknowns: [], pace: derivePace(record.text), requested: true, question: "", answer: "", ref: null
+        unknowns: [], advice: "unsure", adviceFrom: "", pace: derivePace(record.text), requested: true, question: "", answer: "", ref: null
       };
+    }
+    function keepAdvice(mind, prev, reset) {
+      if (!mind) return mind;
+      if (reset || !prev) return mind;
+      mind.advice = prev.advice || "unsure";
+      mind.adviceFrom = prev.adviceFrom || "";
+      mind.unknowns = prev.unknowns || [];
+      if (prev.mode === "ai") mind.mode = "ai";
+      if (prev.status === "ok") mind.status = "ok";
+      return mind;
+    }
+    function readAdvice(out) {
+      if (out && (out.advice === "decline" || out.advice === "offer" || out.advice === "unsure")) return out.advice;
+      var bag = ((out && out.unknowns) || []).join("\n");
+      if (/不要给行动|先不要建议|不要建议/.test(bag)) return "decline";
+      return "unsure";
+    }
+    function wantsAction(v) {
+      var m = (v && v.mind) || {};
+      if (m.adviceFrom === "user" && m.advice === "offer") return true;
+      if (m.advice === "offer" && m.adviceFrom === "model") return true;
+      return false;
     }
     function ensureRecord(p) {
       var v = p.v18;
       var text = String(p.idea || "");
+      var prev = v.mind;
+      var reset = !!(v.record && v.record.text && v.record.text !== text);
       if (!v.record) v.record = LingcunUserState.migrate(p);
-      else if (v.record.text !== text) {
+      else if (reset) {
         v.record = LingcunUserState.replaceSource(v.record, text, "idea");
         v.mindToken = (v.mindToken || 0) + 1;
         v.aiAttempts = null;
         v.attemptFrom = "manual";
       }
       (v.custom || []).forEach(function (w) { LingcunUserState.addUtterance(v.record, w, "custom"); });
-      v.mind = projectMind(v.record);
+      v.mind = keepAdvice(projectMind(v.record), prev, reset);
       return v.record;
     }
     function prepareGrounded(p) {
@@ -271,7 +303,7 @@
         var more = $("v19-more");
         if (more) more.hidden = false;
       }
-      if (v.mind && v.mind.pace && v.mind.pace !== "try") {
+      if ((v.mind && v.mind.pace && v.mind.pace !== "try") || (v.mind && v.mind.advice === "decline" && v.mind.adviceFrom !== "user")) {
         var goBtn = $("frag-go");
         if (goBtn) goBtn.disabled = true;
       }
@@ -308,6 +340,8 @@
       });
       if (m.unknowns && m.unknowns.length) html += '<p class="v20-unk">还不清楚：' + esc(m.unknowns.join("；")) + "</p>";
       if (m.ref) html += '<p class="v20-ref">对照，不是你的经历：' + esc(m.ref.pattern) + (m.ref.excerpt ? " 「" + esc(m.ref.excerpt) + "」" : "") + " " + esc(m.ref.limits) + "</p>";
+      if (m.advice === "decline" && m.adviceFrom !== "user") html += "<p id=\"v20-no-action\">这次先不给做法。这段话留在这里，不必做成一条尝试。</p><button type=\"button\" id=\"v20-keep-text\">先留下这段话</button><button type=\"button\" id=\"v20-want-advice\">我想听听建议</button>";
+      else if ((m.advice === "unsure" || !m.advice) && m.adviceFrom !== "user") html += "<p id=\"v20-ask-advice\">还看不出你想不想听一条做法。</p>";
       if (m.pace === "vent") html += "<p>你写了先不要分析。可以停在这里，不必做成一条尝试，也不会把这句存成以后的方向。</p><button type=\"button\" id=\"v20-hold\">先停在这里</button>";
       else if (m.pace === "hold") html += "<p>这里不能判断身体情况，也不会把担心写成诊断。如果身体让你不放心，优先联系你当地能找到的专业帮助。可以先停在这里，不必做尝试。</p><button type=\"button\" id=\"v20-hold\">先停在这里</button>";
       if (m.question && !m.answer && m.pace === "try") {
@@ -315,6 +349,21 @@
       } else if (m.answer) html += "<p>你补了一句：" + esc(m.answer) + "</p>";
       box.innerHTML = html;
       host.insertBefore(box, host.firstChild);
+      function allowAdvice() {
+        m.advice = "offer";
+        m.adviceFrom = "user";
+        save();
+        renderMaterial();
+      }
+      var keep = $("v20-keep-text");
+      if (keep) keep.onclick = function () {
+        p.paused = true;
+        S.cur = -1;
+        ui.pickStep = "home";
+        go("pick");
+      };
+      var want = $("v20-want-advice");
+      if (want) want.onclick = allowAdvice;
       var hold = $("v20-hold");
       if (hold) hold.onclick = function () {
         p.paused = true;
@@ -373,7 +422,7 @@
     }
     var FACT = { type: "object", required: ["id", "kind", "text", "start", "end"], properties: { id: STR(12), kind: { type: "string", enum: ["said", "keep", "change", "constraint"] }, text: STR(80), start: { type: "integer", minimum: 0 }, end: { type: "integer", minimum: 0 } } };
     var INF = { type: "object", required: ["id", "text", "start", "end"], properties: { id: STR(12), text: STR(40), start: { type: "integer", minimum: 0 }, end: { type: "integer", minimum: 0 } } };
-    var UNDER_SCHEMA = { type: "object", required: ["facts", "inferences", "unknowns"], properties: { facts: { type: "array", maxItems: 8, items: FACT }, inferences: { type: "array", maxItems: 3, items: INF }, unknowns: { type: "array", maxItems: 4, items: STR(40) }, question: STR0(80), question_why: STR0(80) } };
+    var UNDER_SCHEMA = { type: "object", required: ["facts", "inferences", "unknowns"], properties: { facts: { type: "array", maxItems: 8, items: FACT }, inferences: { type: "array", maxItems: 3, items: INF }, unknowns: { type: "array", maxItems: 4, items: STR(40) }, advice: { type: "string", enum: ["offer", "decline", "unsure"] }, question: STR0(80), question_why: STR0(80) } };
     var NEED = { type: "object", required: ["resource"], properties: { resource: STR(20), key: { type: "boolean" }, claim: STR(12), evidenceId: STR(20) } };
     var ATT_SCHEMA = { type: "object", required: ["attempts"], properties: { attempts: { type: "array", minItems: 2, maxItems: 3, items: { type: "object", required: ["text", "why", "observe", "stop", "uses"], properties: { text: STR(80), why: STR(80), observe: STR(60), stop: STR(60), uses: { type: "array", minItems: 1, maxItems: 4, items: STR(12) }, needs: { type: "array", maxItems: 6, items: NEED } } } } } };
     function contradicts(facts, answer, text) {
@@ -481,7 +530,8 @@
         "kind：said 是说过的事，keep 是想留的，change 是想改的，constraint 是限制（时间、钱、精力、不想做的）。",
         "inferences 是你的推测，必须同样贴着原文位置，不能写成已经发生的事实。没把握就放进 unknowns。",
         "question 最多一句，而且只有答案会改变建议时才问。不要默认对方想转行、辞职或换职业。对方已经说清要离开或只要吐槽时，不要再追问。多数时候 question 用空字符串。",
-        "若对方明确不要分析、只是吐槽、或什么都不想做，在 unknowns 里写明先不要给行动，不要把担心身体写成诊断。",
+        "若对方明确不要分析、只是吐槽、或什么都不想做，advice 写 decline，并在 unknowns 里写明先不要给行动。不要把担心身体写成诊断。",
+        "advice 只能是 offer、decline 或 unsure。offer 表示可以给一条低风险的试法，decline 表示不要建议或不要行动，unsure 表示看不出来。写在这个字段里。",
         "reference 若存在，只是公开摘录，不是这个人的履历，不能写进 facts。"
       ];
     }
@@ -537,6 +587,8 @@
       var m = v.mind;
       if (!transportOn()) { m.mode = "manual"; m.status = "offline"; m.requested = true; return; }
       var flight = v.flight && v.flight.understand;
+      if (v.mind && v.mind.adviceFrom === "user") return;
+      if (v.mind && v.mind.adviceFrom === "model" && v.mind.source === src) return;
       if (flight && flight.status === "pending" && flight.seq === (v.epochSeq || 0)) return;
       m.pace = derivePace(src, m.pace);
       m.requested = true;
@@ -550,15 +602,21 @@
         if (!gateFlight(p, boundU, err && !out)) return;
         if (!out) { p.v18.mind.status = err || "failed"; p.v18.mind.errors = [err || "empty"]; p.v18.mind.mode = "manual"; save(); return; }
         if (!LingcunUserState.acceptLate(p.v18.record, p.v18.record.inputRev, out)) { LingcunEpoch.note(p, boundU, "late-record"); return; }
+        var advice = readAdvice(out);
         p.v18.mind = projectMind(p.v18.record);
+        p.v18.mind.advice = advice;
+        p.v18.mind.adviceFrom = "model";
+        p.v18.mind.unknowns = out.unknowns || [];
         p.v18.mind.understoodSeq = boundU.seq;
-        p.v18.mind.mode = "manual";
+        p.v18.mind.mode = "ai";
+        p.v18.mind.status = "ok";
         save();
-        if (S.stage === "check") kickAttempts(p);
+        if (S.stage === "material") renderMaterial();
+        if (advice !== "decline" && S.stage === "check") kickAttempts(p);
       });
     }
     function kickAttempts(p) {
-      if (!transportOn() || !p || !p.v18 || !p.v18.direction || p.v18.edited) return;
+      if (!transportOn() || !p || !p.v18 || !wantsAction(p.v18) || !p.v18.direction || p.v18.edited) return;
       var v = p.v18, m = v.mind;
       if (!m) return;
       var flight = v.flight && v.flight.attempts;
@@ -715,6 +773,24 @@
       var p = curP();
       if (!p || !p.v18) return;
       var v = p.v18, k = $("try-kicker");
+      if (!wantsAction(v)) {
+        var card0 = document.querySelector(".trycard");
+        if (card0 && !$("v20-want-advice")) {
+          var ask = document.createElement("div");
+          ask.className = "v20-extra";
+          ask.id = "v20-advice-ask";
+          ask.innerHTML = "<p id=\"v20-ask-advice\">还看不出你想不想听一条做法。可以先留下这段话，或是你自己要一条。</p><button type=\"button\" id=\"v20-keep-text\">先留下这段话</button><button type=\"button\" id=\"v20-want-advice\">我想听听建议</button>";
+          card0.appendChild(ask);
+          $("v20-keep-text").onclick = function () { p.paused = true; S.cur = -1; ui.pickStep = "home"; go("pick"); };
+          $("v20-want-advice").onclick = function () {
+            v.mind = v.mind || {};
+            v.mind.advice = "offer";
+            v.mind.adviceFrom = "user";
+            save();
+            renderCheck();
+          };
+        }
+      }
       if (v.attemptFrom === "manual" && k) k.textContent = (v.unlike ? "没有另一条理解出来的做法。可以改这句，或换方向。" : "按原话整理，不是理解。") + "方向只是在试的组合。";
       else if (v.attemptFrom === "ai" && k) k.textContent = (v.aiMode === "mock" ? "测试用模拟，不是真实模型。" : "模型给出的一种做法。格式核过，并不证明它真的懂。") + (v.unlike ? "已换一条。" : "");
       paintPremise(v);

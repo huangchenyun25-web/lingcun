@@ -38,7 +38,8 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   await sleep(120);
   await p.click('[data-dir="body"]');
   await p.click("#dir-go");
-  await sleep(200);
+  await sleep(150);
+  if (await p.$("#v20-want-advice")) { await p.click("#v20-want-advice"); await sleep(150); }
   const before = await p.$eval("#try-line", (e) => e.textContent);
   ok("整理句仍留着原话", before.indexOf("我想观测流星") >= 0, before);
   const injected = await p.evaluate(() => window.__lingcun20.applyCandidates([

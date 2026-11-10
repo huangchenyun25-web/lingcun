@@ -46,7 +46,8 @@ const pack = (text) => ({ attempts: [
   await sleep(80);
   await p.click('[data-dir="body"]');
   await p.click("#dir-go");
-  await sleep(200);
+  await sleep(150);
+  if (await p.$("#v20-want-advice")) { await p.click("#v20-want-advice"); await sleep(150); }
 
   async function toDraft() {
     await p.click("#try-no");

@@ -279,7 +279,8 @@ async function placeTap(p, label, set) {
   await phone.click('[data-dir="tech"]');
   await sleep(40);
   await phone.click("#dir-go");
-  await sleep(200);
+  await sleep(150);
+  if (await phone.$("#v20-want-advice")) { await phone.click("#v20-want-advice"); await sleep(150); }
   await shot(phone, "手机_一条尝试");
   ok("尝试用上带走的词", (await text(phone, "#try-line")).indexOf(A) >= 0 && (await text(phone, "#try-line")).indexOf("擅长") < 0);
   const tryC = await contrastOf(phone, ".tryline");
@@ -351,6 +352,8 @@ async function placeTap(p, label, set) {
   await shot(desk, "桌面_好奇方向");
   await desk.click('[data-dir="tech"]');
   await desk.click("#dir-go");
+  await sleep(150);
+  if (await desk.$("#v20-want-advice")) { await desk.click("#v20-want-advice"); await sleep(150); }
   await sleep(180);
   await shot(desk, "桌面_一条尝试");
   await desk.click("#try-yes");

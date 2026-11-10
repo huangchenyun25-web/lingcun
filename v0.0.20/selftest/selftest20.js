@@ -203,7 +203,8 @@ async function place(p, label, set) {
   await sleep(180);
   await phone.click('[data-dir="body"]');
   await phone.click("#dir-go");
-  await sleep(200);
+  await sleep(150);
+  if (await phone.$("#v20-want-advice")) { await phone.click("#v20-want-advice"); await sleep(150); }
   const line = await text(phone, "#try-line");
   ok("尝试引用带走的原话", line.indexOf("会修自行车") >= 0 && line.indexOf("不是你的经历") >= 0 && line.indexOf("擅长") < 0 && line.indexOf("现场观察") < 0, line);
   await phone.click("#try-yes");
@@ -257,7 +258,8 @@ async function place(p, label, set) {
   await sleep(150);
   await desk.click('[data-dir="craft"]');
   await desk.click("#dir-go");
-  await sleep(180);
+  await sleep(150);
+  if (await desk.$("#v20-want-advice")) { await desk.click("#v20-want-advice"); await sleep(150); }
   const line2 = await text(desk, "#try-line");
   ok("第二局尝试仍引用原话", line2.indexOf("上周在阳台种了三盆薄荷") >= 0 && line2.indexOf("不是你的经历") >= 0 && line2.indexOf("会修自行车") < 0, line2);
   await desk.click("#try-yes");

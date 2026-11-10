@@ -326,7 +326,7 @@
         }
         if (!(v.edited && v.epochDir === dirKey)) { buildPool(v); v.ix = 0; v.unlike = 0; applyIx(p); }
         bump("direction_picked"); bump("attempt_ok"); touchV(p); go("check");
-        maybePolish(p);
+        if (!(v.mind && v.mind.advice === "decline" && v.mind.adviceFrom !== "user") && !(v.mind && (v.mind.advice === "unsure" || !v.mind.advice) && v.mind.adviceFrom !== "user")) maybePolish(p);
       };
     };
 
