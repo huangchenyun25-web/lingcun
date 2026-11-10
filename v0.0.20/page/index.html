@@ -6953,6 +6953,8 @@ var LingcunTransport = { handler: null, waitMs: 0 };
       mind.advice = prev.advice || "unsure";
       mind.adviceFrom = prev.adviceFrom || "";
       mind.unknowns = prev.unknowns || [];
+      mind.readings = prev.readings || [];
+      mind.voiceConfirmed = !!prev.voiceConfirmed;
       if (prev.mode === "ai") mind.mode = "ai";
       if (prev.status === "ok") mind.status = "ok";
       return mind;
@@ -6963,8 +6965,19 @@ var LingcunTransport = { handler: null, waitMs: 0 };
       if (/不要给行动|先不要建议|不要建议/.test(bag)) return "decline";
       return "unsure";
     }
+    function voiceNeedsAsk(v) {
+      var list = (v && v.mind && v.mind.readings) || [];
+      if (!list.length || (v.mind && v.mind.voiceConfirmed)) return false;
+      var own = false, ask = false;
+      list.forEach(function (it) {
+        if (it.speaker === "self" && it.modality === "certain") own = true;
+        if (it.speaker === "reported" || it.modality === "hypothetical") ask = true;
+      });
+      return ask && !own;
+    }
     function wantsAction(v) {
       var m = (v && v.mind) || {};
+      if (voiceNeedsAsk(v)) return false;
       if (m.adviceFrom === "user" && m.advice === "offer") return true;
       if (m.advice === "offer" && m.adviceFrom === "model") return true;
       return false;
@@ -7078,7 +7091,8 @@ var LingcunTransport = { handler: null, waitMs: 0 };
       });
       if (m.unknowns && m.unknowns.length) html += '<p class="v20-unk">还不清楚：' + esc(m.unknowns.join("；")) + "</p>";
       if (m.ref) html += '<p class="v20-ref">对照，不是你的经历：' + esc(m.ref.pattern) + (m.ref.excerpt ? " 「" + esc(m.ref.excerpt) + "」" : "") + " " + esc(m.ref.limits) + "</p>";
-      if (m.advice === "decline" && m.adviceFrom !== "user") html += "<p id=\"v20-no-action\">这次先不给做法。这段话留在这里，不必做成一条尝试。</p><button type=\"button\" id=\"v20-keep-text\">先留下这段话</button><button type=\"button\" id=\"v20-want-advice\">我想听听建议</button>";
+      if (voiceNeedsAsk({ mind: m })) html += "<p id=\"v20-voice-ask\">这里有别人说的话，或者还只是假设。你自己是这么想的吗？</p><button type=\"button\" id=\"v20-own-voice\">是我自己的想法</button>";
+      else if (m.advice === "decline" && m.adviceFrom !== "user") html += "<p id=\"v20-no-action\">这次先不给做法。这段话留在这里，不必做成一条尝试。</p><button type=\"button\" id=\"v20-keep-text\">先留下这段话</button><button type=\"button\" id=\"v20-want-advice\">我想听听建议</button>";
       else if ((m.advice === "unsure" || !m.advice) && m.adviceFrom !== "user") html += "<p id=\"v20-ask-advice\">还看不出你想不想听一条做法。</p>";
       if (m.pace === "vent") html += "<p>你写了先不要分析。可以停在这里，不必做成一条尝试，也不会把这句存成以后的方向。</p><button type=\"button\" id=\"v20-hold\">先停在这里</button>";
       else if (m.pace === "hold") html += "<p>这里不能判断身体情况，也不会把担心写成诊断。如果身体让你不放心，优先联系你当地能找到的专业帮助。可以先停在这里，不必做尝试。</p><button type=\"button\" id=\"v20-hold\">先停在这里</button>";
@@ -7099,6 +7113,14 @@ var LingcunTransport = { handler: null, waitMs: 0 };
         S.cur = -1;
         ui.pickStep = "home";
         go("pick");
+      };
+      var own = $("v20-own-voice");
+      if (own) own.onclick = function () {
+        m.voiceConfirmed = true;
+        m.advice = "offer";
+        m.adviceFrom = "user";
+        save();
+        renderMaterial();
       };
       var want = $("v20-want-advice");
       if (want) want.onclick = allowAdvice;
@@ -7158,7 +7180,7 @@ var LingcunTransport = { handler: null, waitMs: 0 };
         };
       });
     }
-    var FACT = { type: "object", required: ["id", "kind", "text", "start", "end"], properties: { id: STR(12), kind: { type: "string", enum: ["said", "keep", "change", "constraint"] }, text: STR(80), start: { type: "integer", minimum: 0 }, end: { type: "integer", minimum: 0 } } };
+    var FACT = { type: "object", required: ["id", "kind", "text", "start", "end", "speaker", "modality"], properties: { id: STR(12), kind: { type: "string", enum: ["said", "keep", "change", "constraint"] }, text: STR(80), start: { type: "integer", minimum: 0 }, end: { type: "integer", minimum: 0 }, speaker: { type: "string", enum: ["self", "reported"] }, modality: { type: "string", enum: ["certain", "hypothetical", "refusal"] } } };
     var INF = { type: "object", required: ["id", "text", "start", "end"], properties: { id: STR(12), text: STR(40), start: { type: "integer", minimum: 0 }, end: { type: "integer", minimum: 0 } } };
     var UNDER_SCHEMA = { type: "object", required: ["facts", "inferences", "unknowns"], properties: { facts: { type: "array", maxItems: 8, items: FACT }, inferences: { type: "array", maxItems: 3, items: INF }, unknowns: { type: "array", maxItems: 4, items: STR(40) }, advice: { type: "string", enum: ["offer", "decline", "unsure"] }, question: STR0(80), question_why: STR0(80) } };
     var NEED = { type: "object", required: ["resource"], properties: { resource: STR(20), key: { type: "boolean" }, claim: STR(12), evidenceId: STR(20) } };
@@ -7270,6 +7292,7 @@ var LingcunTransport = { handler: null, waitMs: 0 };
         "question 最多一句，而且只有答案会改变建议时才问。不要默认对方想转行、辞职或换职业。对方已经说清要离开或只要吐槽时，不要再追问。多数时候 question 用空字符串。",
         "若对方明确不要分析、只是吐槽、或什么都不想做，advice 写 decline，并在 unknowns 里写明先不要给行动。不要把担心身体写成诊断。",
         "advice 只能是 offer、decline 或 unsure。offer 表示可以给一条低风险的试法，decline 表示不要建议或不要行动，unsure 表示看不出来。写在这个字段里。",
+        "每条 facts 都要有 speaker 和 modality。speaker 用 self 表示用户本人说的，reported 表示在转述别人。modality 用 certain 表示确定，hypothetical 表示假设或可能，refusal 表示拒绝。转述和假设不要写成用户已经要做的事。",
         "reference 若存在，只是公开摘录，不是这个人的履历，不能写进 facts。"
       ];
     }
@@ -7345,6 +7368,9 @@ var LingcunTransport = { handler: null, waitMs: 0 };
         p.v18.mind.advice = advice;
         p.v18.mind.adviceFrom = "model";
         p.v18.mind.unknowns = out.unknowns || [];
+        p.v18.mind.readings = (out.facts || []).concat(out.inferences || []).map(function (it) {
+          return { text: it.text, speaker: it.speaker || "", modality: it.modality || "", kind: it.kind || "" };
+        });
         p.v18.mind.understoodSeq = boundU.seq;
         p.v18.mind.mode = "ai";
         p.v18.mind.status = "ok";
