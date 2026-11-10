@@ -9,7 +9,7 @@ var p2 = fs.readFileSync(path.join(root, "p2.js"), "utf8");
 var v20 = fs.readFileSync(path.join(root, "v20.js"), "utf8");
 if (/fetch\s*\(|XMLHttpRequest|https?:\/\//.test(src)) throw new Error("userstate.js 里不该有网络调用");
 if (!/var LIVE_AI = false/.test(p2)) throw new Error("真实调用开关没有关掉");
-if (!/LIVE_AI === false\) \{ resolve\(null\); return;/.test(p2)) throw new Error("AI.run 没有在发请求前返回");
+if (!/!evalOn\(\) && typeof LIVE_AI !== "undefined" && LIVE_AI === false\) \{ resolve\(null\); return;/.test(p2)) throw new Error("发布默认仍应在发送前返回");
 if (/var LIVE_AI/.test(v20)) throw new Error("v20 不该再声明另一份开关");
 var ctx = {};
 vm.runInNewContext(src, ctx);

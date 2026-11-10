@@ -13,7 +13,7 @@
   (function () { var m = /[?&]relay=([^&#]+)/.exec(location.search); if (m) { var u = decodeURIComponent(m[1]); if (u === "off") RELAY_URL = ""; else if (/^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?\/?$/.test(u)) RELAY_URL = u.replace(/\/+$/, ""); } })();
   var RELAY_MODEL = "deepseek-flash";
   /* 第 108 条④ + #24：联网说明分两件事说清 */
-  var LIVE_AI = false; /* 只挡住真实传输。行动前提检查不靠这个开关，恢复传输要以后单独打开。 */
+  var LIVE_AI = false; /* 发布默认不发送，访客不会因此打模型。评测另开 window.__lingcunEval，仍走下面的中转和 claimModelSend。测试隔离只用 LingcunTransport。 */
   var NET_NOTICE = "生成和修改时，你提供的相关内容会发送给 AI 服务处理：默认经过另存人生的中转服务转给 DeepSeek（中转不保存内容）；用自己的密钥时，直接从你的浏览器发给你选的那家。额外搜索网上资料，只在你主动选择并确认搜索内容后进行。";
   var WAIT_LIMIT = 10000, AGENT_LIMIT = 180000; /* v0.0.13（#39）：agent 模式也有超时（三分钟） */ /* 第 102 条 / #9：10 秒是等待体验的阈值，不是完成承诺 */
   var SKIP = "不确定，先跳过", OTHER = "其他，我自己写", PEND = "待补";
@@ -133,10 +133,13 @@
       return { lingcun_task: "v1", id: rec.id, type: t.type, category: t.category || "", role: t.role, instructions: t.instructions, fact_rule: t.factRule || "", inputs: t.inputs, output_schema: t.schema,
         how_to_submit: "把符合 output_schema 的 JSON 填进 #ai-result-" + rec.id + " 再点 #ai-submit-" + rec.id + "；或在页面里调用 window.lingcunAI.submit(\"" + rec.id + "\", 结果对象)。事实按 fact_rule 处理。" };
     }
+    function evalOn() {
+      try { return window.__lingcunEval === true; } catch (e) { return false; }
+    }
     function run(task, slot) {
       return new Promise(function (resolve) {
         if (typeof LingcunTransport !== "undefined" && LingcunTransport.handler) { LingcunTransport.handler(task, resolve); return; }
-        if (typeof LIVE_AI !== "undefined" && LIVE_AI === false) { resolve(null); return; }
+        if (!evalOn() && typeof LIVE_AI !== "undefined" && LIVE_AI === false) { resolve(null); return; }
         if (task.key) Object.keys(tasks).forEach(function (id) { if (tasks[id].task.key === task.key) { stopTimers(tasks[id]); delete tasks[id]; } });
         var rec = { id: task.type + "-" + (++seq), task: task, slot: slot, resolve: resolve };
         tasks[rec.id] = rec; attempt(rec);
@@ -345,20 +348,23 @@
     function contentOf(data) { var ch = data && data.choices && data.choices[0]; if (ch && ch.finish_reason === "length") throw cutErr(); var c = ch && ch.message && ch.message.content; if (typeof c !== "string" || !c) throw new Error("服务没有返回内容"); return c; }
     function claimModelSend(rec, tg) {
       var gate = typeof LingcunAiBudget !== "undefined" ? LingcunAiBudget : (typeof window !== "undefined" ? window.__lingcunAiBudget : null);
-      if (!gate || typeof gate.claim !== "function") return { ok: false, reason: "no-budget-gate" };
-      return gate.claim({ route: tg && tg.relay ? "relay" : "direct", kind: rec && rec.task && rec.task.type || "", channel: "page" }) || { ok: false, reason: "no-budget-gate" };
+      var meta = { route: tg && tg.relay ? "relay" : "direct", kind: rec && rec.task && rec.task.type || "", channel: "page" };
+      if (!gate || typeof gate.claim !== "function") return Promise.resolve({ ok: false, reason: "no-budget-gate" });
+      try { return Promise.resolve(gate.claim(meta)).then(function (ticket) { return ticket || { ok: false, reason: "no-budget-gate" }; }, function () { return { ok: false, reason: "no-budget-gate" }; }); }
+      catch (e) { return Promise.resolve({ ok: false, reason: "no-budget-gate" }); }
     }
     function fetchWith(rec, body, tg) {
-      var ticket = claimModelSend(rec, tg);
-      if (!ticket.ok) {
-        var blocked = new Error(ticket.reason === "cap" ? "这一轮的模型次数已经用完" : "模型发送没有经过共用的次数闸");
-        blocked.budget = ticket.reason || "no-budget-gate";
-        return Promise.reject(blocked);
+      return Promise.resolve(claimModelSend(rec, tg)).then(function (ticket) {
+      if (!ticket || !ticket.ok) {
+        var blocked = new Error(ticket && ticket.reason === "cap" ? "这一轮的模型次数已经用完" : "模型发送没有经过共用的次数闸");
+        blocked.budget = (ticket && ticket.reason) || "no-budget-gate";
+        throw blocked;
       }
       var ctl = window.AbortController ? new AbortController() : null; rec.ctl = ctl;
       var timer = ctl ? setTimeout(function () { ctl.abort(); }, 120000) : 0;
       return fetch(tg.url, { method: "POST", headers: tg.headers, body: JSON.stringify(body), signal: ctl ? ctl.signal : undefined })
         .then(function (r) { r._timer = timer; if (tg.relay) { var ql = r.headers.get("x-quota-remaining"); if (ql !== null && ql !== "" && !isNaN(+ql)) { quotaLeft = +ql; emit(); } } return r; }, function (e) { clearTimeout(timer); throw netErr(e, tg); });
+      });
     }
     function postPlain(rec, body, tg) {
       var tm = rec.tm;

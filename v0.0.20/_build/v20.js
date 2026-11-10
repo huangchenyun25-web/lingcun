@@ -517,8 +517,11 @@
       var timer = setTimeout(function () { try { AI.drop(task.key); } catch (e) {} finish(null, "timeout"); }, wait);
       AI.run(task, slot).then(function (out) { clearTimeout(timer); finish(out || null, out ? "" : "empty"); }, function () { clearTimeout(timer); finish(null, "error"); });
     }
+    function evalOn() {
+      try { return window.__lingcunEval === true; } catch (e) { return false; }
+    }
     function transportOn() {
-      return !!((typeof LingcunTransport !== "undefined" && LingcunTransport.handler) || LIVE_AI);
+      return !!((typeof LingcunTransport !== "undefined" && LingcunTransport.handler) || LIVE_AI || evalOn());
     }
     function gateFlight(p, bound, err) {
       var gate = LingcunEpoch.accept(p, bound);

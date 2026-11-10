@@ -111,7 +111,7 @@ function auditProduct(buildDir) {
   });
   return {
     liveOff: /var LIVE_AI = false/.test(p2),
-    returnsBeforeFetch: /LIVE_AI === false\) \{ resolve\(null\); return;/.test(p2),
+    returnsBeforeFetch: /!evalOn\(\) && typeof LIVE_AI !== "undefined" && LIVE_AI === false/.test(p2),
     fetchClaims: /claimModelSend\(/.test(p2) && /function fetchWith\(/.test(p2),
     otherModelFetches: hits
   };
