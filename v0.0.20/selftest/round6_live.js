@@ -24,14 +24,18 @@ frozen.cases.forEach(function (c) { byId[c.id] = c; });
 var CAP = 6;
 function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
 function used() { return budget.snapshot().used; }
-async function settle(raw) {
+async function settle(raw, p) {
   var last = -1, stable = 0, i;
-  for (i = 0; i < 40; i++) {
+  for (i = 0; i < 60; i++) {
     await sleep(400);
-    if (raw.length === last) stable++;
+    var pending = false;
+    try {
+      pending = await p.evaluate(function () { return document.body.innerText.indexOf("结果还没回来") >= 0; });
+    } catch (e) {}
+    if (raw.length === last && !pending) stable++;
     else { stable = 0; last = raw.length; }
-    if (raw.length > 0 && stable >= 4) return;
-    if (used() >= CAP && stable >= 2) return;
+    if (raw.length > 0 && stable >= 3 && !pending) return;
+    if (used() >= CAP && stable >= 2 && !pending) return;
   }
 }
 async function runCase(b, item) {
@@ -69,7 +73,7 @@ async function runCase(b, item) {
     await p.click("#pk-type");
     await p.fill("#pk-idea", item.input);
     await p.evaluate(function () { document.querySelector("#pk-go").click(); });
-    await settle(raw);
+    await settle(raw, p);
     row.screen = await p.evaluate(function () {
       function t(id) { var e = document.querySelector(id); return e ? e.textContent : ""; }
       var go = document.querySelector("#frag-go");
@@ -106,7 +110,7 @@ async function runCase(b, item) {
 }
 
 (async function () {
-  var plan = ["U02", "U03"];
+  var plan = (process.env.CASES || "U02,U03").split(",");
   var b = await chromium.launch({ executablePath: "/usr/bin/google-chrome", args: ["--no-sandbox", "--disable-gpu"] });
   var rows = [];
   var i;
