@@ -108,16 +108,54 @@
       var m = v.mind || {};
       return [m.source || "", m.answer || "", (v.take || []).join("|"), (v.leave || []).join("|"), (v.direction && v.direction.id) || "", (v.direction && v.direction.custom) || ""].join("\n");
     }
+    function textsOverlap(a, b) {
+      a = String(a || "");
+      b = String(b || "");
+      if (a.length < 2 || b.length < 2) return false;
+      return a === b || a.indexOf(b) >= 0 || b.indexOf(a) >= 0;
+    }
+    function voiceMark(text, readings) {
+      var marks = {};
+      (readings || []).forEach(function (r) {
+        if (!r || !textsOverlap(text, r.text)) return;
+        if (r.speaker === "reported") marks.reported = 1;
+        else if (r.modality === "hypothetical") marks.hypothetical = 1;
+        else if (r.modality === "refusal") marks.refusal = 1;
+        else if (r.speaker === "self" && r.modality === "certain") marks.certain = 1;
+      });
+      if (marks.reported) return "reported";
+      if (marks.hypothetical) return "hypothetical";
+      if (marks.refusal) return "refusal";
+      if (marks.certain) return "certain";
+      return "";
+    }
+    function isDirectText(text, readings) {
+      var mark = voiceMark(text, readings);
+      if (!mark) return true;
+      return mark === "certain";
+    }
+    function candidateBasis(v) {
+      var taken = v && v.take && v.take[0];
+      if (taken) return taken;
+      var seq = ((v && v.fragments) || []).filter(function (w) { return w && w !== SENT; });
+      return seq[0] || "";
+    }
     function manualLine(v) {
       var t0 = (v.take && v.take[0]) || "";
       var d = dirLabel20(v);
       if (!t0) return "";
+      var mark = voiceMark(t0, v.mind && v.mind.readings);
       var kind = "自述";
-      if (v.record) {
+      if (mark === "reported") kind = "你转述的";
+      else if (mark === "hypothetical") kind = "你设想的";
+      else if (mark === "refusal") kind = "你拒绝的";
+      else if (v.record) {
         var view = LingcunUserState.view(v.record);
         if (view.intents.some(function (x) { return x.text === t0; })) kind = "意愿";
       }
-      return "带走的是你的" + kind + "「" + t0 + "」。" + (d ? "「" + d + "」只是在试的组合，不是你的经历。" : "") + "这一步还要你改成自己愿意做的事。";
+      if (v.mind && v.mind.voiceConfirmed && mark && mark !== "certain") kind = "你确认过的";
+      var head = kind === "你确认过的" ? "带走的是你确认过的「" : "带走的是你的" + kind + "「";
+      return head + t0 + "」。" + (d ? "「" + d + "」只是在试的组合，不是你的经历。" : "") + "这一步还要你改成自己愿意做的事。";
     }
     function syncOut(p) {
       var v = p.v18;
@@ -150,12 +188,14 @@
       }
       if (!wantsAction(v)) {
         v.attempt = "";
-        v.pool = [];
+        v.pool = [""];
         v.attemptFrom = "withhold";
         v.attemptEpoch = v.epochSeq || 0;
+        if (v.mind) v.mind.holdAttempt = true;
         syncOut(p);
         return;
       }
+      if (v.mind) v.mind.holdAttempt = false;
       if (v.candidatePack && v.candidatePack.length) {
         var skipped = !!(v.premise && v.premise.skipped);
         v.premise = LingcunPremises.settle(v.record, v.candidatePack);
@@ -228,14 +268,12 @@
       return "unsure";
     }
     function voiceNeedsAsk(v) {
-      var list = (v && v.mind && v.mind.readings) || [];
-      if (!list.length || (v.mind && v.mind.voiceConfirmed)) return false;
-      var own = false, ask = false;
-      list.forEach(function (it) {
-        if (it.speaker === "self" && it.modality === "certain") own = true;
-        if (it.speaker === "reported" || it.modality === "hypothetical") ask = true;
-      });
-      return ask && !own;
+      var m = v && v.mind;
+      if (!m || m.voiceConfirmed || !m.readings || !m.readings.length) return false;
+      if (m.advice === "decline" && m.adviceFrom !== "user") return false;
+      var basis = candidateBasis(v);
+      if (!basis) return false;
+      return !isDirectText(basis, m.readings);
     }
     function wantsAction(v) {
       var m = (v && v.mind) || {};
@@ -316,7 +354,8 @@
         var more = $("v19-more");
         if (more) more.hidden = false;
       }
-      if ((v.mind && v.mind.pace && v.mind.pace !== "try") || (v.mind && v.mind.advice === "decline" && v.mind.adviceFrom !== "user")) {
+      if (v.mind) v.mind.holdAttempt = !wantsAction(v);
+      if ((v.mind && v.mind.pace && v.mind.pace !== "try") || (v.mind && v.mind.advice === "decline" && v.mind.adviceFrom !== "user") || voiceNeedsAsk(v)) {
         var goBtn = $("frag-go");
         if (goBtn) goBtn.disabled = true;
       }
@@ -342,18 +381,28 @@
       var html = '<p class="v20-mode">' + esc(mode) + "</p>";
       function rows(list, name) {
         if (!list || !list.length) return "";
-        return "<p>" + name + "</p><ul>" + list.map(function (f) {
+        var voice = name === "你转述的" ? "reported" : name === "你设想的" ? "hypothetical" : name === "你拒绝的" ? "refusal" : name === "自述" ? "self" : name === "意愿" ? "intent" : "other";
+        return "<p data-voice=\"" + voice + "\">" + name + "</p><ul>" + list.map(function (f) {
           return "<li>" + esc(f.text) + " <button type=\"button\" class=\"v20-mini\" data-drop-fact=\"" + esc(f.id) + "\">撤回</button></li>";
         }).join("") + "</ul>";
       }
-      html += rows(m.facts, "自述");
-      html += rows(m.intents, "意愿");
+      function grouped(list, plainName) {
+        var buckets = { reported: [], hypothetical: [], refusal: [], plain: [] };
+        (list || []).forEach(function (f) {
+          var mark = voiceMark(f.text, m.readings);
+          if (mark === "reported" || mark === "hypothetical" || mark === "refusal") buckets[mark].push(f);
+          else buckets.plain.push(f);
+        });
+        return rows(buckets.reported, "你转述的") + rows(buckets.hypothetical, "你设想的") + rows(buckets.refusal, "你拒绝的") + rows(buckets.plain, plainName);
+      }
+      html += grouped(m.facts, "自述");
+      html += grouped(m.intents, "意愿");
       (m.inferences || []).forEach(function (inf) {
         html += '<p class="v20-inf">待确认，还不是你的经历：' + esc(inf.text) + " <button type=\"button\" class=\"v20-mini\" data-confirm=\"" + esc(inf.id) + "\">算我说的</button> <button type=\"button\" class=\"v20-mini\" data-drop-inf=\"" + esc(inf.id) + "\">不算</button></p>";
       });
       if (m.unknowns && m.unknowns.length) html += '<p class="v20-unk">还不清楚：' + esc(m.unknowns.join("；")) + "</p>";
       if (m.ref) html += '<p class="v20-ref">对照，不是你的经历：' + esc(m.ref.pattern) + (m.ref.excerpt ? " 「" + esc(m.ref.excerpt) + "」" : "") + " " + esc(m.ref.limits) + "</p>";
-      if (voiceNeedsAsk({ mind: m })) html += "<p id=\"v20-voice-ask\">这里有别人说的话，或者还只是假设。你自己是这么想的吗？</p><button type=\"button\" id=\"v20-own-voice\">是我自己的想法</button>";
+      if (voiceNeedsAsk(p.v18)) html += "<p id=\"v20-voice-ask\">这里有别人说的话，或者还只是假设。你自己是这么想的吗？</p><button type=\"button\" id=\"v20-own-voice\">是我自己的想法</button>";
       else if (m.advice === "decline" && m.adviceFrom !== "user") html += "<p id=\"v20-no-action\">这次先不给做法。这段话留在这里，不必做成一条尝试。</p><button type=\"button\" id=\"v20-keep-text\">先留下这段话</button><button type=\"button\" id=\"v20-want-advice\">我想听听建议</button>";
       else if ((m.advice === "unsure" || !m.advice) && m.adviceFrom !== "user") html += "<p id=\"v20-ask-advice\">还看不出你想不想听一条做法。</p>";
       if (m.pace === "vent") html += "<p>你写了先不要分析。可以停在这里，不必做成一条尝试，也不会把这句存成以后的方向。</p><button type=\"button\" id=\"v20-hold\">先停在这里</button>";
@@ -799,7 +848,25 @@
       var p = curP();
       if (!p || !p.v18) return;
       var v = p.v18, k = $("try-kicker");
-      if (!wantsAction(v)) {
+      if (voiceNeedsAsk(v)) {
+        var cardV = document.querySelector(".trycard");
+        if (cardV && !$("v20-own-voice")) {
+          var voice = document.createElement("div");
+          voice.className = "v20-extra";
+          voice.id = "v20-advice-ask";
+          voice.innerHTML = "<p id=\"v20-voice-ask\">这里有别人说的话，或者还只是假设。你自己是这么想的吗？</p><button type=\"button\" id=\"v20-own-voice\">是我自己的想法</button>";
+          cardV.appendChild(voice);
+          $("v20-own-voice").onclick = function () {
+            v.mind = v.mind || {};
+            v.mind.voiceConfirmed = true;
+            v.mind.advice = "offer";
+            v.mind.adviceFrom = "user";
+            v.mind.holdAttempt = false;
+            save();
+            renderCheck();
+          };
+        }
+      } else if (!wantsAction(v)) {
         var card0 = document.querySelector(".trycard");
         if (card0 && !$("v20-want-advice")) {
           var ask = document.createElement("div");
@@ -812,6 +879,7 @@
             v.mind = v.mind || {};
             v.mind.advice = "offer";
             v.mind.adviceFrom = "user";
+            v.mind.holdAttempt = false;
             save();
             renderCheck();
           };
