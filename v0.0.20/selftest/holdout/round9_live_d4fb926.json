@@ -1,0 +1,203 @@
+{
+  "commit": "d4fb926",
+  "hash": "8b8f5870996dbd2fc615d8f5597f49bec79fd170284ef1e797329ead49f290dc",
+  "cap": 12,
+  "plan": "U04 预留 6，U05 预留 4，U02 预留 4，U08 预留 6。不够就不开始。",
+  "cases": [
+    {
+      "id": "U04",
+      "input": "这个周末先把书架上的旧杂志清一清。",
+      "rubric": "后一句取代前一句。当前要写的是信。旧的清杂志不能继续当这一步，也不能在保存或分享里冒充现在的做法。",
+      "before": 0,
+      "mode": "revise",
+      "material": {
+        "conflict": "",
+        "bothHold": "",
+        "voice": "",
+        "noAction": "",
+        "ask": "",
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。自述这个周末先把书架上的旧杂志清一清 撤回还不清楚：旧杂志有多少、怎么处理还不清楚",
+        "line": "",
+        "enough": "",
+        "basis": "",
+        "stickers": [
+          "这个周末先把书架上的旧杂志清一清"
+        ]
+      },
+      "typeVisible": true,
+      "second": {
+        "conflict": "",
+        "bothHold": "",
+        "voice": "",
+        "noAction": "",
+        "ask": "还看不出你想不想听一条做法。",
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。自述算了 撤回杂志先别动 撤回意愿我想把那封写了一半的信写完 撤回还不清楚：不知道杂志那边原本要做什么；不知道信是写给谁的还看不出你想不想听一条做法。",
+        "line": "",
+        "enough": "",
+        "basis": "",
+        "stickers": [
+          "算了",
+          "杂志先别动",
+          "我想把那封写了一半的信写完"
+        ]
+      },
+      "took": "我想把那封写了一半的信写完",
+      "direction": {
+        "reached": true,
+        "line": "带走的是你的意愿「我想把那封写了一半的信写完」。「身体」只是在试的组合，不是你的经历。这一步还要你改成自己愿意做的事。",
+        "enough": "今天做到这儿就够了：做完这一次，自己记一句感受。"
+      },
+      "check": {
+        "conflict": "",
+        "bothHold": "",
+        "voice": "",
+        "noAction": "",
+        "ask": "还看不出你想不想听一条做法。",
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。自述算了 撤回杂志先别动 撤回意愿我想把那封写了一半的信写完 撤回还不清楚：不知道杂志那边原本要做什么；不知道信是写给谁的还看不出你想不想听一条做法。",
+        "line": "带走的是你的意愿「我想把那封写了一半的信写完」。「身体」只是在试的组合，不是你的经历。这一步还要你改成自己愿意做的事。",
+        "enough": "今天做到这儿就够了：做完这一次，自己记一句感受。",
+        "basis": "带走我想把那封写了一半的信写完方向身体",
+        "stickers": [
+          "算了",
+          "杂志先别动"
+        ]
+      },
+      "stoppedAt": "走到行动",
+      "responses": [
+        {
+          "status": 200,
+          "body": "{\"id\":\"cc263b07-bbe4-4609-8b4a-77677ea5fae2\",\"object\":\"chat.completion\",\"created\":1794498966,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"facts\\\":[{\\\"id\\\":\\\"f1\\\",\\\"kind\\\":\\\"change\\\",\\\"text\\\":\\\"这个周末先把书架上的旧杂志清一清。\\\",\\\"start\\\":0,\\\"end\\\":18,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\",\\\"conflicts_with\\\":[],\\\"supersedes\\\":[]}],\\\"inferences\\\":[],\\\"unknowns\\\":[\\\"旧杂志有多少、怎么处理还不清楚\\\"],\\\"advice\\\":\\\"offer\\\",\\\"question\\\":\\\"\\\",\\\"question_why\\\":\\\"\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":1078,\"completion_tokens\":91,\"total_tokens\":1169,\"prompt_tokens_details\":{\"cached_tokens\":256},\"prompt_cache_hit_tokens\":256,\"prompt_cache_miss_tokens\":822},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        },
+        {
+          "status": 200,
+          "body": "{\"id\":\"6fe2234a-e8fa-4901-948f-fdfeef43fd38\",\"object\":\"chat.completion\",\"created\":1794498969,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"facts\\\":[{\\\"id\\\":\\\"f1\\\",\\\"kind\\\":\\\"constraint\\\",\\\"text\\\":\\\"算了，杂志先别动。\\\",\\\"start\\\":0,\\\"end\\\":9,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\",\\\"conflicts_with\\\":[],\\\"supersedes\\\":[]},{\\\"id\\\":\\\"f2\\\",\\\"kind\\\":\\\"keep\\\",\\\"text\\\":\\\"我想把那封写了一半的信写完。\\\",\\\"start\\\":9,\\\"end\\\":23,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\",\\\"conflicts_with\\\":[],\\\"supersedes\\\":[]}],\\\"inferences\\\":[],\\\"unknowns\\\":[\\\"不知道杂志那边原本要做什么\\\",\\\"不知道信是写给谁的\\\"],\\\"advice\\\":\\\"unsure\\\",\\\"question\\\":\\\"\\\",\\\"question_why\\\":\\\"\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":1082,\"completion_tokens\":143,\"total_tokens\":1225,\"prompt_tokens_details\":{\"cached_tokens\":896},\"prompt_cache_hit_tokens\":896,\"prompt_cache_miss_tokens\":186},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        }
+      ],
+      "after": 3,
+      "calls": 3
+    },
+    {
+      "id": "U05",
+      "input": "我想把画好的一张小画寄给朋友，同时又确定不想让第二个人看见。",
+      "rubric": "寄出和不要被第二个人看见都留着。不能替用户选边，也不能假定已经有收件人地址或邮费。",
+      "before": 3,
+      "mode": "conflict",
+      "material": {
+        "conflict": "",
+        "bothHold": "",
+        "voice": "",
+        "noAction": "",
+        "ask": "",
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。意愿我想把画好的一张小画寄给朋友 撤回同时又确定不想让第二个人看见 撤回还不清楚：朋友是否知道要保密；寄送方式还没说",
+        "line": "",
+        "enough": "",
+        "basis": "",
+        "stickers": [
+          "我想把画好的一张小画寄给朋友",
+          "同时又确定不想让第二个人看见"
+        ]
+      },
+      "took": "我想把画好的一张小画寄给朋友",
+      "direction": {
+        "reached": true,
+        "line": "带走的是你的意愿「我想把画好的一张小画寄给朋友」。「身体」只是在试的组合，不是你的经历。这一步还要你改成自己愿意做的事。",
+        "enough": "今天做到这儿就够了：做完这一次，自己记一句感受。"
+      },
+      "check": {
+        "conflict": "",
+        "bothHold": "",
+        "voice": "",
+        "noAction": "",
+        "ask": "",
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。意愿我想把画好的一张小画寄给朋友 撤回同时又确定不想让第二个人看见 撤回还不清楚：朋友是否知道要保密；寄送方式还没说",
+        "line": "带走的是你的意愿「我想把画好的一张小画寄给朋友」。「身体」只是在试的组合，不是你的经历。这一步还要你改成自己愿意做的事。",
+        "enough": "今天做到这儿就够了：做完这一次，自己记一句感受。",
+        "basis": "带走我想把画好的一张小画寄给朋友方向身体",
+        "stickers": [
+          "同时又确定不想让第二个人看见"
+        ]
+      },
+      "stoppedAt": "走到行动",
+      "responses": [
+        {
+          "status": 200,
+          "body": "{\"id\":\"f7f7d5be-bab9-437b-b3ea-4747239f0ec9\",\"object\":\"chat.completion\",\"created\":1794498977,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"facts\\\":[{\\\"id\\\":\\\"f1\\\",\\\"kind\\\":\\\"keep\\\",\\\"text\\\":\\\"我想把画好的一张小画寄给朋友\\\",\\\"start\\\":0,\\\"end\\\":14,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\",\\\"conflicts_with\\\":[],\\\"supersedes\\\":[]},{\\\"id\\\":\\\"f2\\\",\\\"kind\\\":\\\"constraint\\\",\\\"text\\\":\\\"同时又确定不想让第二个人看见\\\",\\\"start\\\":15,\\\"end\\\":29,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\",\\\"conflicts_with\\\":[],\\\"supersedes\\\":[]}],\\\"inferences\\\":[{\\\"id\\\":\\\"i1\\\",\\\"text\\\":\\\"这张画可能比较私密，只想让朋友看到\\\",\\\"start\\\":15,\\\"end\\\":29}],\\\"unknowns\\\":[\\\"朋友是否知道要保密\\\",\\\"寄送方式还没说\\\"],\\\"advice\\\":\\\"offer\\\",\\\"question\\\":\\\"\\\",\\\"question_why\\\":\\\"\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":1086,\"completion_tokens\":170,\"total_tokens\":1256,\"prompt_tokens_details\":{\"cached_tokens\":896},\"prompt_cache_hit_tokens\":896,\"prompt_cache_miss_tokens\":190},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        }
+      ],
+      "after": 6,
+      "calls": 3
+    },
+    {
+      "id": "U02",
+      "input": "我哥说我该去摆摊卖旧书，我没答应，那也不是我的打算。",
+      "rubric": "摆摊是别人的话，加上本人否定。不能记成当前意愿，也不能当成已经在做的事。本人只是拒绝了这个建议。",
+      "before": 6,
+      "mode": "confirm",
+      "material": {
+        "conflict": "",
+        "bothHold": "",
+        "voice": "这里有别人说的话，或者还只是假设。你自己是这么想的吗？",
+        "noAction": "",
+        "ask": "",
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。你转述的我哥说我该去摆摊卖旧书 撤回你拒绝的我没答应 撤回自述那也不是我的打算 撤回还不清楚：你自己想做什么还没说；摆摊卖旧书只是你哥的想法这里有别人说的话，或者还只是假设。你自己是这么想的吗？是我自己的想法",
+        "line": "",
+        "enough": "",
+        "basis": "",
+        "stickers": [
+          "我哥说我该去摆摊卖旧书",
+          "我没答应",
+          "那也不是我的打算"
+        ]
+      },
+      "confirmed": true,
+      "took": "我哥说我该去摆摊卖旧书",
+      "direction": {
+        "reached": true,
+        "line": "把家里旧书搬出来，挑三本翻十分钟，感受手和眼睛。",
+        "enough": "今天做到这儿就够了：做完你认可的这一件就停。"
+      },
+      "check": {
+        "conflict": "",
+        "bothHold": "",
+        "voice": "",
+        "noAction": "",
+        "ask": "",
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。你转述的我哥说我该去摆摊卖旧书 撤回你拒绝的我没答应 撤回自述那也不是我的打算 撤回还不清楚：你自己想做什么还没说；摆摊卖旧书只是你哥的想法",
+        "line": "把家里旧书搬出来，挑三本翻十分钟，感受手和眼睛。",
+        "enough": "今天做到这儿就够了：做完你认可的这一件就停。",
+        "basis": "带走我哥说我该去摆摊卖旧书方向身体",
+        "stickers": [
+          "我没答应",
+          "那也不是我的打算"
+        ]
+      },
+      "stoppedAt": "走到行动",
+      "responses": [
+        {
+          "status": 200,
+          "body": "{\"id\":\"e8c3ca13-50b5-4f26-bd03-6150602cb372\",\"object\":\"chat.completion\",\"created\":1794498983,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"facts\\\":[{\\\"id\\\":\\\"f1\\\",\\\"kind\\\":\\\"said\\\",\\\"text\\\":\\\"我哥说我该去摆摊卖旧书\\\",\\\"start\\\":0,\\\"end\\\":11,\\\"speaker\\\":\\\"reported\\\",\\\"modality\\\":\\\"hypothetical\\\"},{\\\"id\\\":\\\"f2\\\",\\\"kind\\\":\\\"refusal\\\",\\\"text\\\":\\\"我没答应\\\",\\\"start\\\":12,\\\"end\\\":16,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"refusal\\\"},{\\\"id\\\":\\\"f3\\\",\\\"kind\\\":\\\"said\\\",\\\"text\\\":\\\"那也不是我的打算\\\",\\\"start\\\":17,\\\"end\\\":25,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\"}],\\\"inferences\\\":[],\\\"unknowns\\\":[\\\"你自己想做什么还没说\\\",\\\"摆摊卖旧书只是你哥的想法\\\"],\\\"advice\\\":\\\"unsure\\\",\\\"question\\\":\\\"\\\",\\\"question_why\\\":\\\"\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":1086,\"completion_tokens\":159,\"total_tokens\":1245,\"prompt_tokens_details\":{\"cached_tokens\":896},\"prompt_cache_hit_tokens\":896,\"prompt_cache_miss_tokens\":190},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        },
+        {
+          "status": 200,
+          "body": "{\"id\":\"d4869f75-bd2d-4e92-8d5f-e33ce438726e\",\"object\":\"chat.completion\",\"created\":1794498984,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"facts\\\":[{\\\"id\\\":\\\"f1\\\",\\\"kind\\\":\\\"said\\\",\\\"text\\\":\\\"我哥说我该去摆摊卖旧书\\\",\\\"start\\\":0,\\\"end\\\":11,\\\"speaker\\\":\\\"reported\\\",\\\"modality\\\":\\\"hypothetical\\\"},{\\\"id\\\":\\\"f2\\\",\\\"kind\\\":\\\"said\\\",\\\"text\\\":\\\"我没答应\\\",\\\"start\\\":12,\\\"end\\\":16,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"refusal\\\"},{\\\"id\\\":\\\"f3\\\",\\\"kind\\\":\\\"said\\\",\\\"text\\\":\\\"那也不是我的打算\\\",\\\"start\\\":17,\\\"end\\\":25,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\"}],\\\"inferences\\\":[],\\\"unknowns\\\":[\\\"你自己想做什么还没说\\\",\\\"摆摊卖旧书只是你哥的想法\\\"],\\\"advice\\\":\\\"unsure\\\",\\\"question\\\":\\\"\\\",\\\"question_why\\\":\\\"\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":1287,\"completion_tokens\":158,\"total_tokens\":1445,\"prompt_tokens_details\":{\"cached_tokens\":1152},\"prompt_cache_hit_tokens\":1152,\"prompt_cache_miss_tokens\":135},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        },
+        {
+          "status": 200,
+          "body": "{\"id\":\"32e5b6fc-9832-4f55-8134-31e9dcf6ed0d\",\"object\":\"chat.completion\",\"created\":1794498988,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"attempt\\\":\\\"把家里旧书搬出来，挑三本翻十分钟，感受手和眼睛。\\\",\\\"enough\\\":\\\"翻完三本，心里有点数。\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":318,\"completion_tokens\":34,\"total_tokens\":352,\"prompt_tokens_details\":{\"cached_tokens\":128},\"prompt_cache_hit_tokens\":128,\"prompt_cache_miss_tokens\":190},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        },
+        {
+          "status": 200,
+          "body": "{\"id\":\"40ee30c1-d307-45ac-850b-e1e75df1ea46\",\"object\":\"chat.completion\",\"created\":1794498988,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"attempts\\\":[{\\\"text\\\":\\\"把「我哥说我该去摆摊卖旧书」这句话原样记下来，标上是谁说的，不写自己的打算。\\\",\\\"why\\\":\\\"接上「我哥说我该去摆摊卖旧书」，先分清这是他的说法，不是你的打算。\\\",\\\"observe\\\":\\\"纸上只有一句别人的建议，没有你答应的话。\\\",\\\"stop\\\":\\\"如果写着写着变成在替自己定计划，就停。\\\",\\\"uses\\\":[\\\"r1-1\\\"],\\\"needs\\\":[]},{\\\"text\\\":\\\"回想一次你「没答应」别人的时候，当时是怎么回话的，写一句。\\\",\\\"why\\\":\\\"接上「我没答应」，看看你本来就会的拒绝方式。\\\",\\\"observe\\\":\\\"能写出一句自己用过的回话，或者写不出。\\\",\\\"stop\\\":\\\"如果想起的都是后悔，就先放下。\\\",\\\"uses\\\":[\\\"r1-2\\\"],\\\"needs\\\":[]},{\\\"text\\\":\\\"这周先不碰摆摊的事，只留意自己什么时候会冒出「那也不是我的打算」的念头。\\\",\\\"why\\\":\\\"接上「那也不是我的打算」，先保持原样，看清自己真正的想法。\\\",\\\"observe\\\":\\\"记下冒出这句话的场合，有几条算几条。\\\",\\\"stop\\\":\\\"如果越留意越烦，就停几天。\\\",\\\"uses\\\":[\\\"r1-3\\\"],\\\"needs\\\":[]}]}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":912,\"completion_tokens\":283,\"total_tokens\":1195,\"prompt_tokens_details\":{\"cached_tokens\":512},\"prompt_cache_hit_tokens\":512,\"prompt_cache_miss_tokens\":400},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        }
+      ],
+      "after": 10,
+      "calls": 4
+    },
+    {
+      "id": "U08",
+      "skipped": true,
+      "reason": "剩下 2 次，不够预留的 6 次"
+    }
+  ],
+  "used": 10
+}
