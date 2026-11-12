@@ -71,7 +71,8 @@ function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
   await p.evaluate(function () { document.querySelector("#dir-go").click(); });
   await sleep(400);
   var line = await p.$eval("#try-line", function (e) { return e.textContent; }).catch(function () { return ""; });
-  ok("行动同时留下两边", line.indexOf(lend) >= 0 && line.indexOf(stay) >= 0 && line.indexOf("只把阳台的椅子借给楼上") < 0, line);
+  var hold = await p.$eval("#v20-both-hold", function (e) { return e.textContent; }).catch(function () { return ""; });
+  ok("没有同时做得到的动作就先不给做法", hold.indexOf("先不给做法") >= 0 && line.indexOf("两边都还在") < 0 && line.indexOf("只把阳台的椅子借给楼上") < 0, hold + " / " + line);
   ok("没有发出网页请求", net.length === 0, net.join(" "));
   await b.close();
   console.log(fail ? ("FAILED " + fail + "/" + n) : ("passed " + n));

@@ -6935,24 +6935,35 @@ var LingcunTransport = { handler: null, waitMs: 0 };
       return conflictSides(v).length >= 2;
     }
     function sideBit(text) { text = String(text || ""); return text.slice(0, Math.min(4, text.length)); }
-    function respectsConflict(v, text) {
+    function attemptText(a) { return (a && (a.text || a.action)) || (typeof a === "string" ? a : ""); }
+    function jointOk(a, sides) {
+      var text = attemptText(a);
+      if (!text || !sides || sides.length < 2) return false;
+      var uses = (a && a.uses) || [];
+      if (!sides.every(function (s) { return uses.indexOf(s.id) >= 0; })) return false;
+      if (text.indexOf("两边都还在") >= 0) return false;
+      if (sides.every(function (s) { return text.indexOf(s.text) >= 0; })) return false;
+      var rest = text;
+      sides.forEach(function (s) { rest = rest.split(s.text).join(""); });
+      rest = rest.replace(/[「」“”‘’，。、：；\s]/g, "");
+      return rest.length >= 6;
+    }
+    function respectsConflict(v, a) {
       var m = (v && v.mind) || {};
       var sides = conflictSides(v);
-      text = String(text || "");
+      var text = attemptText(a);
       if (!sides.length || !m.conflictChoice) return true;
-      if (m.conflictChoice === "both") return sides.every(function (s) { return sideBit(s.text) && text.indexOf(sideBit(s.text)) >= 0; });
+      if (m.conflictChoice === "both") return jointOk(a, sides);
       var chosen = null;
       sides.forEach(function (s) { if (s.id === m.conflictChoice) chosen = s; });
       if (!chosen) return true;
+      var uses = (a && a.uses) || [];
+      if (uses.indexOf(chosen.id) >= 0 && text.indexOf(chosen.text) < 0) return true;
       return !sideBit(chosen.text) || text.indexOf(sideBit(chosen.text)) >= 0;
     }
     function manualLine(v) {
       var d = dirLabel20(v);
       var m = v.mind || {};
-      if (m.conflictChoice === "both") {
-        var sides = conflictSides(v);
-        if (sides.length >= 2) return "两边都还在：「" + sides[0].text + "」和「" + sides[1].text + "」。这一步不能违反其中任何一边。" + (d ? "「" + d + "」只是在试的组合，不是你的经历。" : "");
-      }
       var t0 = (v.take && v.take[0]) || "";
       if (m.conflictChoice && m.conflictChoice !== "both") {
         conflictSides(v).forEach(function (s) { if (s.id === m.conflictChoice) t0 = s.text; });
@@ -7024,29 +7035,32 @@ var LingcunTransport = { handler: null, waitMs: 0 };
         } else v.enough = "今天做到这儿就够了：做完你认可的这一件就停。";
       }
       if (v.candidatePack && v.candidatePack.length) {
-        v.candidatePack = v.candidatePack.filter(function (a) { return respectsConflict(v, (a && (a.text || a.action)) || ""); });
+        v.candidatePack = v.candidatePack.filter(function (a) { return respectsConflict(v, a); });
       }
-      if (v.candidatePack && v.candidatePack.length) {
+      if (v.candidatePack && v.candidatePack.length && !(v.mind && v.mind.conflictChoice === "both")) {
         var skipped = !!(v.premise && v.premise.skipped);
         v.premise = LingcunPremises.settle(v.record, v.candidatePack);
         if (skipped) { v.premise.skipped = true; v.premise.verified = false; v.premise.pending = true; }
         var shown = v.premise.display;
         var shownText = shown && (shown.text || shown.action);
-        if (shownText && respectsConflict(v, shownText)) {
+        var shownAttempt = v.candidatePack[0] || { text: shownText, uses: [] };
+        if (shownText && respectsConflict(v, shownAttempt)) {
           v.modelLine = shownText;
+          v.modelUses = shownAttempt.uses || [];
           v.modelEpoch = v.epochSeq || 0;
-          v.modelEnough = (v.candidatePack[0] && v.candidatePack[0].stop) || "";
+          v.modelEnough = shownAttempt.stop || "";
           v.attemptFrom = "model";
           v.pool = [shownText];
           v.poolSig = shownText;
           v.ix = 0;
           v.attempt = shownText;
+          v.mind.bothHold = false;
           settleEnough(v.modelEnough, shownText);
+          v.attemptEpoch = v.epochSeq || 0;
+          v.packEpoch = v.epochSeq || 0;
+          syncOut(p);
+          return;
         }
-        v.attemptEpoch = v.epochSeq || 0;
-        v.packEpoch = v.epochSeq || 0;
-        syncOut(p);
-        return;
       }
       if (v.modelLine && v.modelEpoch === (v.epochSeq || 0) && respectsConflict(v, v.modelLine)) {
         v.attempt = v.modelLine;
@@ -7072,6 +7086,33 @@ var LingcunTransport = { handler: null, waitMs: 0 };
           v.attempt = pickedText;
         }
         syncOut(p);
+        return;
+      }
+      if (v.mind && v.mind.conflictChoice === "both") {
+        var jointSides = conflictSides(v);
+        var joint = null;
+        (v.candidatePack || []).forEach(function (a) { if (!joint && jointOk(a, jointSides)) joint = a; });
+        if (!joint && v.modelLine && jointOk({ text: v.modelLine, uses: v.modelUses || [] }, jointSides)) joint = { text: v.modelLine, uses: v.modelUses, stop: v.modelEnough };
+        if (joint) {
+          v.modelLine = joint.text;
+          v.modelUses = joint.uses || [];
+          v.modelEpoch = v.epochSeq || 0;
+          v.modelEnough = joint.stop || "";
+          v.attempt = joint.text;
+          v.attemptFrom = "model";
+          v.pool = [joint.text];
+          v.ix = 0;
+          v.mind.bothHold = false;
+          settleEnough(v.modelEnough, joint.text);
+        } else {
+          v.attempt = "";
+          v.pool = [""];
+          v.attemptFrom = "withhold";
+          v.mind.bothHold = true;
+        }
+        v.attemptEpoch = v.epochSeq || 0;
+        syncOut(p);
+        kickAttempts(p);
         return;
       }
       var line = manualLine(v);
@@ -7488,7 +7529,7 @@ var LingcunTransport = { handler: null, waitMs: 0 };
         "三条之间要有实质差别，例如弄清一件已有的事、减去一件、或先保持原样观察。不要都写成今天做一件小事。",
         "why 说明它接上了哪句原话。observe 是做完能看到的现象。stop 是停下或改的条件。",
         "若原话里有不想辞职、不想花钱、没精力、不想再学，就不要建议相反的事。对方已经确认要离开时，stop 不能写成放弃离开。",
-        "若 inputs 里两条本人的话互相 conflicts_with，一条尝试不能只做成其中一边而违反另一边。两边都留着时，text 里要同时带上两边的原话。",
+        "若两条本人的话 conflicts_with，而且两边都要留，text 要写成一个同时做得到的小动作，uses 必须带上这两条的 id。不要只把两条原话复述一遍，也不要只做成其中一边。",
         "needs 列出这一步真正要用、而原文没有写明已经有的东西。没有就给空数组。不要把没在当前原话里出现的东西写成已经有。claim 不会被当成证据。",
         "原文若同时有「上次」和「现在」，以现在这句为准。上次的内容只能对照，不能当成这次要做的事。",
         "reference 不是用户事实。"
@@ -7723,7 +7764,18 @@ var LingcunTransport = { handler: null, waitMs: 0 };
       var p = curP();
       if (!p || !p.v18) return;
       var v = p.v18, k = $("try-kicker");
-      if (conflictOpen(v)) {
+      if (v.mind && v.mind.bothHold) {
+        var cardH = document.querySelector(".trycard");
+        var lineH = $("try-line");
+        if (lineH) lineH.textContent = "";
+        if (cardH && !$("v20-both-hold")) {
+          var holdBoth = document.createElement("p");
+          holdBoth.id = "v20-both-hold";
+          holdBoth.textContent = "这次先不给做法。还没有一条同时做得到的小动作。";
+          cardH.appendChild(holdBoth);
+        }
+      }
+      if (conflictOpen(v) || (v.mind && v.mind.bothHold)) {
         var cardC = document.querySelector(".trycard");
         if (cardC && !$("v20-conflict")) {
           var clash = document.createElement("div");
