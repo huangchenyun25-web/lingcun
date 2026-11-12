@@ -452,6 +452,9 @@
       mind.attemptPending = !!prev.attemptPending;
       mind.relationPending = !!prev.relationPending;
       mind.understandGaveUp = prev.understandGaveUp || "";
+      mind.understandFor = prev.understandFor || "";
+      mind.understandSends = prev.understandSends || 0;
+      if (prev.status === "failed" || prev.status === "rejected") mind.status = prev.status;
       if (prev.mode === "ai") mind.mode = "ai";
       if (prev.status === "ok") mind.status = "ok";
       return mind;
@@ -744,24 +747,26 @@
       return bad;
     }
     function alignSpans(source, out) {
-      function fix(list) {
+      var droppedFacts = 0;
+      function fix(list, facts) {
         return (list || []).filter(function (item) {
-          if (!item || typeof item.text !== "string" || !item.text) return false;
-          if (source.slice(item.start, item.end) !== item.text) {
-            var at = source.indexOf(item.text);
-            if (at < 0) return false;
-            item.start = at;
-            item.end = at + item.text.length;
-          }
+          if (!item || typeof item.text !== "string" || !item.text) { if (facts) droppedFacts++; return false; }
+          if (typeof item.start === "number" && source.slice(item.start, item.end) === item.text) return true;
+          var at = source.indexOf(item.text);
+          if (at < 0) { if (facts) droppedFacts++; return false; }
+          item.start = at;
+          item.end = at + item.text.length;
           return true;
         });
       }
-      out.facts = fix(out.facts);
-      out.inferences = fix(out.inferences);
+      out.facts = fix(out.facts, true);
+      out.inferences = fix(out.inferences, false);
+      return droppedFacts;
     }
     function checkUnderstand(source, out) {
       var er = validate(out, UNDER_SCHEMA);
       if (er.length) return er;
+      if (alignSpans(source, out) && !(out.facts || []).length) er.push("没有一句对得上原文");
       function inSource(item) {
         return !!(item && item.text && source.indexOf(item.text) >= 0);
       }
@@ -964,7 +969,10 @@
       if (v.mind && v.mind.adviceFrom === "user") return;
       if (v.mind && v.mind.adviceFrom === "model" && v.mind.source === src) return;
       if (v.mind && v.mind.understandGaveUp === src) return;
+      if (m.understandFor === src && (m.understandSends || 0) >= 2) return;
       if (flight && flight.status === "pending" && flight.seq === (v.epochSeq || 0)) return;
+      if (m.understandFor !== src) { m.understandFor = src; m.understandSends = 0; }
+      m.understandSends = (m.understandSends || 0) + 1;
       m.pace = derivePace(src, m.pace);
       m.requested = true;
       m.status = "pending";
@@ -973,13 +981,48 @@
       m.status = "pending";
       var inputs = { user_text: src, answer: m.answer || "", reference: m.ref || null };
       var task = taskOf("v20_understand", "读这句原话", "把人的原话拆成可核对的片段", understoodInstructions(), inputs, UNDER_SCHEMA, "v20u:" + p.id + ":" + boundU.reqId);
+      task.noRepair = true;
       task.check = function (out) { return checkUnderstand(src, out); };
-      function takeUnderstand(out, err, tries) {
+      function degradeUnderstand(reason) {
+        var mind = p.v18.mind;
+        mind.mode = "manual";
+        mind.status = "failed";
+        mind.errors = [reason || "没能核上"];
+        mind.adviceFrom = "";
+        mind.understandGaveUp = String(p.idea || "");
+        try { LingcunEpoch.finish(p, boundU); } catch (e) {}
+        save();
+        if (S.stage === "material") renderMaterial();
+      }
+      function repairUnderstand(reason) {
+        if ((p.v18.mind.understandSends || 0) >= 2) { degradeUnderstand(reason); return; }
+        p.v18.mind.understandSends += 1;
+        var again = taskOf("v20_understand", "读这句原话", "把人的原话拆成可核对的片段", understoodInstructions(), { user_text: src, answer: m.answer || "", reference: m.ref || null, repair: [reason || "格式没核上"] }, UNDER_SCHEMA, "v20u:" + p.id + ":" + boundU.reqId + ":repair");
+        again.noRepair = true;
+        again.check = function (o) { return checkUnderstand(src, o); };
+        runTask(again, 28000, function (out2, err2) { takeUnderstand(out2, err2); });
+      }
+      function takeUnderstand(out, err) {
         var er = out ? checkUnderstand(src, out) : [];
-        if (out && er.length && tries < 1) {
-          var again = taskOf("v20_understand", "读这句原话", "把人的原话拆成可核对的片段", understoodInstructions(), { user_text: src, answer: m.answer || "", reference: m.ref || null, repair: er.slice(0, 6) }, UNDER_SCHEMA, "v20u:" + p.id + ":" + boundU.reqId + ":repair");
-          again.check = function (o) { return checkUnderstand(src, o); };
-          runTask(again, 28000, function (out2, err2) { takeUnderstand(out2, err2, 1); });
+        if (!out || er.length) {
+          if ((p.v18.mind.understandSends || 0) < 2) { repairUnderstand(er[0] || err || "格式没核上"); return; }
+          if (out && er.some(function (x) { return /relation/.test(x); })) {
+            var gateAsk = LingcunEpoch.accept(p, boundU);
+            if (gateAsk.ok) LingcunEpoch.finish(p, boundU);
+            p.v18.mind.adviceFrom = "model";
+            p.v18.mind.mode = "ai";
+            p.v18.mind.status = "rejected";
+            p.v18.mind.relationUnsure = true;
+            p.v18.mind.relations = out.relations || [];
+            p.v18.mind.readings = (out.facts || []).map(function (it) {
+              return { id: it.id || "", text: it.text, speaker: it.speaker || "", modality: it.modality || "", kind: it.kind || "", conflicts_with: it.conflicts_with || [], supersedes: it.supersedes || [] };
+            });
+            p.v18.mind.understandGaveUp = src;
+            save();
+            if (S.stage === "material") renderMaterial();
+            return;
+          }
+          degradeUnderstand(er[0] || err || "格式没核上");
           return;
         }
         var gate = LingcunEpoch.accept(p, boundU);
@@ -990,16 +1033,6 @@
           return;
         }
         if (gate.ok && !LingcunEpoch.finish(p, boundU)) return;
-        if (!out) {
-          p.v18.mind.status = err || "failed";
-          p.v18.mind.errors = [err || "empty"];
-          p.v18.mind.mode = "manual";
-          p.v18.mind.understandGaveUp = String(p.idea || "");
-          if (er.some(function (x) { return /relation/.test(x); }) || /relation/.test(String(err || ""))) p.v18.mind.relationUnsure = true;
-          save();
-          if (S.stage === "material") renderMaterial();
-          return;
-        }
         if (!LingcunUserState.acceptLate(p.v18.record, p.v18.record.inputRev, out)) { LingcunEpoch.note(p, boundU, "late-record"); return; }
         var advice = readAdvice(out);
         p.v18.mind = projectMind(p.v18.record);

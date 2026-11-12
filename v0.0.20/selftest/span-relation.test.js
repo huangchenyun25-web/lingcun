@@ -43,9 +43,12 @@ function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
   var invented = await p.evaluate(function (pack) {
     var out = JSON.parse(JSON.stringify(pack.out));
     out.facts[1].text = "并不在这句话里的安排";
-    return window.__lingcun20.checkUnderstand(pack.source, out);
+    var errors = window.__lingcun20.checkUnderstand(pack.source, out);
+    var only = JSON.parse(JSON.stringify(pack.out));
+    only.facts = [{ id: "f9", kind: "said", text: "并不在这句话里的安排", start: 0, end: 4, speaker: "self", modality: "certain", conflicts_with: [], supersedes: [] }];
+    return { kept: out.facts.map(function (f) { return f.text; }), errors: errors, only: window.__lingcun20.checkUnderstand(pack.source, only) };
   }, { source: source, out: slipped });
-  ok("原文里没有的句子仍然拦住", invented.some(function (x) { return /连续片段/.test(x); }), JSON.stringify(invented));
+  ok("对不上原文的句子不会留下", invented.kept.indexOf("并不在这句话里的安排") < 0 && invented.only.length > 0, JSON.stringify(invented));
 
   await p.evaluate(function (pack) {
     window.__n = { understand: 0, relation: 0 };
@@ -95,7 +98,8 @@ function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
     await sleep(200);
   }
   var again = await p2.evaluate(function () { return window.__n; });
-  ok("失败后不再反复重问", again.understand === 1, JSON.stringify(again));
+  var failed = await p2.$eval("#v20-mind", function (e) { return e.textContent; }).catch(function () { return ""; });
+  ok("失败后只返工一次并停止", again.understand === 2 && failed.indexOf("没能核上") >= 0, JSON.stringify(again) + " " + failed);
   await ctx2.close();
   await b.close();
   ok("没有发出网页请求", net.length === 0, net.join(" "));
