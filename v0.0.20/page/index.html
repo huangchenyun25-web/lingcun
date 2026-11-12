@@ -6912,8 +6912,11 @@ var LingcunTransport = { handler: null, waitMs: 0 };
       var seq = ((v && v.fragments) || []).filter(function (w) { return w && w !== SENT; });
       return seq[0] || "";
     }
+    function pairKey(a, b) { return [String(a || ""), String(b || "")].sort().join("|"); }
+    function relationsOf(v) { return (v && v.mind && v.mind.relations) || []; }
     function supersededIds(v) {
       var ids = {};
+      relationsOf(v).forEach(function (rel) { if (rel && rel.relation === "supersedes" && rel.b) ids[rel.b] = 1; });
       ((v && v.mind && v.mind.readings) || []).forEach(function (r) {
         (r.supersedes || []).forEach(function (id) { if (id) ids[id] = 1; });
       });
@@ -6925,7 +6928,18 @@ var LingcunTransport = { handler: null, waitMs: 0 };
     }
     function conflictSides(v) {
       var list = liveReadings(v);
-      var by = {}, seen = {}, out = [], i;
+      var by = {}, seen = {}, out = [];
+      relationsOf(v).forEach(function (rel) {
+        if (!rel || rel.relation !== "conflicts") return;
+        var a = null, b = null;
+        list.forEach(function (r) { if (r.id === rel.a) a = r; if (r.id === rel.b) b = r; });
+        if (!a || !b || a.text === b.text) return;
+        var key = pairKey(a.id, b.id);
+        if (seen[key]) return;
+        seen[key] = 1;
+        if (!out.some(function (x) { return x.id === a.id; })) out.push(a);
+        if (!out.some(function (x) { return x.id === b.id; })) out.push(b);
+      });
       list.forEach(function (r) { if (r && r.id) by[r.id] = r; });
       list.forEach(function (r) {
         (r.conflicts_with || []).forEach(function (id) {
@@ -7046,8 +7060,8 @@ var LingcunTransport = { handler: null, waitMs: 0 };
         return;
       }
       if (!wantsAction(v)) {
-        v.attempt = "";
-        v.pool = [""];
+        v.attempt = holdLine();
+        v.pool = [v.attempt];
         v.attemptFrom = "withhold";
         v.attemptEpoch = v.epochSeq || 0;
         if (v.mind) v.mind.holdAttempt = true;
@@ -7191,6 +7205,9 @@ var LingcunTransport = { handler: null, waitMs: 0 };
       mind.readings = prev.readings || [];
       mind.voiceConfirmed = !!prev.voiceConfirmed;
       mind.conflictChoice = prev.conflictChoice || "";
+      mind.relations = prev.relations || [];
+      mind.relationUnsure = !!prev.relationUnsure;
+      mind.relationChoice = prev.relationChoice || "";
       if (prev.mode === "ai") mind.mode = "ai";
       if (prev.status === "ok") mind.status = "ok";
       return mind;
@@ -7211,6 +7228,7 @@ var LingcunTransport = { handler: null, waitMs: 0 };
     }
     function wantsAction(v) {
       var m = (v && v.mind) || {};
+      if (m.relationUnsure && !m.relationChoice) return false;
       if (conflictOpen(v)) return false;
       if (voiceNeedsAsk(v)) return false;
       if (m.adviceFrom === "user" && m.advice === "offer") return true;
@@ -7348,6 +7366,7 @@ var LingcunTransport = { handler: null, waitMs: 0 };
       });
       if (m.unknowns && m.unknowns.length) html += '<p class="v20-unk">还不清楚：' + esc(m.unknowns.join("；")) + "</p>";
       if (m.ref) html += '<p class="v20-ref">对照，不是你的经历：' + esc(m.ref.pattern) + (m.ref.excerpt ? " 「" + esc(m.ref.excerpt) + "」" : "") + " " + esc(m.ref.limits) + "</p>";
+      if (m.relationUnsure && !m.relationChoice) html += "<p id=\"v20-relation-ask\">这两条怎么摆，还不确定。先选一下，或这次先不给做法。</p>";
       if (conflictOpen(p.v18)) {
         html += '<p id="v20-conflict">这两边都是你说的，不能只留一边。</p>';
         conflictSides(p.v18).forEach(function (s) {
@@ -7461,8 +7480,9 @@ var LingcunTransport = { handler: null, waitMs: 0 };
       });
     }
     var FACT = { type: "object", required: ["id", "kind", "text", "start", "end", "speaker", "modality"], properties: { id: STR(12), kind: { type: "string", enum: ["said", "keep", "change", "constraint"] }, text: STR(80), start: { type: "integer", minimum: 0 }, end: { type: "integer", minimum: 0 }, speaker: { type: "string", enum: ["self", "reported"] }, modality: { type: "string", enum: ["certain", "hypothetical", "refusal"] }, conflicts_with: { type: "array", maxItems: 4, items: STR(12) }, supersedes: { type: "array", maxItems: 4, items: STR(12) } } };
+    var REL = { type: "object", required: ["a", "b", "relation", "why"], properties: { a: STR(12), b: STR(12), relation: { type: "string", enum: ["supersedes", "conflicts", "independent"] }, why: STR(80) } };
     var INF = { type: "object", required: ["id", "text", "start", "end"], properties: { id: STR(12), text: STR(40), start: { type: "integer", minimum: 0 }, end: { type: "integer", minimum: 0 } } };
-    var UNDER_SCHEMA = { type: "object", required: ["facts", "inferences", "unknowns"], properties: { facts: { type: "array", maxItems: 8, items: FACT }, inferences: { type: "array", maxItems: 3, items: INF }, unknowns: { type: "array", maxItems: 4, items: STR(40) }, advice: { type: "string", enum: ["offer", "decline", "unsure"] }, question: STR0(80), question_why: STR0(80) } };
+    var UNDER_SCHEMA = { type: "object", required: ["facts", "inferences", "unknowns"], properties: { facts: { type: "array", maxItems: 8, items: FACT }, inferences: { type: "array", maxItems: 3, items: INF }, unknowns: { type: "array", maxItems: 4, items: STR(40) }, relations: { type: "array", maxItems: 12, items: REL }, advice: { type: "string", enum: ["offer", "decline", "unsure"] }, question: STR0(80), question_why: STR0(80) } };
     var NEED = { type: "object", required: ["resource"], properties: { resource: STR(20), key: { type: "boolean" }, claim: STR(12), evidenceId: STR(20) } };
     var ATT_SCHEMA = { type: "object", required: ["attempts"], properties: { attempts: { type: "array", minItems: 2, maxItems: 3, items: { type: "object", required: ["text", "why", "observe", "stop", "uses"], properties: { text: STR(80), why: STR(80), observe: STR(60), stop: STR(60), uses: { type: "array", minItems: 1, maxItems: 4, items: STR(12) }, needs: { type: "array", maxItems: 6, items: NEED } } } } } };
     function contradicts(facts, answer, text) {
@@ -7505,6 +7525,18 @@ var LingcunTransport = { handler: null, waitMs: 0 };
       }
       (out.facts || []).forEach(function (f, i) { spanOk(f, "facts[" + i + "]"); });
       (out.inferences || []).forEach(function (f, i) { spanOk(f, "inferences[" + i + "]"); });
+      var selves = (out.facts || []).filter(function (f) { return f && f.speaker === "self" && f.id; });
+      if (selves.length >= 2) {
+        var need = {};
+        var i, j;
+        for (i = 0; i < selves.length; i++) for (j = i + 1; j < selves.length; j++) need[pairKey(selves[i].id, selves[j].id)] = 1;
+        (out.relations || []).forEach(function (rel, n) {
+          if (!rel || ["supersedes", "conflicts", "independent"].indexOf(rel.relation) < 0) er.push("relations[" + n + "] 的 relation 只能是 supersedes、conflicts 或 independent");
+          if (!rel || !rel.why) er.push("relations[" + n + "] 缺了理由");
+          if (rel && rel.a && rel.b) delete need[pairKey(rel.a, rel.b)];
+        });
+        if (Object.keys(need).length) er.push("两条以上的本人内容必须写明 relation");
+      }
       if (out.question && out.facts && out.facts.length && /转行|辞职|裸辞/.test(out.question) && !/辞职|转行|离开/.test(source)) er.push("问题把原文没有的去向塞进来了");
       return er;
     }
@@ -7575,6 +7607,7 @@ var LingcunTransport = { handler: null, waitMs: 0 };
         "每条 facts 都要有 speaker 和 modality。speaker 用 self 表示用户本人说的，reported 表示在转述别人。modality 用 certain 表示确定，hypothetical 表示假设或可能，refusal 表示拒绝。转述和假设不要写成用户已经要做的事。",
         "若后一条是用户本人说的，并且撤回或取代前面某一条，就在后一条的 supersedes 里写下被撤回那条的 id。被撤回的不再是当前要做的事。这种关系不要写成 conflicts_with。",
         "conflicts_with 只用于两条都还成立、但不能同时做。没有这种关系就给空数组。被 supersedes 指向的 id 也不要再写进 conflicts_with。",
+        "若 facts 里 speaker 为 self 的内容有两条或以上，relations 必须写明每一对的关系，不能缺省。relation 只能是 supersedes、conflicts 或 independent。supersedes 表示 a 撤回并取代 b，b 不再是当前要做的事。conflicts 表示两条都还成立但不能同时做。independent 表示都还成立、彼此不打架。每一对都要有 why，用一句话说明理由。",
         "reference 若存在，只是公开摘录，不是这个人的履历，不能写进 facts。"
       ];
     }
@@ -7643,25 +7676,53 @@ var LingcunTransport = { handler: null, waitMs: 0 };
       m.status = "pending";
       var inputs = { user_text: src, answer: m.answer || "", reference: m.ref || null };
       var task = taskOf("v20_understand", "读这句原话", "把人的原话拆成可核对的片段", understoodInstructions(), inputs, UNDER_SCHEMA, "v20u:" + p.id + ":" + boundU.reqId);
-      runTask(task, 28000, function (out, err) {
+      task.check = function (out) { return checkUnderstand(src, out); };
+      function takeUnderstand(out, err, tries) {
+        var er = out ? checkUnderstand(src, out) : [];
+        if (out && er.length && tries < 1) {
+          var again = taskOf("v20_understand", "读这句原话", "把人的原话拆成可核对的片段", understoodInstructions(), { user_text: src, answer: m.answer || "", reference: m.ref || null, repair: er.slice(0, 6) }, UNDER_SCHEMA, "v20u:" + p.id + ":" + boundU.reqId + ":repair");
+          again.check = function (o) { return checkUnderstand(src, o); };
+          runTask(again, 28000, function (out2, err2) { takeUnderstand(out2, err2, 1); });
+          return;
+        }
         if (!gateFlight(p, boundU, err && !out)) return;
-        if (!out) { p.v18.mind.status = err || "failed"; p.v18.mind.errors = [err || "empty"]; p.v18.mind.mode = "manual"; save(); return; }
+        if (!out) {
+          p.v18.mind.status = err || "failed";
+          p.v18.mind.errors = [err || "empty"];
+          p.v18.mind.mode = "manual";
+          if (er.some(function (x) { return /relation/.test(x); }) || /relation/.test(String(err || ""))) p.v18.mind.relationUnsure = true;
+          save();
+          if (S.stage === "material") renderMaterial();
+          return;
+        }
         if (!LingcunUserState.acceptLate(p.v18.record, p.v18.record.inputRev, out)) { LingcunEpoch.note(p, boundU, "late-record"); return; }
         var advice = readAdvice(out);
         p.v18.mind = projectMind(p.v18.record);
         p.v18.mind.advice = advice;
         p.v18.mind.adviceFrom = "model";
         p.v18.mind.unknowns = out.unknowns || [];
+        p.v18.mind.relations = out.relations || [];
+        var selves = (out.facts || []).filter(function (f) { return f && f.speaker === "self" && f.id; });
+        var missing = {};
+        var si, sj;
+        for (si = 0; si < selves.length; si++) for (sj = si + 1; sj < selves.length; sj++) missing[pairKey(selves[si].id, selves[sj].id)] = 1;
+        (out.relations || []).forEach(function (rel) { if (rel && rel.a && rel.b) delete missing[pairKey(rel.a, rel.b)]; });
+        selves.forEach(function (f) {
+          (f.conflicts_with || []).forEach(function (id) { delete missing[pairKey(f.id, id)]; });
+          (f.supersedes || []).forEach(function (id) { delete missing[pairKey(f.id, id)]; });
+        });
+        p.v18.mind.relationUnsure = Object.keys(missing).length > 0;
         p.v18.mind.readings = (out.facts || []).concat(out.inferences || []).map(function (it) {
           return { id: it.id || "", text: it.text, speaker: it.speaker || "", modality: it.modality || "", kind: it.kind || "", conflicts_with: it.conflicts_with || [], supersedes: it.supersedes || [] };
         });
         p.v18.mind.understoodSeq = boundU.seq;
         p.v18.mind.mode = "ai";
-        p.v18.mind.status = "ok";
+        p.v18.mind.status = er.length ? "rejected" : "ok";
         save();
         if (S.stage === "material") renderMaterial();
-        if (advice !== "decline" && S.stage === "check") kickAttempts(p);
-      });
+        if (advice !== "decline" && !p.v18.mind.relationUnsure && S.stage === "check") kickAttempts(p);
+      }
+      runTask(task, 28000, function (out, err) { takeUnderstand(out, err, 0); });
     }
     function kickAttempts(p) {
       if (!transportOn() || !p || !p.v18 || !wantsAction(p.v18) || !p.v18.direction || p.v18.edited) return;
