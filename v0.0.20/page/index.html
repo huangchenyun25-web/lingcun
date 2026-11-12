@@ -7750,7 +7750,14 @@ var LingcunTransport = { handler: null, waitMs: 0 };
           runTask(again, 28000, function (out2, err2) { takeUnderstand(out2, err2, 1); });
           return;
         }
-        if (!gateFlight(p, boundU, err && !out)) return;
+        var gate = LingcunEpoch.accept(p, boundU);
+        var sameWords = !!(out && boundU && boundU.deps && boundU.deps.idea === String(p.idea || "") && (p.v18.record ? p.v18.record.inputRev || 0 : 0) === (boundU.deps.inputRev || 0));
+        var readingStillUseful = !gate.ok && sameWords && (gate.reason === "stale-seq" || gate.reason === "stale-direction" || gate.reason === "stale-take" || gate.reason === "stale-leave");
+        if (!gate.ok && !readingStillUseful) {
+          LingcunEpoch.note(p, boundU, gate.reason || (err || "failed"));
+          return;
+        }
+        if (gate.ok && !LingcunEpoch.finish(p, boundU)) return;
         if (!out) {
           p.v18.mind.status = err || "failed";
           p.v18.mind.errors = [err || "empty"];

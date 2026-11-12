@@ -28,7 +28,7 @@ function used() { return budget.snapshot().used; }
 function shot(p, name) { return p.screenshot({ path: path.join(__dirname, "holdout", name), fullPage: true }); }
 async function settle(raw, p) {
   var last = -1, stable = 0, i;
-  for (i = 0; i < 90; i++) {
+  for (i = 0; i < 200; i++) {
     await sleep(400);
     var state = { reading: false, relationPending: false, attemptPending: false };
     try {
@@ -147,7 +147,10 @@ async function run(b, item, opts) {
     await settle(opened.raw, opened.p);
     row.material = await screen(opened.p);
     await shot(opened.p, "round11_" + item.id + "_material.png");
-    if (opts.revise) {
+    if (await opened.p.evaluate(function () { return document.body.innerText.indexOf("结果还没回来") >= 0; }).catch(function () { return false; })) {
+      row.stoppedAt = "理解还没回来，不再往下点";
+      row.check = await screen(opened.p);
+    } else if (opts.revise) {
       var btn = await opened.p.$("#frag-revise") || await opened.p.$("#frag-back");
       if (!btn) row.reviseMiss = "没有改这句";
       else {
@@ -163,7 +166,12 @@ async function run(b, item, opts) {
         await shot(opened.p, "round11_" + item.id + "_second.png");
       }
     }
-    if (await opened.p.$("#v20-conflict") || await opened.p.$("#v20-relation-ask") || await opened.p.$("#v20-no-action")) {
+    var stillReading = await opened.p.evaluate(function () { return document.body.innerText.indexOf("结果还没回来") >= 0; }).catch(function () { return false; });
+    if (row.stoppedAt === "理解还没回来，不再往下点" || stillReading) {
+      row.stoppedAt = "理解还没回来，不再往下点";
+      row.check = await screen(opened.p);
+      await shot(opened.p, "round11_" + item.id + "_pending.png");
+    } else if (await opened.p.$("#v20-conflict") || await opened.p.$("#v20-relation-ask") || await opened.p.$("#v20-no-action")) {
       row.stoppedAt = "停在先问或不给做法";
       row.check = await screen(opened.p);
     } else {
@@ -209,24 +217,33 @@ async function run(b, item, opts) {
 (async function () {
   var doc = {
     commit: commit, hash: hash, cap: CAP,
-    plan: "U04 预留 7，U05 预留 6，U08 预留 6。不够就不开始。关系小步在两条本人内容时打一次；理解里已有关系也不代替这一步。",
+    plan: "U04 预留 7，U05 预留 6，U08 预留 6。不够就不开始。关系小步在两条本人内容时打一次；理解里已有关系也不代替这一步。U04 用掉 7 次后，U05 的顺句这条路径不会发出，按理解最多 3、关系 1、行动 1 共 5 次继续，不超过上限。",
     cases: []
   };
+  if (process.env.CONTINUE === "1" && fs.existsSync(outPath)) {
+    var prev = JSON.parse(fs.readFileSync(outPath, "utf8"));
+    doc.cases = prev.cases || [];
+    doc.plan = prev.plan + " 随后用剩下的次数补 U05。";
+  }
   var b = await chromium.launch({ executablePath: "/usr/bin/google-chrome", args: ["--no-sandbox", "--disable-gpu"] });
   var queue = [
     { id: "U04", need: 7, opts: { prefer: "信", revise: byId.U04.turns[0], mode: "revise" } },
-    { id: "U05", need: 6, opts: { prefer: "小画", mode: "conflict" } },
+    { id: "U05", need: 5, opts: { prefer: "小画", mode: "conflict" } },
     { id: "U08", need: 6, opts: { prefer: "花盆", mode: "direction", changeDirection: true } }
   ];
+  var only = process.env.ONLY || "";
   var i;
   for (i = 0; i < queue.length; i++) {
     var item = queue[i];
+    if (only && item.id !== only) continue;
+    if (doc.cases.some(function (c) { return c.id === item.id && !c.skipped; })) continue;
     if (CAP - used() < item.need) {
       doc.cases.push({ id: item.id, skipped: true, reason: "剩下 " + (CAP - used()) + " 次，不够预留的 " + item.need + " 次" });
       console.log(item.id, "skip", CAP - used(), "<", item.need);
       continue;
     }
     var row = await run(b, byId[item.id], item.opts);
+    doc.cases = doc.cases.filter(function (c) { return c.id !== item.id; });
     doc.cases.push(row);
     doc.used = used();
     fs.writeFileSync(outPath, JSON.stringify(doc, null, 2));
