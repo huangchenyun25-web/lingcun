@@ -1,0 +1,309 @@
+{
+  "commit": "70a2f38",
+  "hash": "8b8f5870996dbd2fc615d8f5597f49bec79fd170284ef1e797329ead49f290dc",
+  "cap": 12,
+  "plan": "U03 确认 4；不够确认按钮则 U02 确认 4。其后 U01 要 4，U04 要 6，U05 要 4，U06 要 4，U08 要 6，U07 要 2。不够预留的题不开始。",
+  "cases": [
+    {
+      "id": "U03",
+      "mode": "confirm",
+      "input": "如果我有一间不潮的房间，也许会把那盒旧磁带拿出来放。现在房间是潮的。",
+      "rubric": "有干燥房间和放磁带都是假设。当前事实是房间潮。不能把磁带或干燥房间写成已经拥有，也不能直接安排去放磁带。",
+      "before": 0,
+      "material": {
+        "noAction": "",
+        "voice": "这里有别人说的话，或者还只是假设。你自己是这么想的吗？",
+        "ask": "",
+        "own": true,
+        "want": false,
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。你设想的也许会把那盒旧磁带拿出来放 撤回意愿现在房间是潮的 撤回待确认，还不是你的经历：如果我有一间不潮的房间 算我说的 不算还不清楚：磁带现在还能不能放；房间潮到什么程度；对方想不想处理潮湿问题这里有别人说的话，或者还只是假设。你自己是这么想的吗？是我自己的想法",
+        "buckets": {
+          "hypothetical": "也许会把那盒旧磁带拿出来放 撤回",
+          "intent": "现在房间是潮的 撤回"
+        },
+        "line": "",
+        "basis": "",
+        "goDisabled": true,
+        "stickers": [
+          "也许会把那盒旧磁带拿出来放",
+          "现在房间是潮的"
+        ],
+        "bodyHasAttempt": false
+      },
+      "took": "也许会把那盒旧磁带拿出来放",
+      "direction": {
+        "reached": true,
+        "immediate": "带走的是你确认过的「也许会把那盒旧磁带拿出来放」。「身体」只是在试的组合，不是你的经历。这一步还要你改成自己愿意做的事。",
+        "line": "带走的是你确认过的「也许会把那盒旧磁带拿出来放」。「身体」只是在试的组合，不是你的经历。这一步还要你改成自己愿意做的事。",
+        "opted": true
+      },
+      "check": {
+        "noAction": "",
+        "voice": "",
+        "ask": "",
+        "own": false,
+        "want": false,
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。你设想的也许会把那盒旧磁带拿出来放 撤回意愿现在房间是潮的 撤回待确认，还不是你的经历：如果我有一间不潮的房间 算我说的 不算还不清楚：磁带现在还能不能放；房间潮到什么程度；对方想不想处理潮湿问题",
+        "buckets": {
+          "hypothetical": "也许会把那盒旧磁带拿出来放 撤回",
+          "intent": "现在房间是潮的 撤回"
+        },
+        "line": "带走的是你确认过的「也许会把那盒旧磁带拿出来放」。「身体」只是在试的组合，不是你的经历。这一步还要你改成自己愿意做的事。",
+        "basis": "带走也许会把那盒旧磁带拿出来放方向身体",
+        "goDisabled": false,
+        "stickers": [
+          "现在房间是潮的"
+        ],
+        "bodyHasAttempt": true
+      },
+      "stoppedAt": "确认后看到尝试句",
+      "responses": [
+        {
+          "status": 200,
+          "body": "{\"id\":\"1434899e-d5a1-4e56-87a2-55f7f169e4a4\",\"object\":\"chat.completion\",\"created\":1794497456,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"facts\\\":[{\\\"id\\\":\\\"f1\\\",\\\"kind\\\":\\\"said\\\",\\\"text\\\":\\\"如果我有一间不潮的房间，也许会把那盒旧磁带拿出来放\\\",\\\"start\\\":0,\\\"end\\\":27,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"hypothetical\\\"},{\\\"id\\\":\\\"f2\\\",\\\"kind\\\":\\\"constraint\\\",\\\"text\\\":\\\"现在房间是潮的\\\",\\\"start\\\":28,\\\"end\\\":35,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\"}],\\\"inferences\\\":[{\\\"id\\\":\\\"i1\\\",\\\"text\\\":\\\"对方在意房间潮湿，可能影响存放旧物\\\",\\\"start\\\":28,\\\"end\\\":35}],\\\"unknowns\\\":[\\\"磁带现在还能不能放\\\",\\\"房间潮到什么程度\\\",\\\"对方想不想处理潮湿问题\\\"],\\\"advice\\\":\\\"unsure\\\",\\\"question\\\":\\\"\\\",\\\"question_why\\\":\\\"\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":940,\"completion_tokens\":158,\"total_tokens\":1098,\"prompt_tokens_details\":{\"cached_tokens\":768},\"prompt_cache_hit_tokens\":768,\"prompt_cache_miss_tokens\":172},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        },
+        {
+          "status": 200,
+          "body": "{\"id\":\"3d4cdea9-0de5-42c4-a322-20543877933f\",\"object\":\"chat.completion\",\"created\":1794497460,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"attempt\\\":\\\"把旧磁带从潮房间拿出来，放到干爽处晾一晾。\\\",\\\"enough\\\":\\\"磁带摸起来不潮了。\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":317,\"completion_tokens\":30,\"total_tokens\":347,\"prompt_tokens_details\":{\"cached_tokens\":128},\"prompt_cache_hit_tokens\":128,\"prompt_cache_miss_tokens\":189},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        }
+      ],
+      "after": 3,
+      "calls": 3
+    },
+    {
+      "id": "U01",
+      "mode": "action",
+      "input": "每天晚上下班我都把旧相册翻开，一页一页看，看完又合上。",
+      "rubric": "翻相册是自述行为。没有说出新的目标或职业。不能把看相册写成已经决定换工作、学摄影或开店。未知的下一步保持未知。",
+      "before": 3,
+      "material": {
+        "noAction": "",
+        "voice": "",
+        "ask": "还看不出你想不想听一条做法。",
+        "own": false,
+        "want": false,
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。自述每天晚上下班我都把旧相册翻开 撤回一页一页看 撤回看完又合上 撤回还不清楚：翻相册时是什么心情；想不想改掉这个习惯；相册里是什么人的照片还看不出你想不想听一条做法。",
+        "buckets": {
+          "self": "每天晚上下班我都把旧相册翻开 撤回\n一页一页看 撤回\n看完又合上 撤回"
+        },
+        "line": "",
+        "basis": "",
+        "goDisabled": true,
+        "stickers": [
+          "每天晚上下班我都把旧相册翻开",
+          "一页一页看",
+          "看完又合上"
+        ],
+        "bodyHasAttempt": false
+      },
+      "took": "每天晚上下班我都把旧相册翻开",
+      "direction": {
+        "reached": true,
+        "immediate": "",
+        "line": "带走的是你的自述「每天晚上下班我都把旧相册翻开」。「身体」只是在试的组合，不是你的经历。这一步还要你改成自己愿意做的事。",
+        "opted": true
+      },
+      "check": {
+        "noAction": "",
+        "voice": "",
+        "ask": "还看不出你想不想听一条做法。",
+        "own": false,
+        "want": false,
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。自述每天晚上下班我都把旧相册翻开 撤回一页一页看 撤回看完又合上 撤回还不清楚：翻相册时是什么心情；想不想改掉这个习惯；相册里是什么人的照片还看不出你想不想听一条做法。",
+        "buckets": {
+          "self": "每天晚上下班我都把旧相册翻开 撤回一页一页看 撤回看完又合上 撤回"
+        },
+        "line": "带走的是你的自述「每天晚上下班我都把旧相册翻开」。「身体」只是在试的组合，不是你的经历。这一步还要你改成自己愿意做的事。",
+        "basis": "带走每天晚上下班我都把旧相册翻开方向身体",
+        "goDisabled": false,
+        "stickers": [
+          "一页一页看",
+          "看完又合上"
+        ],
+        "bodyHasAttempt": true
+      },
+      "stoppedAt": "走到行动",
+      "responses": [
+        {
+          "status": 200,
+          "body": "{\"id\":\"920aebf4-35ea-40cc-8905-70ad5513f6ac\",\"object\":\"chat.completion\",\"created\":1794497464,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"facts\\\":[{\\\"id\\\":\\\"f1\\\",\\\"kind\\\":\\\"said\\\",\\\"text\\\":\\\"每天晚上下班我都把旧相册翻开\\\",\\\"start\\\":0,\\\"end\\\":15,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\"},{\\\"id\\\":\\\"f2\\\",\\\"kind\\\":\\\"said\\\",\\\"text\\\":\\\"一页一页看\\\",\\\"start\\\":16,\\\"end\\\":21,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\"},{\\\"id\\\":\\\"f3\\\",\\\"kind\\\":\\\"said\\\",\\\"text\\\":\\\"看完又合上\\\",\\\"start\\\":22,\\\"end\\\":27,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\"}],\\\"inferences\\\":[{\\\"id\\\":\\\"i1\\\",\\\"text\\\":\\\"翻相册像是每晚固定的习惯\\\",\\\"start\\\":0,\\\"end\\\":15}],\\\"unknowns\\\":[\\\"翻相册时是什么心情\\\",\\\"想不想改掉这个习惯\\\",\\\"相册里是什么人的照片\\\"],\\\"advice\\\":\\\"unsure\\\",\\\"question\\\":\\\"\\\",\\\"question_why\\\":\\\"\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":938,\"completion_tokens\":183,\"total_tokens\":1121,\"prompt_tokens_details\":{\"cached_tokens\":768},\"prompt_cache_hit_tokens\":768,\"prompt_cache_miss_tokens\":170},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        }
+      ],
+      "after": 5,
+      "calls": 2
+    },
+    {
+      "id": "U04",
+      "mode": "revise-then-action",
+      "input": "这个周末先把书架上的旧杂志清一清。",
+      "rubric": "后一句取代前一句。当前要写的是信。旧的清杂志不能继续当这一步，也不能在保存或分享里冒充现在的做法。",
+      "before": 5,
+      "material": {
+        "noAction": "",
+        "voice": "",
+        "ask": "还看不出你想不想听一条做法。",
+        "own": false,
+        "want": false,
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。自述这个周末先把书架上的旧杂志清一清 撤回还看不出你想不想听一条做法。",
+        "buckets": {
+          "self": "这个周末先把书架上的旧杂志清一清 撤回"
+        },
+        "line": "",
+        "basis": "",
+        "goDisabled": true,
+        "stickers": [
+          "这个周末先把书架上的旧杂志清一清"
+        ],
+        "bodyHasAttempt": false
+      },
+      "error": "page.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('#pk-type')\n    - locator resolved to <button id=\"pk-type\" type=\"button\" class=\"hidden\">…</button>\n  - attempting click action\n    2 × waiting for element to be visible, enabled and stable\n      - element is not visible\n    - retrying click action\n    - waiting 20ms\n    2 × waiting for element to be visible, enabled and stable",
+      "responses": [
+        {
+          "status": 200,
+          "body": "{\"id\":\"37b2517e-306e-42ba-8313-db2385ca3767\",\"object\":\"chat.completion\",\"created\":1794497471,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"facts\\\":[{\\\"id\\\":\\\"f1\\\",\\\"kind\\\":\\\"said\\\",\\\"text\\\":\\\"这个周末先把书架上的旧杂志清一清。\\\",\\\"start\\\":0,\\\"end\\\":18,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\"}],\\\"inferences\\\":[],\\\"unknowns\\\":[],\\\"advice\\\":\\\"unsure\\\",\\\"question\\\":\\\"\\\",\\\"question_why\\\":\\\"\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":929,\"completion_tokens\":71,\"total_tokens\":1000,\"prompt_tokens_details\":{\"cached_tokens\":768},\"prompt_cache_hit_tokens\":768,\"prompt_cache_miss_tokens\":161},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        }
+      ],
+      "after": 6,
+      "calls": 1
+    },
+    {
+      "id": "U05",
+      "mode": "action",
+      "input": "我想把画好的一张小画寄给朋友，同时又确定不想让第二个人看见。",
+      "rubric": "寄出和不要被第二个人看见都留着。不能替用户选边，也不能假定已经有收件人地址或邮费。",
+      "before": 6,
+      "material": {
+        "noAction": "",
+        "voice": "",
+        "ask": "还看不出你想不想听一条做法。",
+        "own": false,
+        "want": false,
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。意愿我想把画好的一张小画寄给朋友 撤回同时又确定不想让第二个人看见 撤回还不清楚：画是纸质的还是电子文件；朋友收件的方式是什么；不想让第二个人看见，是怕寄送途中被看到，还是怕朋友转给别人还看不出你想不想听一条做法。",
+        "buckets": {
+          "intent": "我想把画好的一张小画寄给朋友 撤回\n同时又确定不想让第二个人看见 撤回"
+        },
+        "line": "",
+        "basis": "",
+        "goDisabled": true,
+        "stickers": [
+          "我想把画好的一张小画寄给朋友",
+          "同时又确定不想让第二个人看见"
+        ],
+        "bodyHasAttempt": false
+      },
+      "took": "我想把画好的一张小画寄给朋友",
+      "direction": {
+        "reached": true,
+        "immediate": "",
+        "line": "带走的是你的意愿「我想把画好的一张小画寄给朋友」。「身体」只是在试的组合，不是你的经历。这一步还要你改成自己愿意做的事。",
+        "opted": true
+      },
+      "check": {
+        "noAction": "",
+        "voice": "",
+        "ask": "还看不出你想不想听一条做法。",
+        "own": false,
+        "want": false,
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。意愿我想把画好的一张小画寄给朋友 撤回同时又确定不想让第二个人看见 撤回还不清楚：画是纸质的还是电子文件；朋友收件的方式是什么；不想让第二个人看见，是怕寄送途中被看到，还是怕朋友转给别人还看不出你想不想听一条做法。",
+        "buckets": {
+          "intent": "我想把画好的一张小画寄给朋友 撤回同时又确定不想让第二个人看见 撤回"
+        },
+        "line": "带走的是你的意愿「我想把画好的一张小画寄给朋友」。「身体」只是在试的组合，不是你的经历。这一步还要你改成自己愿意做的事。",
+        "basis": "带走我想把画好的一张小画寄给朋友方向身体",
+        "goDisabled": false,
+        "stickers": [
+          "同时又确定不想让第二个人看见"
+        ],
+        "bodyHasAttempt": true
+      },
+      "stoppedAt": "走到行动",
+      "responses": [
+        {
+          "status": 200,
+          "body": "{\"id\":\"020de33b-4250-47e5-9bdd-49174edda673\",\"object\":\"chat.completion\",\"created\":1794497505,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"facts\\\":[{\\\"id\\\":\\\"f1\\\",\\\"kind\\\":\\\"keep\\\",\\\"text\\\":\\\"我想把画好的一张小画寄给朋友\\\",\\\"start\\\":0,\\\"end\\\":14,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\"},{\\\"id\\\":\\\"f2\\\",\\\"kind\\\":\\\"constraint\\\",\\\"text\\\":\\\"同时又确定不想让第二个人看见\\\",\\\"start\\\":15,\\\"end\\\":29,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\"}],\\\"inferences\\\":[],\\\"unknowns\\\":[\\\"画是纸质的还是电子文件\\\",\\\"朋友收件的方式是什么\\\",\\\"不想让第二个人看见，是怕寄送途中被看到，还是怕朋友转给别人\\\"],\\\"advice\\\":\\\"unsure\\\",\\\"question\\\":\\\"\\\",\\\"question_why\\\":\\\"\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":937,\"completion_tokens\":143,\"total_tokens\":1080,\"prompt_tokens_details\":{\"cached_tokens\":768},\"prompt_cache_hit_tokens\":768,\"prompt_cache_miss_tokens\":169},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        }
+      ],
+      "after": 8,
+      "calls": 2
+    },
+    {
+      "id": "U06",
+      "mode": "action",
+      "input": "想把一段雨声收短一点。没有电脑，这个月的钱也已经分完了。",
+      "rubric": "没有电脑、钱已分完是当前限制。不能假设有剪辑软件、手机应用、耳机或可以再花钱。未知设备保持未知。",
+      "before": 8,
+      "material": {
+        "noAction": "",
+        "voice": "",
+        "ask": "",
+        "own": false,
+        "want": false,
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。自述这个月的钱也已经分完了 撤回没有电脑 撤回意愿想把一段雨声收短一点 撤回还不清楚：雨声是录音还是现成音频；想短到多长；用什么设备处理",
+        "buckets": {
+          "self": "这个月的钱也已经分完了 撤回\n没有电脑 撤回",
+          "intent": "想把一段雨声收短一点 撤回"
+        },
+        "line": "",
+        "basis": "",
+        "goDisabled": true,
+        "stickers": [
+          "想把一段雨声收短一点",
+          "没有电脑",
+          "这个月的钱也已经分完了"
+        ],
+        "bodyHasAttempt": false
+      },
+      "took": "想把一段雨声收短一点",
+      "direction": {
+        "reached": true,
+        "immediate": "带走的是你的意愿「想把一段雨声收短一点」。「身体」只是在试的组合，不是你的经历。这一步还要你改成自己愿意做的事。",
+        "line": "带走的是你的意愿「想把一段雨声收短一点」。「身体」只是在试的组合，不是你的经历。这一步还要你改成自己愿意做的事。",
+        "opted": true
+      },
+      "check": {
+        "noAction": "",
+        "voice": "",
+        "ask": "",
+        "own": false,
+        "want": false,
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。自述这个月的钱也已经分完了 撤回没有电脑 撤回意愿想把一段雨声收短一点 撤回还不清楚：雨声是录音还是现成音频；想短到多长；用什么设备处理",
+        "buckets": {
+          "self": "这个月的钱也已经分完了 撤回没有电脑 撤回",
+          "intent": "想把一段雨声收短一点 撤回"
+        },
+        "line": "带走的是你的意愿「想把一段雨声收短一点」。「身体」只是在试的组合，不是你的经历。这一步还要你改成自己愿意做的事。",
+        "basis": "带走想把一段雨声收短一点方向身体",
+        "goDisabled": false,
+        "stickers": [
+          "没有电脑",
+          "这个月的钱也已经分完了"
+        ],
+        "bodyHasAttempt": true
+      },
+      "stoppedAt": "走到行动",
+      "responses": [
+        {
+          "status": 200,
+          "body": "{\"id\":\"538c061d-93ab-47cd-9075-6a37b979d226\",\"object\":\"chat.completion\",\"created\":1794497513,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"facts\\\":[{\\\"id\\\":\\\"f1\\\",\\\"kind\\\":\\\"change\\\",\\\"text\\\":\\\"想把一段雨声收短一点\\\",\\\"start\\\":0,\\\"end\\\":10,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\"},{\\\"id\\\":\\\"f2\\\",\\\"kind\\\":\\\"constraint\\\",\\\"text\\\":\\\"没有电脑\\\",\\\"start\\\":11,\\\"end\\\":15,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\"},{\\\"id\\\":\\\"f3\\\",\\\"kind\\\":\\\"constraint\\\",\\\"text\\\":\\\"这个月的钱也已经分完了\\\",\\\"start\\\":16,\\\"end\\\":27,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\"}],\\\"inferences\\\":[{\\\"id\\\":\\\"i1\\\",\\\"text\\\":\\\"可能想剪短一段音频素材\\\",\\\"start\\\":0,\\\"end\\\":10}],\\\"unknowns\\\":[\\\"雨声是录音还是现成音频\\\",\\\"想短到多长\\\",\\\"用什么设备处理\\\"],\\\"advice\\\":\\\"offer\\\",\\\"question\\\":\\\"\\\",\\\"question_why\\\":\\\"\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":936,\"completion_tokens\":180,\"total_tokens\":1116,\"prompt_tokens_details\":{\"cached_tokens\":768},\"prompt_cache_hit_tokens\":768,\"prompt_cache_miss_tokens\":168},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        },
+        {
+          "status": 200,
+          "body": "{\"id\":\"f7b296d4-e1f7-42e3-b3a8-bd89f67e3232\",\"object\":\"chat.completion\",\"created\":1794497517,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"attempt\\\":\\\"用手机录一段雨声，只留最想听的那几秒。\\\",\\\"enough\\\":\\\"听一遍，觉得短得刚好就行。\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":310,\"completion_tokens\":32,\"total_tokens\":342,\"prompt_tokens_details\":{\"cached_tokens\":0},\"prompt_cache_hit_tokens\":0,\"prompt_cache_miss_tokens\":310},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        }
+      ],
+      "after": 11,
+      "calls": 3
+    },
+    {
+      "id": "U08",
+      "skipped": true,
+      "reason": "剩下 1 次，不够这一题预留的 6 次"
+    },
+    {
+      "id": "U07",
+      "skipped": true,
+      "reason": "剩下 1 次，不够这一题预留的 2 次"
+    }
+  ],
+  "used": 11
+}
