@@ -140,9 +140,51 @@
       var seq = ((v && v.fragments) || []).filter(function (w) { return w && w !== SENT; });
       return seq[0] || "";
     }
+    function conflictSides(v) {
+      var list = (v && v.mind && v.mind.readings) || [];
+      var by = {}, seen = {}, out = [], i;
+      list.forEach(function (r) { if (r && r.id) by[r.id] = r; });
+      list.forEach(function (r) {
+        (r.conflicts_with || []).forEach(function (id) {
+          var other = by[id];
+          if (!other || !r.text || !other.text || r.text === other.text) return;
+          var key = [r.id, other.id].sort().join("|");
+          if (seen[key]) return;
+          seen[key] = 1;
+          if (!out.some(function (x) { return x.id === r.id; })) out.push(r);
+          if (!out.some(function (x) { return x.id === other.id; })) out.push(other);
+        });
+      });
+      return out;
+    }
+    function conflictOpen(v) {
+      var m = v && v.mind;
+      if (!m || m.conflictChoice) return false;
+      return conflictSides(v).length >= 2;
+    }
+    function sideBit(text) { text = String(text || ""); return text.slice(0, Math.min(4, text.length)); }
+    function respectsConflict(v, text) {
+      var m = (v && v.mind) || {};
+      var sides = conflictSides(v);
+      text = String(text || "");
+      if (!sides.length || !m.conflictChoice) return true;
+      if (m.conflictChoice === "both") return sides.every(function (s) { return sideBit(s.text) && text.indexOf(sideBit(s.text)) >= 0; });
+      var chosen = null;
+      sides.forEach(function (s) { if (s.id === m.conflictChoice) chosen = s; });
+      if (!chosen) return true;
+      return !sideBit(chosen.text) || text.indexOf(sideBit(chosen.text)) >= 0;
+    }
     function manualLine(v) {
-      var t0 = (v.take && v.take[0]) || "";
       var d = dirLabel20(v);
+      var m = v.mind || {};
+      if (m.conflictChoice === "both") {
+        var sides = conflictSides(v);
+        if (sides.length >= 2) return "两边都还在：「" + sides[0].text + "」和「" + sides[1].text + "」。这一步不能违反其中任何一边。" + (d ? "「" + d + "」只是在试的组合，不是你的经历。" : "");
+      }
+      var t0 = (v.take && v.take[0]) || "";
+      if (m.conflictChoice && m.conflictChoice !== "both") {
+        conflictSides(v).forEach(function (s) { if (s.id === m.conflictChoice) t0 = s.text; });
+      }
       if (!t0) return "";
       var mark = voiceMark(t0, v.mind && v.mind.readings);
       var kind = "自述";
@@ -196,6 +238,9 @@
         return;
       }
       if (v.mind) v.mind.holdAttempt = false;
+      if (v.candidatePack && v.candidatePack.length) {
+        v.candidatePack = v.candidatePack.filter(function (a) { return respectsConflict(v, (a && (a.text || a.action)) || ""); });
+      }
       if (v.candidatePack && v.candidatePack.length) {
         var skipped = !!(v.premise && v.premise.skipped);
         v.premise = LingcunPremises.settle(v.record, v.candidatePack);
@@ -257,6 +302,7 @@
       mind.unknowns = prev.unknowns || [];
       mind.readings = prev.readings || [];
       mind.voiceConfirmed = !!prev.voiceConfirmed;
+      mind.conflictChoice = prev.conflictChoice || "";
       if (prev.mode === "ai") mind.mode = "ai";
       if (prev.status === "ok") mind.status = "ok";
       return mind;
@@ -277,6 +323,7 @@
     }
     function wantsAction(v) {
       var m = (v && v.mind) || {};
+      if (conflictOpen(v)) return false;
       if (voiceNeedsAsk(v)) return false;
       if (m.adviceFrom === "user" && m.advice === "offer") return true;
       if (m.advice === "offer" && m.adviceFrom === "model") return true;
@@ -402,7 +449,13 @@
       });
       if (m.unknowns && m.unknowns.length) html += '<p class="v20-unk">还不清楚：' + esc(m.unknowns.join("；")) + "</p>";
       if (m.ref) html += '<p class="v20-ref">对照，不是你的经历：' + esc(m.ref.pattern) + (m.ref.excerpt ? " 「" + esc(m.ref.excerpt) + "」" : "") + " " + esc(m.ref.limits) + "</p>";
-      if (voiceNeedsAsk(p.v18)) html += "<p id=\"v20-voice-ask\">这里有别人说的话，或者还只是假设。你自己是这么想的吗？</p><button type=\"button\" id=\"v20-own-voice\">是我自己的想法</button>";
+      if (conflictOpen(p.v18)) {
+        html += '<p id="v20-conflict">这两边都是你说的，不能只留一边。</p>';
+        conflictSides(p.v18).forEach(function (s) {
+          html += '<p><button type="button" class="v20-mini" data-keep-side="' + esc(s.id) + '">先留这边</button> ' + esc(s.text) + "</p>";
+        });
+        html += '<button type="button" id="v20-keep-both">两边都留着</button>';
+      } else if (voiceNeedsAsk(p.v18)) html += "<p id=\"v20-voice-ask\">这里有别人说的话，或者还只是假设。你自己是这么想的吗？</p><button type=\"button\" id=\"v20-own-voice\">是我自己的想法</button>";
       else if (m.advice === "decline" && m.adviceFrom !== "user") html += "<p id=\"v20-no-action\">这次先不给做法。这段话留在这里，不必做成一条尝试。</p><button type=\"button\" id=\"v20-keep-text\">先留下这段话</button><button type=\"button\" id=\"v20-want-advice\">我想听听建议</button>";
       else if ((m.advice === "unsure" || !m.advice) && m.adviceFrom !== "user") html += "<p id=\"v20-ask-advice\">还看不出你想不想听一条做法。</p>";
       if (m.pace === "vent") html += "<p>你写了先不要分析。可以停在这里，不必做成一条尝试，也不会把这句存成以后的方向。</p><button type=\"button\" id=\"v20-hold\">先停在这里</button>";
@@ -424,6 +477,23 @@
         S.cur = -1;
         ui.pickStep = "home";
         go("pick");
+      };
+      box.querySelectorAll("[data-keep-side]").forEach(function (b) {
+        b.onclick = function () {
+          m.conflictChoice = b.getAttribute("data-keep-side");
+          m.advice = "offer";
+          m.adviceFrom = "user";
+          save();
+          renderMaterial();
+        };
+      });
+      var bothBtn = $("v20-keep-both");
+      if (bothBtn) bothBtn.onclick = function () {
+        m.conflictChoice = "both";
+        m.advice = "offer";
+        m.adviceFrom = "user";
+        save();
+        renderMaterial();
       };
       var own = $("v20-own-voice");
       if (own) own.onclick = function () {
@@ -491,7 +561,7 @@
         };
       });
     }
-    var FACT = { type: "object", required: ["id", "kind", "text", "start", "end", "speaker", "modality"], properties: { id: STR(12), kind: { type: "string", enum: ["said", "keep", "change", "constraint"] }, text: STR(80), start: { type: "integer", minimum: 0 }, end: { type: "integer", minimum: 0 }, speaker: { type: "string", enum: ["self", "reported"] }, modality: { type: "string", enum: ["certain", "hypothetical", "refusal"] } } };
+    var FACT = { type: "object", required: ["id", "kind", "text", "start", "end", "speaker", "modality"], properties: { id: STR(12), kind: { type: "string", enum: ["said", "keep", "change", "constraint"] }, text: STR(80), start: { type: "integer", minimum: 0 }, end: { type: "integer", minimum: 0 }, speaker: { type: "string", enum: ["self", "reported"] }, modality: { type: "string", enum: ["certain", "hypothetical", "refusal"] }, conflicts_with: { type: "array", maxItems: 4, items: STR(12) } } };
     var INF = { type: "object", required: ["id", "text", "start", "end"], properties: { id: STR(12), text: STR(40), start: { type: "integer", minimum: 0 }, end: { type: "integer", minimum: 0 } } };
     var UNDER_SCHEMA = { type: "object", required: ["facts", "inferences", "unknowns"], properties: { facts: { type: "array", maxItems: 8, items: FACT }, inferences: { type: "array", maxItems: 3, items: INF }, unknowns: { type: "array", maxItems: 4, items: STR(40) }, advice: { type: "string", enum: ["offer", "decline", "unsure"] }, question: STR0(80), question_why: STR0(80) } };
     var NEED = { type: "object", required: ["resource"], properties: { resource: STR(20), key: { type: "boolean" }, claim: STR(12), evidenceId: STR(20) } };
@@ -604,6 +674,7 @@
         "若对方明确不要分析、只是吐槽、或什么都不想做，advice 写 decline，并在 unknowns 里写明先不要给行动。不要把担心身体写成诊断。",
         "advice 只能是 offer、decline 或 unsure。offer 表示可以给一条低风险的试法，decline 表示不要建议或不要行动，unsure 表示看不出来。写在这个字段里。",
         "每条 facts 都要有 speaker 和 modality。speaker 用 self 表示用户本人说的，reported 表示在转述别人。modality 用 certain 表示确定，hypothetical 表示假设或可能，refusal 表示拒绝。转述和假设不要写成用户已经要做的事。",
+        "若两条都是用户本人说的，而且不能同时做成，就在各自的 conflicts_with 里写下对方的 id。没有这种关系就给空数组。",
         "reference 若存在，只是公开摘录，不是这个人的履历，不能写进 facts。"
       ];
     }
@@ -615,6 +686,7 @@
         "三条之间要有实质差别，例如弄清一件已有的事、减去一件、或先保持原样观察。不要都写成今天做一件小事。",
         "why 说明它接上了哪句原话。observe 是做完能看到的现象。stop 是停下或改的条件。",
         "若原话里有不想辞职、不想花钱、没精力、不想再学，就不要建议相反的事。对方已经确认要离开时，stop 不能写成放弃离开。",
+        "若 inputs 里两条本人的话互相 conflicts_with，一条尝试不能只做成其中一边而违反另一边。两边都留着时，text 里要同时带上两边的原话。",
         "needs 列出这一步真正要用、而原文没有写明已经有的东西。没有就给空数组。不要把没在当前原话里出现的东西写成已经有。claim 不会被当成证据。",
         "原文若同时有「上次」和「现在」，以现在这句为准。上次的内容只能对照，不能当成这次要做的事。",
         "reference 不是用户事实。"
@@ -680,7 +752,7 @@
         p.v18.mind.adviceFrom = "model";
         p.v18.mind.unknowns = out.unknowns || [];
         p.v18.mind.readings = (out.facts || []).concat(out.inferences || []).map(function (it) {
-          return { text: it.text, speaker: it.speaker || "", modality: it.modality || "", kind: it.kind || "" };
+          return { id: it.id || "", text: it.text, speaker: it.speaker || "", modality: it.modality || "", kind: it.kind || "", conflicts_with: it.conflicts_with || [] };
         });
         p.v18.mind.understoodSeq = boundU.seq;
         p.v18.mind.mode = "ai";
@@ -697,6 +769,7 @@
       var flight = v.flight && v.flight.attempts;
       if (flight && flight.status === "pending" && flight.seq === (v.epochSeq || 0)) return;
       var sig = attemptSig(v);
+      if (v.aiSig === sig && v.aiAttempts && v.aiAttempts.length) return;
       var boundA = LingcunEpoch.issue(p, "attempts");
       var view = v.record ? LingcunUserState.view(v.record) : { facts: [], constraints: [], intents: [] };
       var inputs = { confirmed: view.facts.concat(view.constraints, view.intents), answer: m.answer || "", direction: dirLabel20(v), take: v.take || [], leave: v.leave || [], reference: m.ref || null, user_text: m.source };
@@ -848,7 +921,37 @@
       var p = curP();
       if (!p || !p.v18) return;
       var v = p.v18, k = $("try-kicker");
-      if (voiceNeedsAsk(v)) {
+      if (conflictOpen(v)) {
+        var cardC = document.querySelector(".trycard");
+        if (cardC && !$("v20-conflict")) {
+          var clash = document.createElement("div");
+          clash.className = "v20-extra";
+          clash.id = "v20-conflict-box";
+          var bits = '<p id="v20-conflict">这两边都是你说的，不能只留一边。</p>';
+          conflictSides(v).forEach(function (s) {
+            bits += '<p><button type="button" class="v20-mini" data-keep-side="' + esc(s.id) + '">先留这边</button> ' + esc(s.text) + "</p>";
+          });
+          bits += '<button type="button" id="v20-keep-both">两边都留着</button>';
+          clash.innerHTML = bits;
+          cardC.appendChild(clash);
+          clash.querySelectorAll("[data-keep-side]").forEach(function (b) {
+            b.onclick = function () {
+              v.mind.conflictChoice = b.getAttribute("data-keep-side");
+              v.mind.advice = "offer";
+              v.mind.adviceFrom = "user";
+              save();
+              renderCheck();
+            };
+          });
+          $("v20-keep-both").onclick = function () {
+            v.mind.conflictChoice = "both";
+            v.mind.advice = "offer";
+            v.mind.adviceFrom = "user";
+            save();
+            renderCheck();
+          };
+        }
+      } else if (voiceNeedsAsk(v)) {
         var cardV = document.querySelector(".trycard");
         if (cardV && !$("v20-own-voice")) {
           var voice = document.createElement("div");
