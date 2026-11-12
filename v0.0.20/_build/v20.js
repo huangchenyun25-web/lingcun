@@ -238,6 +238,19 @@
         return;
       }
       if (v.mind) v.mind.holdAttempt = false;
+      function groundedPhrase(phrase, sources) {
+        var t = String(phrase || "").replace(/^今天做到这儿就够了：/, "").replace(/[。！？\s]/g, "");
+        if (t.length < 2) return false;
+        return (sources || []).join("").indexOf(t) >= 0;
+      }
+      function settleEnough(phrase, attempt) {
+        if (v.enoughOwned) return;
+        var src = [String(p.idea || "")].concat(v.take || [], v.leave || [], [attempt || ""]);
+        if (groundedPhrase(phrase, src)) {
+          var body = String(phrase).replace(/^今天做到这儿就够了：/, "");
+          v.enough = /今天做到这儿就够了/.test(body) ? body : "今天做到这儿就够了：" + body;
+        } else v.enough = "今天做到这儿就够了：做完你认可的这一件就停。";
+      }
       if (v.candidatePack && v.candidatePack.length) {
         v.candidatePack = v.candidatePack.filter(function (a) { return respectsConflict(v, (a && (a.text || a.action)) || ""); });
       }
@@ -247,15 +260,30 @@
         if (skipped) { v.premise.skipped = true; v.premise.verified = false; v.premise.pending = true; }
         var shown = v.premise.display;
         var shownText = shown && (shown.text || shown.action);
-        if (shownText) {
-          v.attemptFrom = "manual";
+        if (shownText && respectsConflict(v, shownText)) {
+          v.modelLine = shownText;
+          v.modelEpoch = v.epochSeq || 0;
+          v.modelEnough = (v.candidatePack[0] && v.candidatePack[0].stop) || "";
+          v.attemptFrom = "model";
           v.pool = [shownText];
           v.poolSig = shownText;
           v.ix = 0;
           v.attempt = shownText;
+          settleEnough(v.modelEnough, shownText);
         }
         v.attemptEpoch = v.epochSeq || 0;
         v.packEpoch = v.epochSeq || 0;
+        syncOut(p);
+        return;
+      }
+      if (v.modelLine && v.modelEpoch === (v.epochSeq || 0) && respectsConflict(v, v.modelLine)) {
+        v.attempt = v.modelLine;
+        v.attemptFrom = "model";
+        v.pool = [v.modelLine];
+        v.poolSig = v.modelLine;
+        v.ix = 0;
+        settleEnough(v.modelEnough, v.modelLine);
+        v.attemptEpoch = v.epochSeq || 0;
         syncOut(p);
         return;
       }
@@ -339,6 +367,8 @@
         v.record = LingcunUserState.replaceSource(v.record, text, "idea");
         v.mindToken = (v.mindToken || 0) + 1;
         v.aiAttempts = null;
+        v.modelLine = "";
+        v.modelEnough = "";
         v.attemptFrom = "manual";
       }
       (v.custom || []).forEach(function (w) { LingcunUserState.addUtterance(v.record, w, "custom"); });

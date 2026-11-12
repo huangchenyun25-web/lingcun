@@ -227,7 +227,7 @@
         h += '<div class="homelinks">' + (lo >= 0 ? '<button id="pk-last">继续上次「' + esc(S.projects[lo].title || "这一版") + "」</button>" : "") + (S.projects.length ? '<button id="pk-map">星图</button>' : "") + "</div>";
         h += '<div class="dock"><button class="main" id="pk-start">开始这一版</button></div>';
         B.innerHTML = h;
-        $("pk-start").onclick = function () { ui.pickStep = "idea"; ui.vmode = "type"; ui.vnote = ""; render(); try { $("pk-idea").focus(); } catch (err) {} };
+        $("pk-start").onclick = function () { ui.pickStep = "idea"; ui.vnote = ""; render(); try { $("pk-idea").focus(); } catch (err) {} };
         if ($("pk-last")) $("pk-last").onclick = function () { S.cur = lo; var p = S.projects[lo]; ui.pickStep = "home"; go(p.stage && p.stage !== "pick" ? p.stage : "material"); };
         if ($("pk-map")) $("pk-map").onclick = function () { openBag(); };
         return;
@@ -238,7 +238,7 @@
       h2 += '<div class="pk-seg" role="tablist" id="pk-seg"><button type="button" data-kind="did"' + (e.kind !== "want" ? ' class="on" aria-selected="true"' : ' aria-selected="false"') + '>做过的事</button><button type="button" data-kind="want"' + (e.kind === "want" ? ' class="on" aria-selected="true"' : ' aria-selected="false"') + ">想改的事</button></div>";
       h2 += '<div class="exchips" id="pk-exchips">' + ex.map(function (t, i) { return '<button type="button" data-exi="' + i + '">' + esc(t) + "</button>"; }).join("") + "</div>";
       h2 += '<button type="button" id="pk-type"><span class="ph">打字</span><span class="dk">打字输入</span></button>';
-      h2 += '<div class="brk" id="pk-typebox">' + bk() + '<div class="gl ideabox"><input type="text" id="pk-idea" placeholder="一句具体的事" aria-label="先带上一件和你有关的事" autocomplete="off" value="' + esc(e.idea || "") + '" /><button class="send" id="pk-go" aria-label="用这句">' + ARROW + '<span class="sr">用这句</span></button>' + (voiceCan() ? '<button class="vz-back" id="pk-tovoice">说话</button>' : "") + "</div></div>";
+      h2 += '<div class="brk' + (vo ? " hidden" : "") + '" id="pk-typebox">' + bk() + '<div class="gl ideabox"><input type="text" id="pk-idea" placeholder="一句具体的事" aria-label="先带上一件和你有关的事" autocomplete="off" value="' + esc(e.idea || "") + '" /><button class="send" id="pk-go" aria-label="用这句">' + ARROW + '<span class="sr">用这句</span></button>' + (vo ? "" : (voiceCan() ? '<button class="vz-back" id="pk-tovoice">说话</button>' : "")) + "</div></div>";
       h2 += '<div id="pk-err" role="status">' + esc(ui.vnote || "") + "</div>";
       h2 += '<p class="netline">说的话由浏览器转成文字。能连上时才会把字发给 AI 润色；连不上也能走完。</p>';
       h2 += '<button class="ghost small back" id="pk-back">回去</button></div>';
@@ -372,10 +372,12 @@
       }, 2500, function (o) {
         if (!o || !o.attempt || v.edited || v.attempt !== sig) return;
         if (/存档|登月|大突破|创造|学习|转行|价格|元/.test(o.attempt)) return;
-        v.pool[v.ix] = o.attempt;
+        v.modelLine = o.attempt;
+        v.modelEpoch = v.epochSeq || 0;
+        v.modelEnough = o.enough || "";
         v.attempt = o.attempt;
-        if (o.enough) v.enough = /今天做到这儿就够了/.test(o.enough) ? o.enough : "今天做到这儿就够了：" + o.enough;
-        p.out.first_step = v.attempt; p.out.summary = v.attempt; p.out.star = v.enough;
+        v.attemptFrom = "model";
+        v.pool[v.ix] = o.attempt;
         save();
         if (curP() === p && S.stage === "check") renderCheck();
       });
@@ -403,6 +405,7 @@
         var t = $("en-in").value.trim().slice(0, 40);
         if (!t) { toast("写一句就好"); return; }
         v.enough = /今天做到这儿就够了/.test(t) ? t : "今天做到这儿就够了：" + t;
+        v.enoughOwned = true;
         if (p.out) p.out.star = v.enough;
         touchV(p); renderCheck(); toast("验收句已改");
       };
