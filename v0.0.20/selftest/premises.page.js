@@ -49,7 +49,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const shown = await p.$eval("#try-line", (e) => e.textContent);
   const note = await p.$eval("#premise-note", (e) => e.innerText);
   ok("架望远镜没有显示", shown.indexOf("望远镜") < 0 && shown.indexOf("抬头看") >= 0, shown);
-  ok("页面记下拦住的前提", injected.premise.results[0].needs[0].status === "denied" && /望远镜/.test(note), note);
+  ok("页面记下拦住的前提", injected.premise.results[0].needs[0].status === "denied" && note.indexOf("程序") < 0 && note.indexOf("没有读懂") < 0, note);
   const ask = await p.evaluate(() => window.__lingcun20.applyCandidates([
     { text: "租一艘观测船出海", needs: [{ resource: "观测船", key: true, claim: "have" }], uses: [] }
   ]));
@@ -87,7 +87,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     })()
   }));
   ok("手写句子没有被改掉", hand.line === "先架好望远镜", hand.line);
-  ok("手写只提示还没核实", /你写的/.test(hand.note) && /不能当成已经可行|还不能当成/.test(hand.note), hand.note);
+  ok("手写只提示还没核实", /这是你写的/.test(hand.note) && /碰到了你写过的限制/.test(hand.note) && hand.note.indexOf("程序") < 0, hand.note);
   ok("这轮没有发出网页请求", NET.length === 0, NET.slice(0, 3).join(" "));
   await b.close();
   const bad = R.filter((x) => x[0] === "FAIL");
