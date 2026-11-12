@@ -5075,6 +5075,33 @@ body.v20 .okorb {
       go("material");
       return true;
     }
+    function reviseProject(id, text) {
+      var p = null, i;
+      for (i = 0; i < S.projects.length; i++) if (S.projects[i].id === id) p = S.projects[i];
+      if (!p || !p.v18) return beginV18(text);
+      p.idea = text;
+      if (!p.v18.record || typeof LingcunUserState === "undefined") p.v18.record = typeof LingcunUserState === "undefined" ? null : LingcunUserState.ingest(text, "idea");
+      else p.v18.record = LingcunUserState.replaceSource(p.v18.record, text, "idea");
+      p.v18.take = [];
+      p.v18.leave = [];
+      p.v18.pick = {};
+      p.v18.board = null;
+      p.v18.fragments = p.v18.record ? LingcunUserState.stickers(p.v18.record) : [];
+      p.v18.weak = p.v18.fragments.length < 2;
+      p.v18.attempt = "";
+      p.v18.pool = [];
+      p.v18.enough = "";
+      p.v18.direction = null;
+      p.v18.aiAttempts = null;
+      p.v18.candidatePack = [];
+      p.v18.modelLine = "";
+      p.v18.attemptFrom = "";
+      p.v18.edited = false;
+      p.v18.mind = null;
+      S.cur = S.projects.indexOf(p);
+      go("material");
+      return true;
+    }
     function lastV18() {
       var best = -1, t = -1;
       S.projects.forEach(function (p, i) { if (p.v18 && (p.updatedAt || 0) >= t) { t = p.updatedAt || 0; best = i; } });
@@ -5115,7 +5142,7 @@ body.v20 .okorb {
         h += '<div class="homelinks">' + (lo >= 0 ? '<button id="pk-last">继续上次「' + esc(S.projects[lo].title || "这一版") + "」</button>" : "") + (S.projects.length ? '<button id="pk-map">星图</button>' : "") + "</div>";
         h += '<div class="dock"><button class="main" id="pk-start">开始这一版</button></div>';
         B.innerHTML = h;
-        $("pk-start").onclick = function () { ui.pickStep = "idea"; ui.vnote = ""; render(); };
+        $("pk-start").onclick = function () { ui.pickStep = "idea"; ui.vmode = "type"; ui.vnote = ""; render(); try { $("pk-idea").focus(); } catch (err) {} };
         if ($("pk-last")) $("pk-last").onclick = function () { S.cur = lo; var p = S.projects[lo]; ui.pickStep = "home"; go(p.stage && p.stage !== "pick" ? p.stage : "material"); };
         if ($("pk-map")) $("pk-map").onclick = function () { openBag(); };
         return;
@@ -5125,8 +5152,8 @@ body.v20 .okorb {
       h2 += '<div class="pk-r pk-side">';
       h2 += '<div class="pk-seg" role="tablist" id="pk-seg"><button type="button" data-kind="did"' + (e.kind !== "want" ? ' class="on" aria-selected="true"' : ' aria-selected="false"') + '>做过的事</button><button type="button" data-kind="want"' + (e.kind === "want" ? ' class="on" aria-selected="true"' : ' aria-selected="false"') + ">想改的事</button></div>";
       h2 += '<div class="exchips" id="pk-exchips">' + ex.map(function (t, i) { return '<button type="button" data-exi="' + i + '">' + esc(t) + "</button>"; }).join("") + "</div>";
-      h2 += '<button type="button" id="pk-type" class="' + (vo ? "" : "hidden") + '"><span class="ph">打字</span><span class="dk">打字输入</span></button>';
-      h2 += '<div class="brk' + (vo ? " hidden" : "") + '" id="pk-typebox">' + bk() + '<div class="gl ideabox"><input type="text" id="pk-idea" placeholder="一句具体的事" aria-label="先带上一件和你有关的事" autocomplete="off" value="' + esc(e.idea || "") + '" /><button class="send" id="pk-go" aria-label="用这句">' + ARROW + '<span class="sr">用这句</span></button>' + (vo ? "" : (voiceCan() ? '<button class="vz-back" id="pk-tovoice">说话</button>' : "")) + "</div></div>";
+      h2 += '<button type="button" id="pk-type"><span class="ph">打字</span><span class="dk">打字输入</span></button>';
+      h2 += '<div class="brk" id="pk-typebox">' + bk() + '<div class="gl ideabox"><input type="text" id="pk-idea" placeholder="一句具体的事" aria-label="先带上一件和你有关的事" autocomplete="off" value="' + esc(e.idea || "") + '" /><button class="send" id="pk-go" aria-label="用这句">' + ARROW + '<span class="sr">用这句</span></button>' + (voiceCan() ? '<button class="vz-back" id="pk-tovoice">说话</button>' : "") + "</div></div>";
       h2 += '<div id="pk-err" role="status">' + esc(ui.vnote || "") + "</div>";
       h2 += '<p class="netline">说的话由浏览器转成文字。能连上时才会把字发给 AI 润色；连不上也能走完。</p>';
       h2 += '<button class="ghost small back" id="pk-back">回去</button></div>';
@@ -5139,6 +5166,7 @@ body.v20 .okorb {
         e.idea = idea.value.trim(); save();
         if (!ideaOk(e.idea)) { $("pk-err").textContent = "多说一点具体的事，后面才能拆开带走和放下"; try { idea.focus(); } catch (err) {} return; }
         $("pk-err").textContent = "";
+        if (ui.revising) { var rid = ui.revising; ui.revising = ""; reviseProject(rid, e.idea); return; }
         beginV18(e.idea);
       }
       idea.oninput = function () { e.idea = idea.value; save(); if (ideaOk(e.idea) && $("pk-err")) $("pk-err").textContent = ""; };
@@ -5763,6 +5791,7 @@ body.v20 .okorb {
       h += "</div>";
       h += '<div id="frag-err" class="pk-hint" role="status"></div>';
       if (v.weak) h += '<button class="ghost small" id="frag-back" type="button">这些都不像我</button>';
+      h += '<button class="ghost small" id="frag-revise" type="button">改这句</button>';
       h += '<p id="v19-live" class="sr" aria-live="polite"></p>';
       h += '<div class="dock"><button class="main" id="frag-go" type="button"' + (any ? "" : " disabled") + ">下一步</button></div>";
       B.innerHTML = h;
@@ -5963,13 +5992,15 @@ body.v20 .okorb {
         if (t.closest("#v19-add")) { addCustom("bubble"); return; }
         if (t.closest("#v19-add-take")) { addCustom("take"); return; }
         if (t.closest("#v19-add-leave")) { addCustom("leave"); return; }
-        if (t.closest("#frag-back")) {
+        if (t.closest("#frag-back") || t.closest("#frag-revise")) {
           var p = curP(), v = p && p.v18;
+          ui.revising = p ? p.id : "";
+          ui.vmode = "type";
           ui.pickStep = "idea";
           S.entry.idea = (p && p.idea) || "";
           S.entry.kind = (v && v.kind) || "did";
-          S.cur = -1;
           go("pick");
+          try { var box = $("pk-idea"); if (box) box.focus(); } catch (err) {}
           return;
         }
         if (t.closest("#frag-go")) {

@@ -221,6 +221,7 @@
       h += "</div>";
       h += '<div id="frag-err" class="pk-hint" role="status"></div>';
       if (v.weak) h += '<button class="ghost small" id="frag-back" type="button">这些都不像我</button>';
+      h += '<button class="ghost small" id="frag-revise" type="button">改这句</button>';
       h += '<p id="v19-live" class="sr" aria-live="polite"></p>';
       h += '<div class="dock"><button class="main" id="frag-go" type="button"' + (any ? "" : " disabled") + ">下一步</button></div>";
       B.innerHTML = h;
@@ -421,13 +422,15 @@
         if (t.closest("#v19-add")) { addCustom("bubble"); return; }
         if (t.closest("#v19-add-take")) { addCustom("take"); return; }
         if (t.closest("#v19-add-leave")) { addCustom("leave"); return; }
-        if (t.closest("#frag-back")) {
+        if (t.closest("#frag-back") || t.closest("#frag-revise")) {
           var p = curP(), v = p && p.v18;
+          ui.revising = p ? p.id : "";
+          ui.vmode = "type";
           ui.pickStep = "idea";
           S.entry.idea = (p && p.idea) || "";
           S.entry.kind = (v && v.kind) || "did";
-          S.cur = -1;
           go("pick");
+          try { var box = $("pk-idea"); if (box) box.focus(); } catch (err) {}
           return;
         }
         if (t.closest("#frag-go")) {
