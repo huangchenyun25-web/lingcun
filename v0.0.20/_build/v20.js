@@ -322,6 +322,7 @@
         var shownAttempt = v.candidatePack[0] || { text: shownText, uses: [] };
         if (shownText && /只留下原话|先不做还要额外条件/.test(shownText) && shownAttempt.text && !quoteAttempt(shownAttempt.text, v, p)) shownText = shownAttempt.text;
         if (shownText && respectsConflict(v, shownAttempt) && !quoteAttempt(shownText, v, p)) {
+          if (v.mind) v.mind.attemptPending = false;
           v.modelLine = shownText;
           v.modelUses = shownAttempt.uses || [];
           v.modelEpoch = v.epochSeq || 0;
@@ -394,6 +395,16 @@
       }
       var line = manualLine(v);
       if (!line || quoteAttempt(line, v, p)) {
+        if (v.mind && v.mind.attemptPending) {
+          var pend = v.flight && v.flight.attempts;
+          if (pend && pend.status === "pending" && pend.seq === (v.epochSeq || 0)) {
+            v.attempt = "正在请一个小动作。";
+            v.pool = [v.attempt];
+            v.attemptFrom = "pending";
+            syncOut(p);
+            return;
+          }
+        }
         v.attempt = holdLine();
         v.pool = [v.attempt];
         v.poolSig = v.attempt;
@@ -436,6 +447,10 @@
       mind.relations = prev.relations || [];
       mind.relationUnsure = !!prev.relationUnsure;
       mind.relationChoice = prev.relationChoice || "";
+      mind.relationFrom = prev.relationFrom || "";
+      mind.relationSource = prev.relationSource || "";
+      mind.attemptPending = !!prev.attemptPending;
+      mind.relationPending = !!prev.relationPending;
       if (prev.mode === "ai") mind.mode = "ai";
       if (prev.status === "ok") mind.status = "ok";
       return mind;
@@ -886,6 +901,56 @@
       if (!LingcunEpoch.finish(p, bound)) return false;
       return true;
     }
+    var REL_FOCUS = { type: "object", required: ["pairs"], properties: { pairs: { type: "array", maxItems: 12, items: { type: "object", required: ["a", "b", "replaces", "both_ok", "why"], properties: { a: STR(12), b: STR(12), replaces: { type: "boolean" }, both_ok: { type: "boolean" }, why: STR(80) } } } } };
+    function focusInstructions() {
+      return [
+        "只判断已经列出的本人句子之间的关系，不写做法，不新增句子。",
+        "每一对里 a 是先出现的一句，b 是后出现的一句。每一对都要回答，不能缺。",
+        "replaces 表示后一句是否收回或取代前一句。true 表示前一句不再是当前要做的事。",
+        "both_ok 表示两句能否同时做到。false 表示两件都还成立，但不能一起做。",
+        "why 用一句话说明理由。判断只依据这两句的字面，不要补充对方没写的经历。"
+      ];
+    }
+    function applyFocusPairs(mind, pairs) {
+      var rels = [];
+      (pairs || []).forEach(function (pair) {
+        if (!pair || !pair.a || !pair.b) return;
+        var relation = pair.replaces ? "supersedes" : (pair.both_ok ? "independent" : "conflicts");
+        if (pair.replaces) rels.push({ a: pair.b, b: pair.a, relation: "supersedes", why: pair.why || "" });
+        else rels.push({ a: pair.a, b: pair.b, relation: relation, why: pair.why || "" });
+      });
+      mind.relations = rels;
+      mind.relationFrom = "focus";
+      mind.relationSource = mind.source || "";
+      mind.relationUnsure = false;
+      mind.conflictChoice = "";
+    }
+    function maybeFocusRelation(p) {
+      var v = p && p.v18, m = v && v.mind;
+      if (!m || !transportOn()) return;
+      var selves = (m.readings || []).filter(function (r) { return r && r.speaker === "self" && r.id && r.text; });
+      if (selves.length < 2) return;
+      if (m.relationFrom === "focus" && m.relationSource === m.source) return;
+      var ordered = selves.slice().sort(function (a, b) {
+        var as = String(m.source || "").indexOf(a.text), bs = String(m.source || "").indexOf(b.text);
+        if (as < 0) as = 0;
+        if (bs < 0) bs = 0;
+        return as - bs;
+      });
+      var pairs = [];
+      var i, j;
+      for (i = 0; i < ordered.length; i++) for (j = i + 1; j < ordered.length; j++) pairs.push({ a: ordered[i].id, b: ordered[j].id, earlier: ordered[i].text, later: ordered[j].text });
+      var task = taskOf("v20_relation", "判断两句的关系", "只判断句子之间的关系", focusInstructions(), { pairs: pairs }, REL_FOCUS, "v20r:" + p.id + ":" + (m.source || "").length + ":" + pairs.length);
+      m.relationPending = true;
+      runTask(task, 20000, function (out) {
+        if (!p.v18 || !p.v18.mind) return;
+        p.v18.mind.relationPending = false;
+        if (out && out.pairs) applyFocusPairs(p.v18.mind, out.pairs);
+        save();
+        if (S.stage === "material") renderMaterial();
+        if (S.stage === "check") renderCheck();
+      });
+    }
     function kickUnderstand(p) {
       if (!p || !p.v18) return;
       var v = p.v18, src = String(p.idea || "");
@@ -948,6 +1013,7 @@
         p.v18.mind.status = er.length ? "rejected" : "ok";
         save();
         if (S.stage === "material") renderMaterial();
+        maybeFocusRelation(p);
         if (advice !== "decline" && !p.v18.mind.relationUnsure && S.stage === "check") kickAttempts(p);
       }
       runTask(task, 28000, function (out, err) { takeUnderstand(out, err, 0); });
@@ -960,19 +1026,33 @@
       if (flight && flight.status === "pending" && flight.seq === (v.epochSeq || 0)) return;
       var sig = attemptSig(v);
       if (v.aiSig === sig && v.aiAttempts && v.aiAttempts.length) return;
+      if (v.mind) v.mind.attemptPending = true;
       var boundA = LingcunEpoch.issue(p, "attempts");
       var view = v.record ? LingcunUserState.view(v.record) : { facts: [], constraints: [], intents: [] };
       var inputs = { confirmed: view.facts.concat(view.constraints, view.intents), answer: m.answer || "", direction: dirLabel20(v), take: v.take || [], leave: v.leave || [], reference: m.ref || null, user_text: m.source };
       var task = taskOf("v20_attempts", "写几种小尝试", "按已核对的原话写不同的小尝试", attemptInstructions(), inputs, ATT_SCHEMA, "v20a:" + p.id + ":" + boundA.reqId);
       runTask(task, 28000, function (out, err) {
-        if (!gateFlight(p, boundA, err && !out)) return;
+        if (!gateFlight(p, boundA, err && !out)) {
+          var newer = p.v18 && p.v18.flight && p.v18.flight.attempts;
+          if (p.v18 && p.v18.mind && !(newer && newer.status === "pending" && newer.seq === (p.v18.epochSeq || 0))) p.v18.mind.attemptPending = false;
+          return;
+        }
+        if (p.v18.mind) p.v18.mind.attemptPending = false;
         if (!out || !out.attempts) {
           p.v18.aiErrors = [err || "没有做法"];
+          if (!p.v18.modelLine) { p.v18.attempt = holdLine(); p.v18.attemptFrom = "withhold"; }
           save();
+          if (S.stage === "check") renderCheck();
           return;
         }
         var format = validate(out, ATT_SCHEMA);
-        if (format.length) { p.v18.aiErrors = format; save(); return; }
+        if (format.length) {
+          p.v18.aiErrors = format;
+          if (!p.v18.modelLine) { p.v18.attempt = holdLine(); p.v18.attemptFrom = "withhold"; }
+          save();
+          if (S.stage === "check") renderCheck();
+          return;
+        }
         citeAttempts(p.v18.mind, out);
         p.v18.aiAttempts = out.attempts;
         p.v18.candidatePack = out.attempts;
@@ -1349,6 +1429,11 @@
       setWaitMs: function (ms) { LingcunTransport.waitMs = ms || 0; },
       late: function () { var p = curP(); return p && p.v18 && p.v18.late ? p.v18.late.slice() : []; },
       flight: function () { var p = curP(); return p && p.v18 ? p.v18.flight || {} : {}; },
+      mindState: function () {
+        var p = curP(), m = p && p.v18 && p.v18.mind;
+        if (!m) return null;
+        return { relationFrom: m.relationFrom || "", relationPending: !!m.relationPending, attemptPending: !!m.attemptPending, advice: m.advice || "", relations: m.relations || [], readings: (m.readings || []).map(function (r) { return { id: r.id, text: r.text, speaker: r.speaker, modality: r.modality }; }) };
+      },
       frozen: function () { var p = curP(); return p ? { frozen: p.frozen || null, snaps: (p.savedSnaps || []).slice(), attempt: p.v18 && p.v18.attempt, draft: p.v18 && p.v18.handDraft || null, landed: !!p.landed } : null; },
       acceptBound: function (bound) {
         var p = null;

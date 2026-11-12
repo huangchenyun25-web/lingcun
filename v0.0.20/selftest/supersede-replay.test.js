@@ -40,8 +40,14 @@ function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
           ],
           inferences: [], unknowns: [], advice: "offer"
         });
-      } else if (task.type === "v18_attempt") resolve({ attempt: info.action, enough: "写完这一段就停" });
-      else resolve(null);
+      } else if (task.type === "v20_attempts") {
+        resolve({
+          attempts: [
+            { text: info.action, why: "接上还成立的那句。", observe: "纸上多了一段", stop: "写完就停", uses: ["f2"] },
+            { text: info.oldText, why: "去做已经撤回的那句。", observe: "旧的还在", stop: "停", uses: ["f1"] }
+          ]
+        });
+      } else resolve(null);
     });
   }, { oldText: oldText, nextText: nextText, action: action });
   await p.click("#pk-start");

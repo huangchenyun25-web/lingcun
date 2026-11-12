@@ -29,11 +29,12 @@ function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
   await sleep(150);
   await p.click("#pk-start");
   await sleep(80);
-  var typeBtn = await p.$("#pk-type");
-  var ideaBox = await p.$("#pk-idea");
   var typeShown = await p.$eval("#pk-type", function (e) { return e.offsetParent !== null && !e.classList.contains("hidden"); });
+  ok("打字按钮一开始就在", typeShown);
+  await p.click("#pk-type");
+  await sleep(80);
   var ideaShown = await p.$eval("#pk-idea", function (e) { return e.offsetParent !== null; });
-  ok("一开始就能打字", !!typeBtn && !!ideaBox && typeShown && ideaShown);
+  ok("点打字后能输入", ideaShown);
   await p.fill("#pk-idea", first);
   await p.click("#pk-go");
   await sleep(250);
@@ -45,8 +46,11 @@ function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
   await p.click("#pk-start");
   await sleep(120);
   var backShown = await p.$eval("#pk-type", function (e) { return e.offsetParent !== null && !e.classList.contains("hidden"); });
+  ok("回到首页后打字还在", backShown);
+  await p.click("#pk-type");
+  await sleep(80);
   var backIdea = await p.$eval("#pk-idea", function (e) { return e.offsetParent !== null; });
-  ok("回到首页后再开始仍能打字", backShown && backIdea);
+  ok("回到首页后点打字能输入", backIdea);
   await p.fill("#pk-idea", first);
   await p.click("#pk-go");
   await sleep(200);
