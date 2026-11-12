@@ -451,6 +451,7 @@
       mind.relationSource = prev.relationSource || "";
       mind.attemptPending = !!prev.attemptPending;
       mind.relationPending = !!prev.relationPending;
+      mind.understandGaveUp = prev.understandGaveUp || "";
       if (prev.mode === "ai") mind.mode = "ai";
       if (prev.status === "ok") mind.status = "ok";
       return mind;
@@ -761,13 +762,15 @@
     function checkUnderstand(source, out) {
       var er = validate(out, UNDER_SCHEMA);
       if (er.length) return er;
+      function inSource(item) {
+        return !!(item && item.text && source.indexOf(item.text) >= 0);
+      }
       function spanOk(item, path) {
-        if (item.start >= item.end || item.end > source.length) { er.push(path + " 的位置对不上原文"); return; }
-        var slice = source.slice(item.start, item.end);
-        if (slice !== item.text) er.push(path + " 不是原文里的连续片段");
+        if (item && typeof item.start === "number" && typeof item.end === "number" && item.start < item.end && item.end <= source.length && source.slice(item.start, item.end) === item.text) return;
+        if (inSource(item)) return;
+        er.push(path + " 不是原文里的连续片段");
       }
       (out.facts || []).forEach(function (f, i) { spanOk(f, "facts[" + i + "]"); });
-      (out.inferences || []).forEach(function (f, i) { spanOk(f, "inferences[" + i + "]"); });
       var selves = (out.facts || []).filter(function (f) { return f && f.speaker === "self" && f.id; });
       if (selves.length >= 2) {
         var need = {};
@@ -960,6 +963,7 @@
       var flight = v.flight && v.flight.understand;
       if (v.mind && v.mind.adviceFrom === "user") return;
       if (v.mind && v.mind.adviceFrom === "model" && v.mind.source === src) return;
+      if (v.mind && v.mind.understandGaveUp === src) return;
       if (flight && flight.status === "pending" && flight.seq === (v.epochSeq || 0)) return;
       m.pace = derivePace(src, m.pace);
       m.requested = true;
@@ -990,6 +994,7 @@
           p.v18.mind.status = err || "failed";
           p.v18.mind.errors = [err || "empty"];
           p.v18.mind.mode = "manual";
+          p.v18.mind.understandGaveUp = String(p.idea || "");
           if (er.some(function (x) { return /relation/.test(x); }) || /relation/.test(String(err || ""))) p.v18.mind.relationUnsure = true;
           save();
           if (S.stage === "material") renderMaterial();
