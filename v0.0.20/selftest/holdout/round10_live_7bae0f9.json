@@ -1,0 +1,150 @@
+{
+  "commit": "7bae0f9",
+  "hash": "8b8f5870996dbd2fc615d8f5597f49bec79fd170284ef1e797329ead49f290dc",
+  "cap": 12,
+  "plan": "U04 预留 6，U05 预留 4，U08 预留 6。不够就不开始。",
+  "cases": [
+    {
+      "id": "U04",
+      "input": "这个周末先把书架上的旧杂志清一清。",
+      "rubric": "后一句取代前一句。当前要写的是信。旧的清杂志不能继续当这一步，也不能在保存或分享里冒充现在的做法。",
+      "before": 0,
+      "mode": "revise",
+      "material": {
+        "conflict": "",
+        "bothHold": "",
+        "relation": "",
+        "voice": "",
+        "noAction": "",
+        "ask": "还看不出你想不想听一条做法。",
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。自述这个周末先把书架上的旧杂志清一清 撤回还不清楚：不清楚旧杂志要留还是扔；不清楚书架有多大、杂志有多少还看不出你想不想听一条做法。",
+        "line": "",
+        "enough": "",
+        "basis": "",
+        "stickers": [
+          "这个周末先把书架上的旧杂志清一清"
+        ]
+      },
+      "typeVisible": true,
+      "second": {
+        "conflict": "",
+        "bothHold": "",
+        "relation": "",
+        "voice": "",
+        "noAction": "",
+        "ask": "",
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。自述算了 撤回杂志先别动 撤回意愿我想把那封写了一半的信写完 撤回还不清楚：杂志之前要做什么不清楚；信写给谁、写什么不清楚",
+        "line": "",
+        "enough": "",
+        "basis": "",
+        "stickers": [
+          "算了",
+          "杂志先别动",
+          "我想把那封写了一半的信写完"
+        ]
+      },
+      "took": "我想把那封写了一半的信写完",
+      "direction": {
+        "reached": true,
+        "line": "这次先不给做法。还没有一条能做的小动作。",
+        "enough": "今天做到这儿就够了：做完这一次，自己记一句感受。"
+      },
+      "check": {
+        "conflict": "",
+        "bothHold": "",
+        "relation": "",
+        "voice": "",
+        "noAction": "",
+        "ask": "",
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。自述算了 撤回杂志先别动 撤回意愿我想把那封写了一半的信写完 撤回还不清楚：杂志之前要做什么不清楚；信写给谁、写什么不清楚",
+        "line": "这次先不给做法。还没有一条能做的小动作。",
+        "enough": "今天做到这儿就够了：做完这一次，自己记一句感受。",
+        "basis": "带走我想把那封写了一半的信写完方向身体",
+        "stickers": [
+          "算了",
+          "杂志先别动"
+        ]
+      },
+      "stoppedAt": "走到行动",
+      "responses": [
+        {
+          "status": 200,
+          "body": "{\"id\":\"cc579bd8-e766-445d-966d-9283521b6441\",\"object\":\"chat.completion\",\"created\":1794499724,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"facts\\\":[{\\\"id\\\":\\\"f1\\\",\\\"kind\\\":\\\"said\\\",\\\"text\\\":\\\"这个周末先把书架上的旧杂志清一清。\\\",\\\"start\\\":0,\\\"end\\\":17,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\",\\\"conflicts_with\\\":[],\\\"supersedes\\\":[]}],\\\"inferences\\\":[],\\\"unknowns\\\":[\\\"不清楚旧杂志要留还是扔\\\",\\\"不清楚书架有多大、杂志有多少\\\"],\\\"relations\\\":[],\\\"advice\\\":\\\"unsure\\\",\\\"question\\\":\\\"\\\",\\\"question_why\\\":\\\"\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":1275,\"completion_tokens\":102,\"total_tokens\":1377,\"prompt_tokens_details\":{\"cached_tokens\":384},\"prompt_cache_hit_tokens\":384,\"prompt_cache_miss_tokens\":891},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        },
+        {
+          "status": 200,
+          "body": "{\"id\":\"a5df61c3-1b5c-402a-867c-84a7a898b385\",\"object\":\"chat.completion\",\"created\":1794499727,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"facts\\\":[{\\\"id\\\":\\\"f1\\\",\\\"kind\\\":\\\"change\\\",\\\"text\\\":\\\"算了，杂志先别动。\\\",\\\"start\\\":0,\\\"end\\\":9,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\",\\\"conflicts_with\\\":[],\\\"supersedes\\\":[]},{\\\"id\\\":\\\"f2\\\",\\\"kind\\\":\\\"keep\\\",\\\"text\\\":\\\"我想把那封写了一半的信写完。\\\",\\\"start\\\":9,\\\"end\\\":23,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\",\\\"conflicts_with\\\":[],\\\"supersedes\\\":[]}],\\\"inferences\\\":[],\\\"unknowns\\\":[\\\"杂志之前要做什么不清楚\\\",\\\"信写给谁、写什么不清楚\\\"],\\\"relations\\\":[{\\\"a\\\":\\\"f1\\\",\\\"b\\\":\\\"f2\\\",\\\"relation\\\":\\\"independent\\\",\\\"why\\\":\\\"杂志先放着，和把信写完不冲突。\\\"}],\\\"advice\\\":\\\"offer\\\",\\\"question\\\":\\\"\\\",\\\"question_why\\\":\\\"\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":1279,\"completion_tokens\":174,\"total_tokens\":1453,\"prompt_tokens_details\":{\"cached_tokens\":1024},\"prompt_cache_hit_tokens\":1024,\"prompt_cache_miss_tokens\":255},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        }
+      ],
+      "after": 3,
+      "calls": 3
+    },
+    {
+      "id": "U05",
+      "input": "我想把画好的一张小画寄给朋友，同时又确定不想让第二个人看见。",
+      "rubric": "寄出和不要被第二个人看见都留着。不能替用户选边，也不能假定已经有收件人地址或邮费。",
+      "before": 3,
+      "mode": "conflict",
+      "material": {
+        "conflict": "",
+        "bothHold": "",
+        "relation": "",
+        "voice": "",
+        "noAction": "",
+        "ask": "还看不出你想不想听一条做法。",
+        "mind": "正在请模型读原话。结果还没回来，下面先按原句放着。意愿我想把画好的一张小画寄给朋友 撤回同时又确定不想让第二个人看见 撤回还看不出你想不想听一条做法。",
+        "line": "",
+        "enough": "",
+        "basis": "",
+        "stickers": [
+          "我想把画好的一张小画寄给朋友",
+          "同时又确定不想让第二个人看见"
+        ]
+      },
+      "took": "我想把画好的一张小画寄给朋友",
+      "direction": {
+        "reached": true,
+        "line": "这次先不给做法。还没有一条能做的小动作。",
+        "enough": "今天做到这儿就够了：做完这一次，自己记一句感受。"
+      },
+      "check": {
+        "conflict": "",
+        "bothHold": "",
+        "relation": "",
+        "voice": "",
+        "noAction": "",
+        "ask": "还看不出你想不想听一条做法。",
+        "mind": "正在请模型读原话。结果还没回来，下面先按原句放着。意愿我想把画好的一张小画寄给朋友 撤回同时又确定不想让第二个人看见 撤回还看不出你想不想听一条做法。",
+        "line": "这次先不给做法。还没有一条能做的小动作。",
+        "enough": "今天做到这儿就够了：做完这一次，自己记一句感受。",
+        "basis": "带走我想把画好的一张小画寄给朋友方向身体",
+        "stickers": [
+          "同时又确定不想让第二个人看见"
+        ]
+      },
+      "stoppedAt": "走到行动",
+      "responses": [
+        {
+          "status": 200,
+          "body": "{\"id\":\"150e8148-b8ca-466a-92dc-8ff308d547d3\",\"object\":\"chat.completion\",\"created\":1794499733,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"facts\\\":[{\\\"id\\\":\\\"f1\\\",\\\"kind\\\":\\\"keep\\\",\\\"text\\\":\\\"我想把画好的一张小画寄给朋友\\\",\\\"start\\\":0,\\\"end\\\":14,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\",\\\"conflicts_with\\\":[],\\\"supersedes\\\":[]},{\\\"id\\\":\\\"f2\\\",\\\"kind\\\":\\\"constraint\\\",\\\"text\\\":\\\"同时又确定不想让第二个人看见\\\",\\\"start\\\":15,\\\"end\\\":29,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\",\\\"conflicts_with\\\":[],\\\"supersedes\\\":[]}],\\\"inferences\\\":[{\\\"id\\\":\\\"i1\\\",\\\"text\\\":\\\"这张画可能比较私密，只想给一位朋友看。\\\",\\\"start\\\":15,\\\"end\\\":29}],\\\"unknowns\\\":[\\\"朋友收到后会不会给别人看\\\",\\\"画的内容和私密程度\\\",\\\"寄送方式有没有保密要求\\\"],\\\"relations\\\":[{\\\"a\\\":\\\"f2\\\",\\\"b\\\":\\\"f1\\\",\\\"relation\\\":\\\"independent\\\",\\\"why\\\":\\\"寄给朋友和不让第二个人看见可以同时成立，只是对寄送方式有要求。\\\"}],\\\"advice\\\":\\\"offer\\\",\\\"question\\\":\\\"\\\",\\\"question_why\\\":\\\"\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":1283,\"completion_tokens\":222,\"total_tokens\":1505,\"prompt_tokens_details\":{\"cached_tokens\":1024},\"prompt_cache_hit_tokens\":1024,\"prompt_cache_miss_tokens\":259},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        },
+        {
+          "status": 200,
+          "body": "{\"id\":\"b251289f-607e-488b-9966-7cda717dfd02\",\"object\":\"chat.completion\",\"created\":1794499735,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"facts\\\":[{\\\"id\\\":\\\"f1\\\",\\\"kind\\\":\\\"keep\\\",\\\"text\\\":\\\"我想把画好的一张小画寄给朋友\\\",\\\"start\\\":0,\\\"end\\\":14,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\",\\\"conflicts_with\\\":[],\\\"supersedes\\\":[]},{\\\"id\\\":\\\"f2\\\",\\\"kind\\\":\\\"constraint\\\",\\\"text\\\":\\\"同时又确定不想让第二个人看见\\\",\\\"start\\\":15,\\\"end\\\":29,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\",\\\"conflicts_with\\\":[],\\\"supersedes\\\":[]}],\\\"inferences\\\":[{\\\"id\\\":\\\"i1\\\",\\\"text\\\":\\\"这张画可能比较私密，只想给一位朋友看。\\\",\\\"start\\\":0,\\\"end\\\":14}],\\\"unknowns\\\":[\\\"朋友收到后会不会给别人看\\\",\\\"画的内容和私密程度\\\",\\\"寄送方式有没有保密要求\\\"],\\\"relations\\\":[{\\\"a\\\":\\\"f2\\\",\\\"b\\\":\\\"f1\\\",\\\"relation\\\":\\\"independent\\\",\\\"why\\\":\\\"寄给朋友和不让第二个人看见可以同时成立，只是对寄送方式有要求。\\\"}],\\\"advice\\\":\\\"offer\\\",\\\"question\\\":\\\"\\\",\\\"question_why\\\":\\\"\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":1542,\"completion_tokens\":222,\"total_tokens\":1764,\"prompt_tokens_details\":{\"cached_tokens\":1408},\"prompt_cache_hit_tokens\":1408,\"prompt_cache_miss_tokens\":134},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        },
+        {
+          "status": 200,
+          "body": "{\"id\":\"55aed656-e616-41d4-bc08-9df00d4a7481\",\"object\":\"chat.completion\",\"created\":1794499761,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"facts\\\":[{\\\"id\\\":\\\"f1\\\",\\\"kind\\\":\\\"keep\\\",\\\"text\\\":\\\"我想把画好的一张小画寄给朋友\\\",\\\"start\\\":0,\\\"end\\\":14,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\",\\\"conflicts_with\\\":[],\\\"supersedes\\\":[]},{\\\"id\\\":\\\"f2\\\",\\\"kind\\\":\\\"constraint\\\",\\\"text\\\":\\\"同时又确定不想让第二个人看见\\\",\\\"start\\\":15,\\\"end\\\":29,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\",\\\"conflicts_with\\\":[],\\\"supersedes\\\":[]}],\\\"inferences\\\":[],\\\"unknowns\\\":[\\\"画的内容和尺寸不清楚\\\",\\\"朋友怎么收、放哪里不清楚\\\",\\\"第二个人指谁不清楚\\\"],\\\"relations\\\":[{\\\"a\\\":\\\"f2\\\",\\\"b\\\":\\\"f1\\\",\\\"relation\\\":\\\"independent\\\",\\\"why\\\":\\\"寄给朋友和不让第二个人看见可以同时成立。\\\"}],\\\"advice\\\":\\\"offer\\\",\\\"question\\\":\\\"\\\",\\\"question_why\\\":\\\"\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":1283,\"completion_tokens\":184,\"total_tokens\":1467,\"prompt_tokens_details\":{\"cached_tokens\":1149},\"prompt_cache_hit_tokens\":1149,\"prompt_cache_miss_tokens\":134},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        }
+      ],
+      "after": 7,
+      "calls": 4
+    },
+    {
+      "id": "U08",
+      "skipped": true,
+      "reason": "剩下 5 次，不够预留的 6 次"
+    }
+  ],
+  "used": 7
+}
