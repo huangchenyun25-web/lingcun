@@ -6912,8 +6912,19 @@ var LingcunTransport = { handler: null, waitMs: 0 };
       var seq = ((v && v.fragments) || []).filter(function (w) { return w && w !== SENT; });
       return seq[0] || "";
     }
+    function supersededIds(v) {
+      var ids = {};
+      ((v && v.mind && v.mind.readings) || []).forEach(function (r) {
+        (r.supersedes || []).forEach(function (id) { if (id) ids[id] = 1; });
+      });
+      return ids;
+    }
+    function liveReadings(v) {
+      var dead = supersededIds(v);
+      return ((v && v.mind && v.mind.readings) || []).filter(function (r) { return r && r.id && !dead[r.id]; });
+    }
     function conflictSides(v) {
-      var list = (v && v.mind && v.mind.readings) || [];
+      var list = liveReadings(v);
       var by = {}, seen = {}, out = [], i;
       list.forEach(function (r) { if (r && r.id) by[r.id] = r; });
       list.forEach(function (r) {
@@ -6965,6 +6976,17 @@ var LingcunTransport = { handler: null, waitMs: 0 };
       var d = dirLabel20(v);
       var m = v.mind || {};
       var t0 = (v.take && v.take[0]) || "";
+      var dead = supersededIds(v);
+      var readings = m.readings || [];
+      var dropped = null;
+      readings.forEach(function (r) {
+        if (dead[r.id] && r.text && t0 && (r.text === t0 || t0.indexOf(r.text) >= 0)) dropped = r;
+      });
+      if (dropped) {
+        readings.forEach(function (r) {
+          if (!dead[r.id] && (r.supersedes || []).indexOf(dropped.id) >= 0) t0 = r.text;
+        });
+      }
       if (m.conflictChoice && m.conflictChoice !== "both") {
         conflictSides(v).forEach(function (s) { if (s.id === m.conflictChoice) t0 = s.text; });
       }
@@ -7271,19 +7293,28 @@ var LingcunTransport = { handler: null, waitMs: 0 };
       var html = '<p class="v20-mode">' + esc(mode) + "</p>";
       function rows(list, name) {
         if (!list || !list.length) return "";
-        var voice = name === "你转述的" ? "reported" : name === "你设想的" ? "hypothetical" : name === "你拒绝的" ? "refusal" : name === "自述" ? "self" : name === "意愿" ? "intent" : "other";
+        var voice = name === "已撤回" ? "withdrawn" : name === "你转述的" ? "reported" : name === "你设想的" ? "hypothetical" : name === "你拒绝的" ? "refusal" : name === "自述" ? "self" : name === "意愿" ? "intent" : "other";
         return "<p data-voice=\"" + voice + "\">" + name + "</p><ul>" + list.map(function (f) {
           return "<li>" + esc(f.text) + " <button type=\"button\" class=\"v20-mini\" data-drop-fact=\"" + esc(f.id) + "\">撤回</button></li>";
         }).join("") + "</ul>";
       }
       function grouped(list, plainName) {
-        var buckets = { reported: [], hypothetical: [], refusal: [], plain: [] };
+        var buckets = { withdrawn: [], reported: [], hypothetical: [], refusal: [], plain: [] };
+        var dead = supersededIds(p.v18);
         (list || []).forEach(function (f) {
+          var covered = null;
+          (m.readings || []).forEach(function (r) {
+            if (!r.text || !f.text) return;
+            if (r.text === f.text || r.text.indexOf(f.text) >= 0 || f.text.indexOf(r.text) >= 0) {
+              if (!covered || r.text.length <= covered.text.length) covered = r;
+            }
+          });
+          if (covered && dead[covered.id]) { buckets.withdrawn.push(f); return; }
           var mark = voiceMark(f.text, m.readings);
           if (mark === "reported" || mark === "hypothetical" || mark === "refusal") buckets[mark].push(f);
           else buckets.plain.push(f);
         });
-        return rows(buckets.reported, "你转述的") + rows(buckets.hypothetical, "你设想的") + rows(buckets.refusal, "你拒绝的") + rows(buckets.plain, plainName);
+        return rows(buckets.withdrawn, "已撤回") + rows(buckets.reported, "你转述的") + rows(buckets.hypothetical, "你设想的") + rows(buckets.refusal, "你拒绝的") + rows(buckets.plain, plainName);
       }
       html += grouped(m.facts, "自述");
       html += grouped(m.intents, "意愿");
@@ -7404,7 +7435,7 @@ var LingcunTransport = { handler: null, waitMs: 0 };
         };
       });
     }
-    var FACT = { type: "object", required: ["id", "kind", "text", "start", "end", "speaker", "modality"], properties: { id: STR(12), kind: { type: "string", enum: ["said", "keep", "change", "constraint"] }, text: STR(80), start: { type: "integer", minimum: 0 }, end: { type: "integer", minimum: 0 }, speaker: { type: "string", enum: ["self", "reported"] }, modality: { type: "string", enum: ["certain", "hypothetical", "refusal"] }, conflicts_with: { type: "array", maxItems: 4, items: STR(12) } } };
+    var FACT = { type: "object", required: ["id", "kind", "text", "start", "end", "speaker", "modality"], properties: { id: STR(12), kind: { type: "string", enum: ["said", "keep", "change", "constraint"] }, text: STR(80), start: { type: "integer", minimum: 0 }, end: { type: "integer", minimum: 0 }, speaker: { type: "string", enum: ["self", "reported"] }, modality: { type: "string", enum: ["certain", "hypothetical", "refusal"] }, conflicts_with: { type: "array", maxItems: 4, items: STR(12) }, supersedes: { type: "array", maxItems: 4, items: STR(12) } } };
     var INF = { type: "object", required: ["id", "text", "start", "end"], properties: { id: STR(12), text: STR(40), start: { type: "integer", minimum: 0 }, end: { type: "integer", minimum: 0 } } };
     var UNDER_SCHEMA = { type: "object", required: ["facts", "inferences", "unknowns"], properties: { facts: { type: "array", maxItems: 8, items: FACT }, inferences: { type: "array", maxItems: 3, items: INF }, unknowns: { type: "array", maxItems: 4, items: STR(40) }, advice: { type: "string", enum: ["offer", "decline", "unsure"] }, question: STR0(80), question_why: STR0(80) } };
     var NEED = { type: "object", required: ["resource"], properties: { resource: STR(20), key: { type: "boolean" }, claim: STR(12), evidenceId: STR(20) } };
@@ -7517,7 +7548,8 @@ var LingcunTransport = { handler: null, waitMs: 0 };
         "若对方明确不要分析、只是吐槽、或什么都不想做，advice 写 decline，并在 unknowns 里写明先不要给行动。不要把担心身体写成诊断。",
         "advice 只能是 offer、decline 或 unsure。offer 表示可以给一条低风险的试法，decline 表示不要建议或不要行动，unsure 表示看不出来。写在这个字段里。",
         "每条 facts 都要有 speaker 和 modality。speaker 用 self 表示用户本人说的，reported 表示在转述别人。modality 用 certain 表示确定，hypothetical 表示假设或可能，refusal 表示拒绝。转述和假设不要写成用户已经要做的事。",
-        "若两条都是用户本人说的，而且不能同时做成，就在各自的 conflicts_with 里写下对方的 id。没有这种关系就给空数组。",
+        "若后一条是用户本人说的，并且撤回或取代前面某一条，就在后一条的 supersedes 里写下被撤回那条的 id。被撤回的不再是当前要做的事。这种关系不要写成 conflicts_with。",
+        "conflicts_with 只用于两条都还成立、但不能同时做。没有这种关系就给空数组。被 supersedes 指向的 id 也不要再写进 conflicts_with。",
         "reference 若存在，只是公开摘录，不是这个人的履历，不能写进 facts。"
       ];
     }
@@ -7530,6 +7562,7 @@ var LingcunTransport = { handler: null, waitMs: 0 };
         "why 说明它接上了哪句原话。observe 是做完能看到的现象。stop 是停下或改的条件。",
         "若原话里有不想辞职、不想花钱、没精力、不想再学，就不要建议相反的事。对方已经确认要离开时，stop 不能写成放弃离开。",
         "若两条本人的话 conflicts_with，而且两边都要留，text 要写成一个同时做得到的小动作，uses 必须带上这两条的 id。不要只把两条原话复述一遍，也不要只做成其中一边。",
+        "被 supersedes 指向的那条已经撤回，不要把它写成这次要做的事。",
         "needs 列出这一步真正要用、而原文没有写明已经有的东西。没有就给空数组。不要把没在当前原话里出现的东西写成已经有。claim 不会被当成证据。",
         "原文若同时有「上次」和「现在」，以现在这句为准。上次的内容只能对照，不能当成这次要做的事。",
         "reference 不是用户事实。"
@@ -7595,7 +7628,7 @@ var LingcunTransport = { handler: null, waitMs: 0 };
         p.v18.mind.adviceFrom = "model";
         p.v18.mind.unknowns = out.unknowns || [];
         p.v18.mind.readings = (out.facts || []).concat(out.inferences || []).map(function (it) {
-          return { id: it.id || "", text: it.text, speaker: it.speaker || "", modality: it.modality || "", kind: it.kind || "", conflicts_with: it.conflicts_with || [] };
+          return { id: it.id || "", text: it.text, speaker: it.speaker || "", modality: it.modality || "", kind: it.kind || "", conflicts_with: it.conflicts_with || [], supersedes: it.supersedes || [] };
         });
         p.v18.mind.understoodSeq = boundU.seq;
         p.v18.mind.mode = "ai";
