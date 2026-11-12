@@ -88,7 +88,7 @@ var poster = "假如周末有空，也许会把那张海报钉上";
   await h.p.click("#dir-go");
   await sleep(200);
   var line = await h.p.$eval("#try-line", function (e) { return e.textContent; }).catch(function () { return ""; });
-  ok("确认后才生成，且不叫自述", line.indexOf(imagined) >= 0 && line.indexOf("确认过的") >= 0 && line.indexOf("自述") < 0, line);
+  ok("确认后没有把原话复述成尝试", /先不给做法/.test(line) && line.indexOf("自述") < 0 && line.indexOf("确认过的") < 0, line);
   await h.ctx.close();
 
   var r = await open(refused, { facts: [{ id: "f1", kind: "said", text: refused, start: 0, end: refused.length, speaker: "self", modality: "refusal" }], inferences: [], unknowns: [], advice: "offer" });
@@ -117,7 +117,8 @@ var poster = "假如周末有空，也许会把那张海报钉上";
   await m.p.click("#dir-go");
   await sleep(200);
   var mixedLine = await m.p.$eval("#try-line", function (e) { return e.textContent; }).catch(function () { return ""; });
-  ok("尝试依据用确定句，不用假设句", mixedLine.indexOf(pin) >= 0 && mixedLine.indexOf("海报") < 0, mixedLine);
+  var mixedBasis = await m.p.$eval("#try-basis", function (e) { return e.textContent; }).catch(function () { return ""; });
+  ok("尝试依据用确定句，不用假设句", /先不给做法/.test(mixedLine) && mixedLine.indexOf("海报") < 0 && mixedBasis.indexOf(pin) >= 0 && mixedBasis.indexOf("海报") < 0, mixedLine + " / " + mixedBasis);
   await m.ctx.close();
 
   await b.close();

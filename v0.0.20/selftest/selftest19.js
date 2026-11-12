@@ -282,7 +282,7 @@ async function placeTap(p, label, set) {
   await sleep(150);
   if (await phone.$("#v20-want-advice")) { await phone.click("#v20-want-advice"); await sleep(150); }
   await shot(phone, "手机_一条尝试");
-  ok("尝试用上带走的词", (await text(phone, "#try-line")).indexOf(A) >= 0 && (await text(phone, "#try-line")).indexOf("擅长") < 0);
+  ok("尝试用上带走的词", /先不给做法/.test(await text(phone, "#try-line")) && (await text(phone, "#try-line")).indexOf("擅长") < 0 && (await text(phone, "#try-basis")).indexOf(A) >= 0);
   const tryC = await contrastOf(phone, ".tryline");
   ok("尝试正文对比度", contrast(tryC.fg, tryC.bg) >= 4.5, JSON.stringify(tryC));
   await phone.click("#try-yes");

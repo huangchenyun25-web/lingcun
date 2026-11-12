@@ -41,7 +41,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   await sleep(150);
   if (await p.$("#v20-want-advice")) { await p.click("#v20-want-advice"); await sleep(150); }
   const before = await p.$eval("#try-line", (e) => e.textContent);
-  ok("整理句仍留着原话", before.indexOf("我想观测流星") >= 0, before);
+  ok("整理句仍留着原话", /先不给做法/.test(before) && before.indexOf("带走的是你的") < 0, before);
   const injected = await p.evaluate(() => window.__lingcun20.applyCandidates([
     { text: "先架好望远镜", needs: [{ resource: "望远镜", key: true, claim: "have" }], uses: [] },
     { text: "今晚只抬头看两分钟", needs: [], uses: [] }

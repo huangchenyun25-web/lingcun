@@ -139,7 +139,7 @@ async function flow(p, tag) {
   await sleep(200);
   if (await p.$("#v20-want-advice")) { await p.click("#v20-want-advice"); await sleep(200); }
   const line1 = await text(p, "#try-line");
-  ok(tag + " 只有一条我想试试", /我想试试/.test(await text(p, "#b-check")) && /办过线下活动策划/.test(line1) && !/擅长/.test(line1) && (await p.$$("#try-line")).length === 1);
+  ok(tag + " 只有一条我想试试", /我想试试/.test(await text(p, "#b-check")) && /先不给做法/.test(line1) && !/带走的是你的/.test(line1) && !/擅长/.test(line1) && /办过线下活动策划/.test(await text(p, "#try-basis")) && (await p.$$("#try-line")).length === 1, line1);
   ok(tag + " 依据含带走和方向", /带走/.test(await text(p, "#try-basis")) && /科技/.test(await text(p, "#try-basis")));
   ok(tag + " 有点想试在首屏", await inView(p, "#try-yes"));
   const ed = await p.$eval("#en-ed", (e) => {
