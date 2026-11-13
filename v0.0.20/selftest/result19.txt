@@ -1,0 +1,51 @@
+PASS	构建 BUILD_OK	PALETTE_OK | BUILD_OK
+PASS	无旧色板	
+PASS	无旧 rgba	
+PASS	无毛玻璃无 blur()	
+PASS	色板记号 --bg:#5E72B5	
+PASS	色板记号 --bg-d:#4A5C9B	
+PASS	色板记号 --cream:#F7F0DF	
+PASS	色板记号 --cream-d:#E9DDBF	
+PASS	色板记号 --cream-hi:#FFFBF1	
+PASS	色板记号 --ink:#232B55	
+PASS	普通输入只留原话两条	办过线下活动策划,负责现场和讲故事
+PASS	弱输入不扩成词库	嗯嗯嗯嗯嗯嗯
+PASS	空输入没有候选	[]
+PASS	方向词和职业词库不混进来	
+PASS	首页标题对比度	{"fg":[255,255,255],"bg":[94,114,181],"fs":22}
+PASS	进入时只有原话两条	
+PASS	下一步起初禁用	
+PASS	贴纸不重叠且不超出手机宽	{"n":2,"overlap":false,"wide":true,"w":390}
+PASS	贴纸 touch-action none	none
+PASS	拖动时原贴纸变淡	0.3
+PASS	拖动时页面不滚动	
+PASS	松在外面会回到原位	{"there":true,"op":"1","chip":false,"lock":false}
+PASS	拖到背包时背包高亮	
+PASS	放进背包后不拿无关词补位	负责现场和讲故事
+PASS	背包里有刚放下的词	
+PASS	点小标签回到对话框	
+PASS	只放下时下一步可点	
+PASS	空背包提示并留在这一屏	
+PASS	键盘打开带走放下取消	
+PASS	键盘确认放进背包	
+PASS	取消不放进背包	
+PASS	更多可以加词	
+PASS	自己的词不重复	
+PASS	更多可以直接放进纸箱	
+PASS	不足 8 条时不换一批	
+PASS	重画后小标签还在	
+PASS	方向说明对比度	{"fg":[255,255,255],"bg":[94,114,181],"fs":14}
+PASS	尝试用上带走的词	
+PASS	尝试正文对比度	{"fg":[35,43,85],"bg":[247,240,223],"fs":22}
+PASS	分享图是蓝底奶油面	{"edge":[94,114,181],"paper":[247,240,223]}
+PASS	星图打得开	
+PASS	手机全程无报错	
+PASS	桌面首页主按钮在首屏	
+PASS	桌面带上过去仍是两栏	{"gap":76.796875,"lw":441.59375,"rw":441.609375}
+PASS	桌面也是原话两条	
+PASS	桌面不足 8 条时不换一批	
+PASS	桌面带走的仍是原话	
+PASS	桌面全程无报错	
+PASS	减少动态效果时贴纸不浮动	none
+PASS	箱图标三态已截图	
+PASS	这轮没有发出任何网页请求	

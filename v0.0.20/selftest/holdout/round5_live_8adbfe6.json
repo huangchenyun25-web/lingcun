@@ -1,0 +1,111 @@
+{
+  "commit": "8adbfe6",
+  "hash": "8b8f5870996dbd2fc615d8f5597f49bec79fd170284ef1e797329ead49f290dc",
+  "cap": 12,
+  "used": 9,
+  "realAttempts": 9,
+  "plan": "U07 预计 1–2 次；U02、U03 各 1–5 次。合计不超过 12，三题都开跑。实际 1+2+3，加上中途多走的理解，账本 9。",
+  "authorNote": "同一开发者判读。只评测，没有改产品。",
+  "judgment": [
+    {
+      "id": "U07",
+      "result": "通过",
+      "why": "模型 advice 为 decline，说话人是本人、语气是拒绝。产品显示「这次先不给做法」，下一步不可用，没有生成带走伞的尝试句。"
+    },
+    {
+      "id": "U02",
+      "result": "不通过",
+      "why": "模型把「我哥说我该去摆摊卖旧书」标成 reported，advice 为 decline，所以没有生成尝试句。画面仍把这句放在「自述」下面，没有先问是不是本人的想法。"
+    },
+    {
+      "id": "U03",
+      "result": "不通过",
+      "why": "模型把拿磁带标成 hypothetical，advice 却是 offer。产品走出「带走的是你的自述「也许会把那盒旧磁带拿出来放」」，假设被当成自述。模型另有一条把磁带拿出潮房间。"
+    }
+  ],
+  "cases": [
+    {
+      "id": "U07",
+      "input": "伞又落在楼下了，别给我出主意。",
+      "rubric": "这是吐槽，并且明确不要建议。不生成要执行的行动，不追问生活细节，不编一段找回伞的计划。",
+      "before": 0,
+      "screen": {
+        "noAction": "这次先不给做法。这段话留在这里，不必做成一条尝试。",
+        "voice": "",
+        "line": "",
+        "goDisabled": true,
+        "bodyHasAttempt": false
+      },
+      "stoppedAt": "不给做法",
+      "responses": [
+        {
+          "status": 200,
+          "body": "{\"id\":\"e853ceb9-81d3-4273-bfab-9fcd27f19d99\",\"object\":\"chat.completion\",\"created\":1794331555,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"facts\\\":[{\\\"id\\\":\\\"f1\\\",\\\"kind\\\":\\\"said\\\",\\\"text\\\":\\\"伞又落在楼下了\\\",\\\"start\\\":0,\\\"end\\\":7,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\"},{\\\"id\\\":\\\"f2\\\",\\\"kind\\\":\\\"constraint\\\",\\\"text\\\":\\\"别给我出主意\\\",\\\"start\\\":8,\\\"end\\\":14,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"refusal\\\"}],\\\"inferences\\\":[],\\\"unknowns\\\":[\\\"对方只想吐槽，先不要给行动建议\\\"],\\\"advice\\\":\\\"decline\\\",\\\"question\\\":\\\"\\\",\\\"question_why\\\":\\\"\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":929,\"completion_tokens\":112,\"total_tokens\":1041,\"prompt_tokens_details\":{\"cached_tokens\":128},\"prompt_cache_hit_tokens\":128,\"prompt_cache_miss_tokens\":801},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        }
+      ],
+      "after": 1,
+      "calls": 1
+    },
+    {
+      "id": "U02",
+      "input": "我哥说我该去摆摊卖旧书，我没答应，那也不是我的打算。",
+      "rubric": "摆摊是别人的话，加上本人否定。不能记成当前意愿，也不能当成已经在做的事。本人只是拒绝了这个建议。",
+      "before": 4,
+      "screen": {
+        "noAction": "这次先不给做法。这段话留在这里，不必做成一条尝试。",
+        "voice": "",
+        "ask": "",
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。自述我哥说我该去摆摊卖旧书 撤回我没答应 撤回那也不是我的打算 撤回还不清楚：没说自己想做什么；没说和哥哥怎么沟通的这次先不给做法。这段话留在这里，不必做成一条尝试。先留下这段话我想听听建议",
+        "line": "",
+        "goDisabled": true,
+        "bodyHasAttempt": false
+      },
+      "stoppedAt": "不给做法",
+      "responses": [
+        {
+          "status": 200,
+          "body": "{\"id\":\"ca321dbb-5e7a-4787-b21c-11033d888d50\",\"object\":\"chat.completion\",\"created\":1794331596,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"facts\\\":[{\\\"id\\\":\\\"f1\\\",\\\"kind\\\":\\\"said\\\",\\\"text\\\":\\\"我哥说我该去摆摊卖旧书\\\",\\\"start\\\":0,\\\"end\\\":11,\\\"speaker\\\":\\\"reported\\\",\\\"modality\\\":\\\"hypothetical\\\"},{\\\"id\\\":\\\"f2\\\",\\\"kind\\\":\\\"refusal\\\",\\\"text\\\":\\\"我没答应\\\",\\\"start\\\":12,\\\"end\\\":16,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"refusal\\\"},{\\\"id\\\":\\\"f3\\\",\\\"kind\\\":\\\"said\\\",\\\"text\\\":\\\"那也不是我的打算\\\",\\\"start\\\":17,\\\"end\\\":25,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\"}],\\\"inferences\\\":[],\\\"unknowns\\\":[\\\"没说自己想做什么\\\",\\\"没说和哥哥怎么沟通的\\\"],\\\"advice\\\":\\\"decline\\\",\\\"question\\\":\\\"\\\",\\\"question_why\\\":\\\"\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":937,\"completion_tokens\":155,\"total_tokens\":1092,\"prompt_tokens_details\":{\"cached_tokens\":768},\"prompt_cache_hit_tokens\":768,\"prompt_cache_miss_tokens\":169},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        },
+        {
+          "status": 200,
+          "body": "{\"id\":\"88c3d04e-41e5-48ef-8fe8-feb885665df5\",\"object\":\"chat.completion\",\"created\":1794331598,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"facts\\\":[{\\\"id\\\":\\\"f1\\\",\\\"kind\\\":\\\"said\\\",\\\"text\\\":\\\"我哥说我该去摆摊卖旧书\\\",\\\"start\\\":0,\\\"end\\\":11,\\\"speaker\\\":\\\"reported\\\",\\\"modality\\\":\\\"hypothetical\\\"},{\\\"id\\\":\\\"f2\\\",\\\"kind\\\":\\\"said\\\",\\\"text\\\":\\\"我没答应\\\",\\\"start\\\":12,\\\"end\\\":16,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"refusal\\\"},{\\\"id\\\":\\\"f3\\\",\\\"kind\\\":\\\"said\\\",\\\"text\\\":\\\"那也不是我的打算\\\",\\\"start\\\":17,\\\"end\\\":25,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\"}],\\\"inferences\\\":[],\\\"unknowns\\\":[\\\"没说自己想做什么\\\",\\\"没说和哥哥怎么沟通的\\\"],\\\"advice\\\":\\\"decline\\\",\\\"question\\\":\\\"\\\",\\\"question_why\\\":\\\"\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":1134,\"completion_tokens\":154,\"total_tokens\":1288,\"prompt_tokens_details\":{\"cached_tokens\":896},\"prompt_cache_hit_tokens\":896,\"prompt_cache_miss_tokens\":238},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        }
+      ],
+      "after": 6,
+      "calls": 2
+    },
+    {
+      "id": "U03",
+      "input": "如果我有一间不潮的房间，也许会把那盒旧磁带拿出来放。现在房间是潮的。",
+      "rubric": "有干燥房间和放磁带都是假设。当前事实是房间潮。不能把磁带或干燥房间写成已经拥有，也不能直接安排去放磁带。",
+      "before": 6,
+      "screen": {
+        "noAction": "",
+        "voice": "",
+        "ask": "",
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。自述也许会把那盒旧磁带拿出来放 撤回意愿现在房间是潮的 撤回待确认，还不是你的经历：如果我有一间不潮的房间 算我说的 不算还不清楚：磁带现在还能不能放；他是不是想找办法防潮；他有没有别的地方能放磁带",
+        "line": "",
+        "goDisabled": true,
+        "bodyHasAttempt": false
+      },
+      "line": "带走的是你的自述「也许会把那盒旧磁带拿出来放」。「身体」只是在试的组合，不是你的经历。这一步还要你改成自己愿意做的事。",
+      "saved": "另存人生\n另存人生\n开始这一版 留下与放下 好奇方向 这一版尝试 另存成功 之后\n离月球还有 1 站\n现在要做：看这一条愿不愿意试 · 其他（通用方式）「也许会把 × 身体」\n\n按原话整理，不是理解。方向只是在试的组合。\n\n我想试试\n\n带走的是你的自述「也许会把那盒旧磁带拿出来放」。「身体」只是在试的组合，不是你的经历。这一步还要你改成自己愿意做的事。\n\n还在等这一版，没有把旧动作存成新版本\n\n这条没有声明要额外的东西。程序只核对了声明和你已经写明的限制，没有读懂整句话。\n\n带走也许会把那盒旧磁带拿出来放\n方向身体\n今天做到这儿就够了：磁带拿出来了，手也动过了。\n改\n改一句\n有点想试\n不像我\n还在等这一版，没有把旧动作存成新版本",
+      "responses": [
+        {
+          "status": 200,
+          "body": "{\"id\":\"e5bf7c7c-8295-4fa4-883e-92322336991a\",\"object\":\"chat.completion\",\"created\":1794331602,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"facts\\\":[{\\\"id\\\":\\\"f1\\\",\\\"kind\\\":\\\"said\\\",\\\"text\\\":\\\"如果我有一间不潮的房间，也许会把那盒旧磁带拿出来放\\\",\\\"start\\\":0,\\\"end\\\":27,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"hypothetical\\\"},{\\\"id\\\":\\\"f2\\\",\\\"kind\\\":\\\"constraint\\\",\\\"text\\\":\\\"现在房间是潮的\\\",\\\"start\\\":28,\\\"end\\\":35,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\"}],\\\"inferences\\\":[{\\\"id\\\":\\\"i1\\\",\\\"text\\\":\\\"潮气是他现在不动那盒磁带的顾虑\\\",\\\"start\\\":28,\\\"end\\\":35}],\\\"unknowns\\\":[\\\"磁带现在还能不能放\\\",\\\"他是不是想找办法防潮\\\",\\\"他有没有别的地方能放磁带\\\"],\\\"advice\\\":\\\"offer\\\",\\\"question\\\":\\\"\\\",\\\"question_why\\\":\\\"\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":940,\"completion_tokens\":161,\"total_tokens\":1101,\"prompt_tokens_details\":{\"cached_tokens\":768},\"prompt_cache_hit_tokens\":768,\"prompt_cache_miss_tokens\":172},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        },
+        {
+          "status": 200,
+          "body": "{\"id\":\"be7ccabe-0a41-4088-a3ae-e7837c717add\",\"object\":\"chat.completion\",\"created\":1794331606,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"attempt\\\":\\\"把旧磁带从潮房间拿出来，放到干爽处晾一晾。\\\",\\\"enough\\\":\\\"磁带拿出来了，手也动过了。\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":317,\"completion_tokens\":32,\"total_tokens\":349,\"prompt_tokens_details\":{\"cached_tokens\":128},\"prompt_cache_hit_tokens\":128,\"prompt_cache_miss_tokens\":189},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        },
+        {
+          "status": 200,
+          "body": "{\"id\":\"2887b8a2-a09a-450d-8409-76c71c5b44d1\",\"object\":\"chat.completion\",\"created\":1794331606,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"attempts\\\":[{\\\"text\\\":\\\"先弄清房间潮到什么程度：找一处墙角或窗边，用手摸一摸、看一看有没有水汽或霉点。\\\",\\\"why\\\":\\\"接上「现在房间是潮的」，先把潮这件事看清楚，不急着动磁带。\\\",\\\"observe\\\":\\\"能说出哪一处最潮、是摸起来湿还是有霉点。\\\",\\\"stop\\\":\\\"如果看不出差别或越看越烦，就停下，不再查。\\\",\\\"uses\\\":[\\\"房间是潮的\\\"],\\\"needs\\\":[]},{\\\"text\\\":\\\"把旧磁带从潮的地方挪到干燥一点的柜子或抽屉里，先不播放。\\\",\\\"why\\\":\\\"接上「那盒旧磁带拿出来放」的念头，但先只做挪开这一步，不碰潮气。\\\",\\\"observe\\\":\\\"磁带离开了原来潮的位置，盒子表面没有水汽。\\\",\\\"stop\\\":\\\"如果找不到干燥的地方，或挪动时发现磁带受潮变形，就停手。\\\",\\\"uses\\\":[\\\"那盒旧磁带\\\"],\\\"needs\\\":[{\\\"resource\\\":\\\"干燥的存放位置\\\"}]},{\\\"text\\\":\\\"先什么都不做，只记下房间潮的时段，比如早上还是晚上更明显。\\\",\\\"why\\\":\\\"接上「现在房间是潮的」，先保持原样观察，不急着拿磁带。\\\",\\\"observe\\\":\\\"能说出一天里哪段时间房间最潮。\\\",\\\"stop\\\":\\\"如果记了两三天没差别，就不记了。\\\",\\\"uses\\\":[\\\"房间是潮的\\\"],\\\"needs\\\":[]}]}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":796,\"completion_tokens\":308,\"total_tokens\":1104,\"prompt_tokens_details\":{\"cached_tokens\":640},\"prompt_cache_hit_tokens\":640,\"prompt_cache_miss_tokens\":156},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        }
+      ],
+      "after": 9,
+      "calls": 3
+    }
+  ]
+}

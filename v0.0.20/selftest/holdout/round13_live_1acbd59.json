@@ -1,0 +1,353 @@
+{
+  "commit": "1acbd59",
+  "hash": "8b8f5870996dbd2fc615d8f5597f49bec79fd170284ef1e797329ead49f290dc",
+  "cap": 12,
+  "plan": "离线全程实测 U04 发送 4 次，U05 发送 2 次。不够就不开始。在飞请求落地后才截图。",
+  "cases": [
+    {
+      "id": "U04",
+      "input": "这个周末先把书架上的旧杂志清一清。",
+      "rubric": "后一句取代前一句。当前要写的是信。旧的清杂志不能继续当这一步，也不能在保存或分享里冒充现在的做法。",
+      "before": 0,
+      "mode": "revise",
+      "materialWait": {
+        "busy": false,
+        "state": {
+          "reading": false,
+          "relationPending": false,
+          "attemptPending": false,
+          "relationFrom": ""
+        }
+      },
+      "material": {
+        "conflict": "",
+        "bothHold": "",
+        "relation": "",
+        "voice": "",
+        "noAction": "",
+        "ask": "还看不出你想不想听一条做法。",
+        "hint": "",
+        "debug": "",
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。自述这个周末先把书架上的旧杂志清一清 撤回还不清楚：不清楚旧杂志是留是扔还是送人还看不出你想不想听一条做法。",
+        "line": "",
+        "enough": "",
+        "basis": "",
+        "stickers": [
+          "这个周末先把书架上的旧杂志清一清"
+        ],
+        "relations": [],
+        "relationFrom": "",
+        "advice": "unsure",
+        "readings": [
+          {
+            "id": "f1",
+            "text": "这个周末先把书架上的旧杂志清一清。",
+            "speaker": "self",
+            "modality": "certain"
+          }
+        ]
+      },
+      "secondWait": {
+        "busy": false,
+        "state": {
+          "reading": false,
+          "relationPending": false,
+          "attemptPending": false,
+          "relationFrom": "focus"
+        }
+      },
+      "second": {
+        "conflict": "",
+        "bothHold": "",
+        "relation": "",
+        "voice": "",
+        "noAction": "这次先不给做法。这段话留在这里，不必做成一条尝试。",
+        "ask": "",
+        "hint": "",
+        "debug": "",
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。自述算了 撤回杂志先别动 撤回意愿我想把那封写了一半的信写完 撤回还不清楚：信是写给谁的、写到哪里了；杂志原本要做什么、为什么先不动这次先不给做法。这段话留在这里，不必做成一条尝试。先留下这段话我想听听建议",
+        "line": "",
+        "enough": "",
+        "basis": "",
+        "stickers": [
+          "算了",
+          "杂志先别动",
+          "我想把那封写了一半的信写完"
+        ],
+        "relations": [
+          {
+            "a": "f1",
+            "b": "f2",
+            "relation": "independent",
+            "why": "前一句是别动杂志，后一句是写信，两件事不冲突。"
+          }
+        ],
+        "relationFrom": "focus",
+        "advice": "decline",
+        "readings": [
+          {
+            "id": "f1",
+            "text": "算了，杂志先别动。",
+            "speaker": "self",
+            "modality": "certain"
+          },
+          {
+            "id": "f2",
+            "text": "我想把那封写了一半的信写完。",
+            "speaker": "self",
+            "modality": "certain"
+          }
+        ]
+      },
+      "stoppedAt": "停在先问或不给做法",
+      "check": {
+        "conflict": "",
+        "bothHold": "",
+        "relation": "",
+        "voice": "",
+        "noAction": "这次先不给做法。这段话留在这里，不必做成一条尝试。",
+        "ask": "",
+        "hint": "",
+        "debug": "",
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。自述算了 撤回杂志先别动 撤回意愿我想把那封写了一半的信写完 撤回还不清楚：信是写给谁的、写到哪里了；杂志原本要做什么、为什么先不动这次先不给做法。这段话留在这里，不必做成一条尝试。先留下这段话我想听听建议",
+        "line": "",
+        "enough": "",
+        "basis": "",
+        "stickers": [
+          "算了",
+          "杂志先别动",
+          "我想把那封写了一半的信写完"
+        ],
+        "relations": [
+          {
+            "a": "f1",
+            "b": "f2",
+            "relation": "independent",
+            "why": "前一句是别动杂志，后一句是写信，两件事不冲突。"
+          }
+        ],
+        "relationFrom": "focus",
+        "advice": "decline",
+        "readings": [
+          {
+            "id": "f1",
+            "text": "算了，杂志先别动。",
+            "speaker": "self",
+            "modality": "certain"
+          },
+          {
+            "id": "f2",
+            "text": "我想把那封写了一半的信写完。",
+            "speaker": "self",
+            "modality": "certain"
+          }
+        ]
+      },
+      "ledger": [
+        {
+          "id": 1,
+          "kind": "v20_understand",
+          "t": "2026-11-12T16:44:02.303Z"
+        },
+        {
+          "id": 2,
+          "kind": "v20_understand",
+          "t": "2026-11-12T16:44:05.831Z"
+        },
+        {
+          "id": 3,
+          "kind": "v20_relation",
+          "t": "2026-11-12T16:44:07.894Z"
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "kind": "v20_understand",
+          "body": "{\"id\":\"094e8ecc-9eae-469d-904d-a49b97e92f22\",\"object\":\"chat.completion\",\"created\":1794501843,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"facts\\\":[{\\\"id\\\":\\\"f1\\\",\\\"kind\\\":\\\"constraint\\\",\\\"text\\\":\\\"这个周末先把书架上的旧杂志清一清。\\\",\\\"start\\\":0,\\\"end\\\":17,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\",\\\"conflicts_with\\\":[],\\\"supersedes\\\":[]}],\\\"inferences\\\":[],\\\"unknowns\\\":[\\\"不清楚旧杂志是留是扔还是送人\\\"],\\\"relations\\\":[],\\\"advice\\\":\\\"unsure\\\",\\\"question\\\":\\\"\\\",\\\"question_why\\\":\\\"\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":1275,\"completion_tokens\":99,\"total_tokens\":1374,\"prompt_tokens_details\":{\"cached_tokens\":1024},\"prompt_cache_hit_tokens\":1024,\"prompt_cache_miss_tokens\":251},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        },
+        {
+          "status": 200,
+          "kind": "v20_understand",
+          "body": "{\"id\":\"168be38a-ca90-49c0-97e3-1eee27890bcf\",\"object\":\"chat.completion\",\"created\":1794501846,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"facts\\\":[{\\\"id\\\":\\\"f1\\\",\\\"kind\\\":\\\"change\\\",\\\"text\\\":\\\"算了，杂志先别动。\\\",\\\"start\\\":0,\\\"end\\\":9,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\",\\\"conflicts_with\\\":[],\\\"supersedes\\\":[]},{\\\"id\\\":\\\"f2\\\",\\\"kind\\\":\\\"keep\\\",\\\"text\\\":\\\"我想把那封写了一半的信写完。\\\",\\\"start\\\":10,\\\"end\\\":24,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\",\\\"conflicts_with\\\":[],\\\"supersedes\\\":[]}],\\\"inferences\\\":[{\\\"id\\\":\\\"i1\\\",\\\"text\\\":\\\"杂志的事可能先搁着，先写信。\\\",\\\"start\\\":0,\\\"end\\\":24}],\\\"unknowns\\\":[\\\"信是写给谁的、写到哪里了\\\",\\\"杂志原本要做什么、为什么先不动\\\"],\\\"relations\\\":[{\\\"a\\\":\\\"f1\\\",\\\"b\\\":\\\"f2\\\",\\\"relation\\\":\\\"independent\\\",\\\"why\\\":\\\"先不动杂志和写完信可以同时成立，不冲突。\\\"}],\\\"advice\\\":\\\"decline\\\",\\\"question\\\":\\\"\\\",\\\"question_why\\\":\\\"\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":1279,\"completion_tokens\":207,\"total_tokens\":1486,\"prompt_tokens_details\":{\"cached_tokens\":1024},\"prompt_cache_hit_tokens\":1024,\"prompt_cache_miss_tokens\":255},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        },
+        {
+          "status": 200,
+          "kind": "v20_relation",
+          "body": "{\"id\":\"a1e67d98-86f6-4d2b-b859-f7044f887a43\",\"object\":\"chat.completion\",\"created\":1794501848,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"pairs\\\":[{\\\"a\\\":\\\"f1\\\",\\\"b\\\":\\\"f2\\\",\\\"replaces\\\":false,\\\"both_ok\\\":true,\\\"why\\\":\\\"前一句是别动杂志，后一句是写信，两件事不冲突。\\\"}]}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":407,\"completion_tokens\":47,\"total_tokens\":454,\"prompt_tokens_details\":{\"cached_tokens\":0},\"prompt_cache_hit_tokens\":0,\"prompt_cache_miss_tokens\":407},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        }
+      ],
+      "relationReturns": [
+        {
+          "pairs": [
+            {
+              "a": "f1",
+              "b": "f2",
+              "replaces": false,
+              "both_ok": true,
+              "why": "前一句是别动杂志，后一句是写信，两件事不冲突。"
+            }
+          ]
+        }
+      ],
+      "after": 3,
+      "calls": 3
+    },
+    {
+      "id": "U05",
+      "input": "我想把画好的一张小画寄给朋友，同时又确定不想让第二个人看见。",
+      "rubric": "寄出和不要被第二个人看见都留着。不能替用户选边，也不能假定已经有收件人地址或邮费。",
+      "before": 3,
+      "mode": "conflict",
+      "materialWait": {
+        "busy": false,
+        "state": {
+          "reading": false,
+          "relationPending": false,
+          "attemptPending": false,
+          "relationFrom": "focus"
+        }
+      },
+      "material": {
+        "conflict": "",
+        "bothHold": "",
+        "relation": "",
+        "voice": "",
+        "noAction": "",
+        "ask": "",
+        "hint": "",
+        "debug": "",
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。意愿我想把画好的一张小画寄给朋友 撤回同时又确定不想让第二个人看见 撤回还不清楚：朋友收到后会不会给别人看；寄送方式是否会被别人经手",
+        "line": "",
+        "enough": "",
+        "basis": "",
+        "stickers": [
+          "我想把画好的一张小画寄给朋友",
+          "同时又确定不想让第二个人看见"
+        ],
+        "relations": [
+          {
+            "a": "f1",
+            "b": "f2",
+            "relation": "independent",
+            "why": "寄给一个朋友和不让第二个人看见可以同时做到。"
+          }
+        ],
+        "relationFrom": "focus",
+        "advice": "offer",
+        "readings": [
+          {
+            "id": "f1",
+            "text": "我想把画好的一张小画寄给朋友",
+            "speaker": "self",
+            "modality": "certain"
+          },
+          {
+            "id": "f2",
+            "text": "同时又确定不想让第二个人看见",
+            "speaker": "self",
+            "modality": "certain"
+          }
+        ]
+      },
+      "took": "我想把画好的一张小画寄给朋友",
+      "direction": {
+        "reached": true,
+        "line": "把画好的小画装进信封，先不写地址，放在自己看得见的地方。",
+        "enough": "今天做到这儿就够了：做完你认可的这一件就停。"
+      },
+      "check": {
+        "conflict": "",
+        "bothHold": "",
+        "relation": "",
+        "voice": "",
+        "noAction": "",
+        "ask": "",
+        "hint": "",
+        "debug": "",
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。意愿我想把画好的一张小画寄给朋友 撤回同时又确定不想让第二个人看见 撤回还不清楚：朋友收到后会不会给别人看；寄送方式是否会被别人经手",
+        "line": "把画好的小画装进信封，先不写地址，放在自己看得见的地方。",
+        "enough": "今天做到这儿就够了：做完你认可的这一件就停。",
+        "basis": "带走我想把画好的一张小画寄给朋友方向身体",
+        "stickers": [
+          "同时又确定不想让第二个人看见"
+        ],
+        "relations": [
+          {
+            "a": "f1",
+            "b": "f2",
+            "relation": "independent",
+            "why": "寄给一个朋友和不让第二个人看见可以同时做到。"
+          }
+        ],
+        "relationFrom": "focus",
+        "advice": "offer",
+        "readings": [
+          {
+            "id": "f1",
+            "text": "我想把画好的一张小画寄给朋友",
+            "speaker": "self",
+            "modality": "certain"
+          },
+          {
+            "id": "f2",
+            "text": "同时又确定不想让第二个人看见",
+            "speaker": "self",
+            "modality": "certain"
+          }
+        ]
+      },
+      "stoppedAt": "走到行动",
+      "ledger": [
+        {
+          "id": 4,
+          "kind": "v20_understand",
+          "t": "2026-11-12T16:44:11.665Z"
+        },
+        {
+          "id": 5,
+          "kind": "v20_relation",
+          "t": "2026-11-12T16:44:14.101Z"
+        },
+        {
+          "id": 6,
+          "kind": "v20_attempts",
+          "t": "2026-11-12T16:44:17.181Z"
+        }
+      ],
+      "responses": [
+        {
+          "status": 200,
+          "kind": "v20_understand",
+          "body": "{\"id\":\"c017d7fc-f762-4ce9-b5ae-7ef3f60bb1e6\",\"object\":\"chat.completion\",\"created\":1794501852,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"facts\\\":[{\\\"id\\\":\\\"f1\\\",\\\"kind\\\":\\\"keep\\\",\\\"text\\\":\\\"我想把画好的一张小画寄给朋友\\\",\\\"start\\\":0,\\\"end\\\":14,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\",\\\"conflicts_with\\\":[],\\\"supersedes\\\":[]},{\\\"id\\\":\\\"f2\\\",\\\"kind\\\":\\\"constraint\\\",\\\"text\\\":\\\"同时又确定不想让第二个人看见\\\",\\\"start\\\":15,\\\"end\\\":29,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\",\\\"conflicts_with\\\":[],\\\"supersedes\\\":[]}],\\\"inferences\\\":[{\\\"id\\\":\\\"i1\\\",\\\"text\\\":\\\"这张画可能比较私密，只愿给这位朋友看。\\\",\\\"start\\\":15,\\\"end\\\":29}],\\\"unknowns\\\":[\\\"朋友收到后会不会给别人看\\\",\\\"寄送方式是否会被别人经手\\\"],\\\"relations\\\":[{\\\"a\\\":\\\"f2\\\",\\\"b\\\":\\\"f1\\\",\\\"relation\\\":\\\"independent\\\",\\\"why\\\":\\\"寄给朋友和不让第二个人看见可以同时成立，只是要多留意寄送环节。\\\"}],\\\"advice\\\":\\\"offer\\\",\\\"question\\\":\\\"\\\",\\\"question_why\\\":\\\"\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":1283,\"completion_tokens\":217,\"total_tokens\":1500,\"prompt_tokens_details\":{\"cached_tokens\":1149},\"prompt_cache_hit_tokens\":1149,\"prompt_cache_miss_tokens\":134},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        },
+        {
+          "status": 200,
+          "kind": "v20_relation",
+          "body": "{\"id\":\"e12ab5f2-4dec-4413-bc90-f1f51cad8790\",\"object\":\"chat.completion\",\"created\":1794501854,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"pairs\\\":[{\\\"a\\\":\\\"f1\\\",\\\"b\\\":\\\"f2\\\",\\\"replaces\\\":false,\\\"both_ok\\\":true,\\\"why\\\":\\\"寄给一个朋友和不让第二个人看见可以同时做到。\\\"}]}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":410,\"completion_tokens\":43,\"total_tokens\":453,\"prompt_tokens_details\":{\"cached_tokens\":256},\"prompt_cache_hit_tokens\":256,\"prompt_cache_miss_tokens\":154},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        },
+        {
+          "status": 200,
+          "kind": "v20_attempts",
+          "body": "{\"id\":\"1ee31097-8e18-4761-af14-ab77447ca673\",\"object\":\"chat.completion\",\"created\":1794501857,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"attempts\\\":[{\\\"text\\\":\\\"把画好的小画装进信封，先不写地址，放在自己看得见的地方。\\\",\\\"why\\\":\\\"接上「画好的一张小画」，先只做到装好这一步。\\\",\\\"observe\\\":\\\"看到信封在桌上，心里是踏实还是想收起来。\\\",\\\"stop\\\":\\\"如果一想到寄出就发慌，就先停在这里，不写地址。\\\",\\\"uses\\\":[\\\"r1-1\\\"],\\\"needs\\\":[]},{\\\"text\\\":\\\"写下想寄给哪位朋友，只写名字，不告诉对方，也不寄。\\\",\\\"why\\\":\\\"接上「寄给朋友」，先弄清这个人是谁，不越过「不想让第二个人看见」。\\\",\\\"observe\\\":\\\"写完名字后，是否愿意让这个念头多留一会儿。\\\",\\\"stop\\\":\\\"如果写名字让你更不安，就撕掉，不再往下想。\\\",\\\"uses\\\":[\\\"r1-1\\\",\\\"r1-2\\\"],\\\"needs\\\":[]},{\\\"text\\\":\\\"这周先什么都不寄，只留意自己有没有哪一刻想把画拿给别人看。\\\",\\\"why\\\":\\\"两条原话一边想寄一边不想被看见，先保持原样观察。\\\",\\\"observe\\\":\\\"记下有没有想分享的瞬间，以及当时身边有谁。\\\",\\\"stop\\\":\\\"如果观察变成反复纠结，就停下记录，照常过日子。\\\",\\\"uses\\\":[\\\"r1-1\\\",\\\"r1-2\\\"],\\\"needs\\\":[]}]}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":871,\"completion_tokens\":292,\"total_tokens\":1163,\"prompt_tokens_details\":{\"cached_tokens\":640},\"prompt_cache_hit_tokens\":640,\"prompt_cache_miss_tokens\":231},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        }
+      ],
+      "relationReturns": [
+        {
+          "pairs": [
+            {
+              "a": "f1",
+              "b": "f2",
+              "replaces": false,
+              "both_ok": true,
+              "why": "寄给一个朋友和不让第二个人看见可以同时做到。"
+            }
+          ]
+        }
+      ],
+      "after": 6,
+      "calls": 3
+    }
+  ],
+  "used": 6
+}

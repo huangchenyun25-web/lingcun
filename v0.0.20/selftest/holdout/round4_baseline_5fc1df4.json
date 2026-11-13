@@ -1,0 +1,115 @@
+{
+  "commit": "5fc1df4a899f2e838a35444a8150faa32ba1ab99",
+  "hash": "8b8f5870996dbd2fc615d8f5597f49bec79fd170284ef1e797329ead49f290dc",
+  "realAttempts": 0,
+  "net": [],
+  "note": "同一开发者执行。产品开关阻止了语义评测，没有用裸模型补结果。",
+  "cases": [
+    {
+      "id": "U01",
+      "input": "每天晚上下班我都把旧相册翻开，一页一页看，看完又合上。",
+      "blocked": "产品 LIVE_AI 为 false，理解到行动没有进入模型。下面的句子是离线整理，不是语义评测。",
+      "line": "带走的是你的自述「每天晚上下班我都把旧相册翻开」。「身体」只是在试的组合，不是你的经历。这一步还要你改成自己愿意做的事。",
+      "second": "",
+      "liveAi": false,
+      "paceNote": "可以进入方向",
+      "stickers": [
+        "每天晚上下班我都把旧相册翻开",
+        "一页一页看",
+        "看完又合上"
+      ]
+    },
+    {
+      "id": "U02",
+      "input": "我哥说我该去摆摊卖旧书，我没答应，那也不是我的打算。",
+      "blocked": "产品 LIVE_AI 为 false，理解到行动没有进入模型。下面的句子是离线整理，不是语义评测。",
+      "line": "带走的是你的自述「我哥说我该去摆摊卖旧书」。「身体」只是在试的组合，不是你的经历。这一步还要你改成自己愿意做的事。",
+      "second": "",
+      "liveAi": false,
+      "paceNote": "可以进入方向",
+      "stickers": [
+        "我哥说我该去摆摊卖旧书",
+        "我没答应",
+        "那也不是我的打算"
+      ]
+    },
+    {
+      "id": "U03",
+      "input": "如果我有一间不潮的房间，也许会把那盒旧磁带拿出来放。现在房间是潮的。",
+      "blocked": "产品 LIVE_AI 为 false，理解到行动没有进入模型。下面的句子是离线整理，不是语义评测。",
+      "line": "带走的是你的自述「也许会把那盒旧磁带拿出来放」。「身体」只是在试的组合，不是你的经历。这一步还要你改成自己愿意做的事。",
+      "second": "",
+      "liveAi": false,
+      "paceNote": "可以进入方向",
+      "stickers": [
+        "也许会把那盒旧磁带拿出来放",
+        "现在房间是潮的"
+      ]
+    },
+    {
+      "id": "U04",
+      "input": "这个周末先把书架上的旧杂志清一清。",
+      "blocked": "",
+      "line": "带走的是你的自述「这个周末先把书架上的旧杂志清一清」。「身体」只是在试的组合，不是你的经历。这一步还要你改成自己愿意做的事。",
+      "second": "",
+      "liveAi": false,
+      "paceNote": "可以进入方向",
+      "stickers": [
+        "这个周末先把书架上的旧杂志清一清"
+      ],
+      "error": "page.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('#pk-type')\n    - locator resolved to <button id=\"pk-type\" type=\"button\" class=\"hidden\">…</button>\n  - attempting click action\n    2 × waiting for element to be visible, enabled and stable\n      - element is not visible\n    - retrying click action\n    - waiting 20ms\n    2 × waiting for element to be visible, enabled and stable\n      - element is not visible\n    - retrying click action\n      - waiting 100ms\n    58 × waiting for element to be visible, enabled and stable\n       - element is not visible\n     - retrying click action\n       - waiting 500ms\n"
+    },
+    {
+      "id": "U05",
+      "input": "我想把画好的一张小画寄给朋友，同时又确定不想让第二个人看见。",
+      "blocked": "产品 LIVE_AI 为 false，理解到行动没有进入模型。下面的句子是离线整理，不是语义评测。",
+      "line": "带走的是你的意愿「我想把画好的一张小画寄给朋友」。「身体」只是在试的组合，不是你的经历。这一步还要你改成自己愿意做的事。",
+      "second": "",
+      "liveAi": false,
+      "paceNote": "可以进入方向",
+      "stickers": [
+        "我想把画好的一张小画寄给朋友",
+        "同时又确定不想让第二个人看见"
+      ]
+    },
+    {
+      "id": "U06",
+      "input": "想把一段雨声收短一点。没有电脑，这个月的钱也已经分完了。",
+      "blocked": "产品 LIVE_AI 为 false，理解到行动没有进入模型。下面的句子是离线整理，不是语义评测。",
+      "line": "带走的是你的意愿「想把一段雨声收短一点」。「身体」只是在试的组合，不是你的经历。这一步还要你改成自己愿意做的事。",
+      "second": "",
+      "liveAi": false,
+      "paceNote": "可以进入方向",
+      "stickers": [
+        "想把一段雨声收短一点",
+        "没有电脑",
+        "这个月的钱也已经分完了"
+      ]
+    },
+    {
+      "id": "U07",
+      "input": "伞又落在楼下了，别给我出主意。",
+      "blocked": "产品 LIVE_AI 为 false，理解到行动没有进入模型。下面的句子是离线整理，不是语义评测。",
+      "line": "带走的是你的自述「伞又落在楼下了」。「身体」只是在试的组合，不是你的经历。这一步还要你改成自己愿意做的事。",
+      "second": "",
+      "liveAi": false,
+      "paceNote": "可以进入方向",
+      "stickers": [
+        "伞又落在楼下了",
+        "别给我出主意"
+      ]
+    },
+    {
+      "id": "U08",
+      "input": "我想把阳台那个空花盆收进柜子。",
+      "blocked": "产品 LIVE_AI 为 false，理解到行动没有进入模型。下面的句子是离线整理，不是语义评测。",
+      "line": "带走的是你的意愿「我想把阳台那个空花盆收进柜子」。「身体」只是在试的组合，不是你的经历。这一步还要你改成自己愿意做的事。",
+      "second": "",
+      "liveAi": false,
+      "paceNote": "可以进入方向",
+      "stickers": [
+        "我想把阳台那个空花盆收进柜子"
+      ]
+    }
+  ]
+}

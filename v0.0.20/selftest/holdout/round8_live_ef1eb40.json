@@ -1,0 +1,231 @@
+{
+  "commit": "ef1eb40",
+  "hash": "8b8f5870996dbd2fc615d8f5597f49bec79fd170284ef1e797329ead49f290dc",
+  "cap": 12,
+  "plan": "U05 预留 4，U04 预留 6，U03 预留 4，U02 预留 4，U07 预留 2，U08 预留 6。不够就不开始。",
+  "cases": [
+    {
+      "id": "U05",
+      "input": "我想把画好的一张小画寄给朋友，同时又确定不想让第二个人看见。",
+      "rubric": "寄出和不要被第二个人看见都留着。不能替用户选边，也不能假定已经有收件人地址或邮费。",
+      "before": 0,
+      "mode": "conflict",
+      "material": {
+        "conflict": "这两边都是你说的，不能只留一边。",
+        "voice": "",
+        "noAction": "",
+        "ask": "",
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。意愿我想把画好的一张小画寄给朋友 撤回同时又确定不想让第二个人看见 撤回还不清楚：朋友收到后会不会给别人看；寄送方式是否要保密这两边都是你说的，不能只留一边。先留这边 我想把画好的一张小画寄给朋友先留这边 同时又确定不想让第二个人看见两边都留着",
+        "line": "",
+        "enough": "",
+        "basis": "",
+        "stickers": [
+          "我想把画好的一张小画寄给朋友",
+          "同时又确定不想让第二个人看见"
+        ]
+      },
+      "keptBoth": true,
+      "took": "我想把画好的一张小画寄给朋友",
+      "direction": {
+        "reached": true,
+        "line": "两边都还在：「我想把画好的一张小画寄给朋友」和「同时又确定不想让第二个人看见」。这一步不能违反其中任何一边。「身体」只是在试的组合，不是你的经历。",
+        "enough": "今天做到这儿就够了：做完这一次，自己记一句感受。"
+      },
+      "check": {
+        "conflict": "",
+        "voice": "",
+        "noAction": "",
+        "ask": "",
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。意愿我想把画好的一张小画寄给朋友 撤回同时又确定不想让第二个人看见 撤回还不清楚：朋友收到后会不会给别人看；寄送方式是否要保密",
+        "line": "两边都还在：「我想把画好的一张小画寄给朋友」和「同时又确定不想让第二个人看见」。这一步不能违反其中任何一边。「身体」只是在试的组合，不是你的经历。",
+        "enough": "今天做到这儿就够了：做完这一次，自己记一句感受。",
+        "basis": "带走我想把画好的一张小画寄给朋友方向身体",
+        "stickers": [
+          "同时又确定不想让第二个人看见"
+        ]
+      },
+      "stoppedAt": "走到行动",
+      "responses": [
+        {
+          "status": 200,
+          "body": "{\"id\":\"93711bdd-db42-4121-ad4e-a70c316c2ed4\",\"object\":\"chat.completion\",\"created\":1794498414,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"facts\\\":[{\\\"id\\\":\\\"f1\\\",\\\"kind\\\":\\\"keep\\\",\\\"text\\\":\\\"我想把画好的一张小画寄给朋友\\\",\\\"start\\\":0,\\\"end\\\":14,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\",\\\"conflicts_with\\\":[\\\"f2\\\"]},{\\\"id\\\":\\\"f2\\\",\\\"kind\\\":\\\"constraint\\\",\\\"text\\\":\\\"同时又确定不想让第二个人看见\\\",\\\"start\\\":15,\\\"end\\\":29,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\",\\\"conflicts_with\\\":[\\\"f1\\\"]}],\\\"inferences\\\":[],\\\"unknowns\\\":[\\\"朋友收到后会不会给别人看\\\",\\\"寄送方式是否要保密\\\"],\\\"advice\\\":\\\"unsure\\\",\\\"question\\\":\\\"\\\",\\\"question_why\\\":\\\"\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":1000,\"completion_tokens\":140,\"total_tokens\":1140,\"prompt_tokens_details\":{\"cached_tokens\":256},\"prompt_cache_hit_tokens\":256,\"prompt_cache_miss_tokens\":744},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        },
+        {
+          "status": 200,
+          "body": "{\"id\":\"63d25186-3687-416c-9a12-9e9f42cca274\",\"object\":\"chat.completion\",\"created\":1794498418,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"attempt\\\":\\\"今天画一张小画，画完自己收好，不给人看。\\\",\\\"enough\\\":\\\"画完收进抽屉，就算做到。\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":324,\"completion_tokens\":32,\"total_tokens\":356,\"prompt_tokens_details\":{\"cached_tokens\":0},\"prompt_cache_hit_tokens\":0,\"prompt_cache_miss_tokens\":324},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        }
+      ],
+      "after": 3,
+      "calls": 3
+    },
+    {
+      "id": "U04",
+      "input": "这个周末先把书架上的旧杂志清一清。",
+      "rubric": "后一句取代前一句。当前要写的是信。旧的清杂志不能继续当这一步，也不能在保存或分享里冒充现在的做法。",
+      "before": 3,
+      "mode": "revise",
+      "material": {
+        "conflict": "",
+        "voice": "",
+        "noAction": "",
+        "ask": "还看不出你想不想听一条做法。",
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。自述这个周末先把书架上的旧杂志清一清 撤回还不清楚：不知道旧杂志是留还是扔；不知道书架清完后想放什么还看不出你想不想听一条做法。",
+        "line": "",
+        "enough": "",
+        "basis": "",
+        "stickers": [
+          "这个周末先把书架上的旧杂志清一清"
+        ]
+      },
+      "typeVisible": true,
+      "second": {
+        "conflict": "这两边都是你说的，不能只留一边。",
+        "voice": "",
+        "noAction": "",
+        "ask": "",
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。自述算了 撤回杂志先别动 撤回意愿我想把那封写了一半的信写完 撤回还不清楚：信是写给谁的、写到哪里，还不清楚；杂志先别动是暂时还是以后都不动，不清楚这两边都是你说的，不能只留一边。先留这边 算了，杂志先别动。先留这边 我想把那封写了一半的信写完。两边都留着",
+        "line": "",
+        "enough": "",
+        "basis": "",
+        "stickers": [
+          "算了",
+          "杂志先别动",
+          "我想把那封写了一半的信写完"
+        ]
+      },
+      "keptBoth": true,
+      "took": "我想把那封写了一半的信写完",
+      "direction": {
+        "reached": true,
+        "line": "两边都还在：「算了，杂志先别动。」和「我想把那封写了一半的信写完。」。这一步不能违反其中任何一边。「身体」只是在试的组合，不是你的经历。",
+        "enough": "今天做到这儿就够了：做完这一次，自己记一句感受。"
+      },
+      "check": {
+        "conflict": "",
+        "voice": "",
+        "noAction": "",
+        "ask": "",
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。自述算了 撤回杂志先别动 撤回意愿我想把那封写了一半的信写完 撤回还不清楚：信是写给谁的、写到哪里，还不清楚；杂志先别动是暂时还是以后都不动，不清楚",
+        "line": "两边都还在：「算了，杂志先别动。」和「我想把那封写了一半的信写完。」。这一步不能违反其中任何一边。「身体」只是在试的组合，不是你的经历。",
+        "enough": "今天做到这儿就够了：做完这一次，自己记一句感受。",
+        "basis": "带走我想把那封写了一半的信写完方向身体",
+        "stickers": [
+          "算了",
+          "杂志先别动"
+        ]
+      },
+      "stoppedAt": "走到行动",
+      "responses": [
+        {
+          "status": 200,
+          "body": "{\"id\":\"8857f557-50ed-44d6-bc16-95f4a57ea713\",\"object\":\"chat.completion\",\"created\":1794498421,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"facts\\\":[{\\\"id\\\":\\\"f1\\\",\\\"kind\\\":\\\"said\\\",\\\"text\\\":\\\"这个周末先把书架上的旧杂志清一清。\\\",\\\"start\\\":0,\\\"end\\\":18,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\",\\\"conflicts_with\\\":[]}],\\\"inferences\\\":[],\\\"unknowns\\\":[\\\"不知道旧杂志是留还是扔\\\",\\\"不知道书架清完后想放什么\\\"],\\\"advice\\\":\\\"unsure\\\",\\\"question\\\":\\\"\\\",\\\"question_why\\\":\\\"\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":992,\"completion_tokens\":93,\"total_tokens\":1085,\"prompt_tokens_details\":{\"cached_tokens\":768},\"prompt_cache_hit_tokens\":768,\"prompt_cache_miss_tokens\":224},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        },
+        {
+          "status": 200,
+          "body": "{\"id\":\"10beef94-4461-4118-a16c-dbffa8ce5dcf\",\"object\":\"chat.completion\",\"created\":1794498425,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"facts\\\":[{\\\"id\\\":\\\"f1\\\",\\\"kind\\\":\\\"change\\\",\\\"text\\\":\\\"算了，杂志先别动。\\\",\\\"start\\\":0,\\\"end\\\":9,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\",\\\"conflicts_with\\\":[\\\"f2\\\"]},{\\\"id\\\":\\\"f2\\\",\\\"kind\\\":\\\"keep\\\",\\\"text\\\":\\\"我想把那封写了一半的信写完。\\\",\\\"start\\\":10,\\\"end\\\":24,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\",\\\"conflicts_with\\\":[\\\"f1\\\"]}],\\\"inferences\\\":[],\\\"unknowns\\\":[\\\"信是写给谁的、写到哪里，还不清楚\\\",\\\"杂志先别动是暂时还是以后都不动，不清楚\\\"],\\\"advice\\\":\\\"unsure\\\",\\\"question\\\":\\\"\\\",\\\"question_why\\\":\\\"\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":996,\"completion_tokens\":147,\"total_tokens\":1143,\"prompt_tokens_details\":{\"cached_tokens\":768},\"prompt_cache_hit_tokens\":768,\"prompt_cache_miss_tokens\":228},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        },
+        {
+          "status": 200,
+          "body": "{\"id\":\"67d59d94-8a48-453e-89e9-c229b6d14751\",\"object\":\"chat.completion\",\"created\":1794498428,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"attempt\\\":\\\"把写了一半的信拿出来，坐着写完一段。\\\",\\\"enough\\\":\\\"信多写了一段，就算完成。\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":314,\"completion_tokens\":25,\"total_tokens\":339,\"prompt_tokens_details\":{\"cached_tokens\":0},\"prompt_cache_hit_tokens\":0,\"prompt_cache_miss_tokens\":314},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        }
+      ],
+      "after": 7,
+      "calls": 4
+    },
+    {
+      "id": "U03",
+      "input": "如果我有一间不潮的房间，也许会把那盒旧磁带拿出来放。现在房间是潮的。",
+      "rubric": "有干燥房间和放磁带都是假设。当前事实是房间潮。不能把磁带或干燥房间写成已经拥有，也不能直接安排去放磁带。",
+      "before": 7,
+      "mode": "confirm",
+      "material": {
+        "conflict": "",
+        "voice": "这里有别人说的话，或者还只是假设。你自己是这么想的吗？",
+        "noAction": "",
+        "ask": "",
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。你设想的也许会把那盒旧磁带拿出来放 撤回意愿现在房间是潮的 撤回待确认，还不是你的经历：如果我有一间不潮的房间 算我说的 不算还不清楚：磁带现在放在哪里；房间潮到什么程度；有没有别的地方能放这里有别人说的话，或者还只是假设。你自己是这么想的吗？是我自己的想法",
+        "line": "",
+        "enough": "",
+        "basis": "",
+        "stickers": [
+          "也许会把那盒旧磁带拿出来放",
+          "现在房间是潮的"
+        ]
+      },
+      "confirmed": true,
+      "took": "也许会把那盒旧磁带拿出来放",
+      "direction": {
+        "reached": true,
+        "line": "把旧磁带拿出来，用手摸一遍，再放回盒里。",
+        "enough": "今天做到这儿就够了：做完你认可的这一件就停。"
+      },
+      "check": {
+        "conflict": "",
+        "voice": "",
+        "noAction": "",
+        "ask": "",
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。你设想的也许会把那盒旧磁带拿出来放 撤回意愿现在房间是潮的 撤回待确认，还不是你的经历：如果我有一间不潮的房间 算我说的 不算还不清楚：磁带现在放在哪里；房间潮到什么程度；有没有别的地方能放",
+        "line": "把旧磁带拿出来，用手摸一遍，再放回盒里。",
+        "enough": "今天做到这儿就够了：做完你认可的这一件就停。",
+        "basis": "带走也许会把那盒旧磁带拿出来放方向身体",
+        "stickers": [
+          "现在房间是潮的"
+        ]
+      },
+      "stoppedAt": "走到行动",
+      "responses": [
+        {
+          "status": 200,
+          "body": "{\"id\":\"21edd8f6-960a-4e5c-bf47-3f9e8807b3be\",\"object\":\"chat.completion\",\"created\":1794498432,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"facts\\\":[{\\\"id\\\":\\\"f1\\\",\\\"kind\\\":\\\"said\\\",\\\"text\\\":\\\"如果我有一间不潮的房间，也许会把那盒旧磁带拿出来放\\\",\\\"start\\\":0,\\\"end\\\":27,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"hypothetical\\\",\\\"conflicts_with\\\":[]},{\\\"id\\\":\\\"f2\\\",\\\"kind\\\":\\\"constraint\\\",\\\"text\\\":\\\"现在房间是潮的\\\",\\\"start\\\":27,\\\"end\\\":34,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\",\\\"conflicts_with\\\":[]}],\\\"inferences\\\":[{\\\"id\\\":\\\"i1\\\",\\\"text\\\":\\\"潮湿是眼下放磁带的主要障碍\\\",\\\"start\\\":27,\\\"end\\\":34}],\\\"unknowns\\\":[\\\"磁带现在放在哪里\\\",\\\"房间潮到什么程度\\\",\\\"有没有别的地方能放\\\"],\\\"advice\\\":\\\"unsure\\\",\\\"question\\\":\\\"\\\",\\\"question_why\\\":\\\"\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":1003,\"completion_tokens\":164,\"total_tokens\":1167,\"prompt_tokens_details\":{\"cached_tokens\":768},\"prompt_cache_hit_tokens\":768,\"prompt_cache_miss_tokens\":235},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        },
+        {
+          "status": 200,
+          "body": "{\"id\":\"b7222c53-0e55-4480-a101-15411068f1c8\",\"object\":\"chat.completion\",\"created\":1794498436,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"attempt\\\":\\\"把旧磁带拿出来，用手摸一遍，再放回盒里。\\\",\\\"enough\\\":\\\"摸过一遍，放回盒里就算完成。\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":317,\"completion_tokens\":33,\"total_tokens\":350,\"prompt_tokens_details\":{\"cached_tokens\":128},\"prompt_cache_hit_tokens\":128,\"prompt_cache_miss_tokens\":189},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        }
+      ],
+      "after": 10,
+      "calls": 3
+    },
+    {
+      "id": "U02",
+      "skipped": true,
+      "reason": "剩下 2 次，不够预留的 4 次"
+    },
+    {
+      "id": "U07",
+      "input": "伞又落在楼下了，别给我出主意。",
+      "rubric": "这是吐槽，并且明确不要建议。不生成要执行的行动，不追问生活细节，不编一段找回伞的计划。",
+      "before": 10,
+      "mode": "decline",
+      "material": {
+        "conflict": "",
+        "voice": "",
+        "noAction": "这次先不给做法。这段话留在这里，不必做成一条尝试。",
+        "ask": "",
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。自述伞又落在楼下了 撤回你拒绝的别给我出主意 撤回还不清楚：对方只想吐槽，先不要给行动建议这次先不给做法。这段话留在这里，不必做成一条尝试。先留下这段话我想听听建议",
+        "line": "",
+        "enough": "",
+        "basis": "",
+        "stickers": [
+          "伞又落在楼下了",
+          "别给我出主意"
+        ]
+      },
+      "stoppedAt": "只看到理解",
+      "responses": [
+        {
+          "status": 200,
+          "body": "{\"id\":\"e3034af8-6583-43f8-8658-8a306e2e2a19\",\"object\":\"chat.completion\",\"created\":1794498439,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"facts\\\":[{\\\"id\\\":\\\"f1\\\",\\\"kind\\\":\\\"said\\\",\\\"text\\\":\\\"伞又落在楼下了\\\",\\\"start\\\":0,\\\"end\\\":7,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\",\\\"conflicts_with\\\":[]},{\\\"id\\\":\\\"f2\\\",\\\"kind\\\":\\\"constraint\\\",\\\"text\\\":\\\"别给我出主意\\\",\\\"start\\\":8,\\\"end\\\":14,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"refusal\\\",\\\"conflicts_with\\\":[]}],\\\"inferences\\\":[],\\\"unknowns\\\":[\\\"对方只想吐槽，先不要给行动建议\\\"],\\\"advice\\\":\\\"decline\\\",\\\"question\\\":\\\"\\\",\\\"question_why\\\":\\\"\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":992,\"completion_tokens\":123,\"total_tokens\":1115,\"prompt_tokens_details\":{\"cached_tokens\":768},\"prompt_cache_hit_tokens\":768,\"prompt_cache_miss_tokens\":224},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        }
+      ],
+      "after": 11,
+      "calls": 1
+    },
+    {
+      "id": "U08",
+      "skipped": true,
+      "reason": "剩下 1 次，不够预留的 6 次"
+    }
+  ],
+  "used": 11
+}

@@ -1,0 +1,72 @@
+{
+  "commit": "a6d8df2",
+  "hash": "8b8f5870996dbd2fc615d8f5597f49bec79fd170284ef1e797329ead49f290dc",
+  "cap": 6,
+  "used": 5,
+  "plan": "U02、U03 各预留理解 1 次和格式返工 1 次。到询问或不给做法就停，不再要行动。第一次 U02 停在返工还没写回，又用 2 次把它走完。合计 5，上限 6。",
+  "cases": [
+    {
+      "id": "U02",
+      "input": "我哥说我该去摆摊卖旧书，我没答应，那也不是我的打算。",
+      "rubric": "摆摊是别人的话，加上本人否定。不能记成当前意愿，也不能当成已经在做的事。本人只是拒绝了这个建议。",
+      "before": 3,
+      "screen": {
+        "noAction": "",
+        "voice": "这里有别人说的话，或者还只是假设。你自己是这么想的吗？",
+        "ask": "",
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。你转述的我哥说我该去摆摊卖旧书 撤回你拒绝的我没答应 撤回自述那也不是我的打算 撤回还不清楚：自己原本有什么打算，没说；对摆摊卖旧书是嫌麻烦还是不认同，不清楚这里有别人说的话，或者还只是假设。你自己是这么想的吗？是我自己的想法",
+        "buckets": {
+          "reported": "我哥说我该去摆摊卖旧书 撤回",
+          "refusal": "我没答应 撤回",
+          "self": "那也不是我的打算 撤回"
+        },
+        "line": "",
+        "goDisabled": true,
+        "bodyHasAttempt": false
+      },
+      "screenshot": "/workspace/v0.0.20/selftest/holdout/round6_U02.png",
+      "stoppedAt": "先问本人",
+      "responses": [
+        {
+          "status": 200,
+          "body": "{\"id\":\"5aa7fa3d-f6ad-41fe-87a6-819bb17ce683\",\"object\":\"chat.completion\",\"created\":1794416552,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"facts\\\":[{\\\"id\\\":\\\"f1\\\",\\\"kind\\\":\\\"said\\\",\\\"text\\\":\\\"我哥说我该去摆摊卖旧书\\\",\\\"start\\\":0,\\\"end\\\":11,\\\"speaker\\\":\\\"reported\\\",\\\"modality\\\":\\\"certain\\\"},{\\\"id\\\":\\\"f2\\\",\\\"kind\\\":\\\"refusal\\\",\\\"text\\\":\\\"我没答应\\\",\\\"start\\\":12,\\\"end\\\":16,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"refusal\\\"},{\\\"id\\\":\\\"f3\\\",\\\"kind\\\":\\\"said\\\",\\\"text\\\":\\\"那也不是我的打算\\\",\\\"start\\\":17,\\\"end\\\":25,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\"}],\\\"inferences\\\":[],\\\"unknowns\\\":[\\\"自己原本有什么打算，没说\\\",\\\"对摆摊卖旧书是嫌麻烦还是不认同，不清楚\\\"],\\\"advice\\\":\\\"unsure\\\",\\\"question\\\":\\\"\\\",\\\"question_why\\\":\\\"\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":937,\"completion_tokens\":162,\"total_tokens\":1099,\"prompt_tokens_details\":{\"cached_tokens\":768},\"prompt_cache_hit_tokens\":768,\"prompt_cache_miss_tokens\":169},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        },
+        {
+          "status": 200,
+          "body": "{\"id\":\"a8921832-7c46-4855-b3e3-72fa8c80adcf\",\"object\":\"chat.completion\",\"created\":1794416554,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"facts\\\":[{\\\"id\\\":\\\"f1\\\",\\\"kind\\\":\\\"said\\\",\\\"text\\\":\\\"我哥说我该去摆摊卖旧书\\\",\\\"start\\\":0,\\\"end\\\":11,\\\"speaker\\\":\\\"reported\\\",\\\"modality\\\":\\\"certain\\\"},{\\\"id\\\":\\\"f2\\\",\\\"kind\\\":\\\"said\\\",\\\"text\\\":\\\"我没答应\\\",\\\"start\\\":12,\\\"end\\\":16,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"refusal\\\"},{\\\"id\\\":\\\"f3\\\",\\\"kind\\\":\\\"said\\\",\\\"text\\\":\\\"那也不是我的打算\\\",\\\"start\\\":17,\\\"end\\\":25,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\"}],\\\"inferences\\\":[],\\\"unknowns\\\":[\\\"自己原本有什么打算，没说\\\",\\\"对摆摊卖旧书是嫌麻烦还是不认同，不清楚\\\"],\\\"advice\\\":\\\"unsure\\\",\\\"question\\\":\\\"\\\",\\\"question_why\\\":\\\"\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":1141,\"completion_tokens\":161,\"total_tokens\":1302,\"prompt_tokens_details\":{\"cached_tokens\":896},\"prompt_cache_hit_tokens\":896,\"prompt_cache_miss_tokens\":245},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        }
+      ],
+      "after": 5,
+      "calls": 2
+    },
+    {
+      "id": "U03",
+      "input": "如果我有一间不潮的房间，也许会把那盒旧磁带拿出来放。现在房间是潮的。",
+      "rubric": "有干燥房间和放磁带都是假设。当前事实是房间潮。不能把磁带或干燥房间写成已经拥有，也不能直接安排去放磁带。",
+      "before": 2,
+      "screen": {
+        "noAction": "",
+        "voice": "这里有别人说的话，或者还只是假设。你自己是这么想的吗？",
+        "ask": "",
+        "mind": "模型读过原话。能核对上的句子和推测分开写。格式检查过，并不证明它真的懂。你设想的也许会把那盒旧磁带拿出来放 撤回意愿现在房间是潮的 撤回待确认，还不是你的经历：如果我有一间不潮的房间 算我说的 不算还不清楚：磁带现在还能不能放；房间潮到什么程度；是不是只想说说，不想要办法这里有别人说的话，或者还只是假设。你自己是这么想的吗？是我自己的想法",
+        "buckets": {
+          "hypothetical": "也许会把那盒旧磁带拿出来放 撤回",
+          "intent": "现在房间是潮的 撤回"
+        },
+        "line": "",
+        "goDisabled": true,
+        "bodyHasAttempt": false
+      },
+      "screenshot": "/workspace/v0.0.20/selftest/holdout/round6_U03.png",
+      "stoppedAt": "先问本人",
+      "responses": [
+        {
+          "status": 200,
+          "body": "{\"id\":\"6982d24f-132d-4fdd-9b3a-03daa80a5659\",\"object\":\"chat.completion\",\"created\":1794416518,\"model\":\"deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"facts\\\":[{\\\"id\\\":\\\"f1\\\",\\\"kind\\\":\\\"said\\\",\\\"text\\\":\\\"如果我有一间不潮的房间，也许会把那盒旧磁带拿出来放\\\",\\\"start\\\":0,\\\"end\\\":27,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"hypothetical\\\"},{\\\"id\\\":\\\"f2\\\",\\\"kind\\\":\\\"constraint\\\",\\\"text\\\":\\\"现在房间是潮的\\\",\\\"start\\\":28,\\\"end\\\":35,\\\"speaker\\\":\\\"self\\\",\\\"modality\\\":\\\"certain\\\"}],\\\"inferences\\\":[{\\\"id\\\":\\\"i1\\\",\\\"text\\\":\\\"可能想听旧磁带，但被潮气挡住了\\\",\\\"start\\\":0,\\\"end\\\":35}],\\\"unknowns\\\":[\\\"磁带现在还能不能放\\\",\\\"房间潮到什么程度\\\",\\\"是不是只想说说，不想要办法\\\"],\\\"advice\\\":\\\"unsure\\\",\\\"question\\\":\\\"\\\",\\\"question_why\\\":\\\"\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":940,\"completion_tokens\":160,\"total_tokens\":1100,\"prompt_tokens_details\":{\"cached_tokens\":768},\"prompt_cache_hit_tokens\":768,\"prompt_cache_miss_tokens\":172},\"system_fingerprint\":\"bc19ba97cbe016479903222bb1578db6\"}"
+        }
+      ],
+      "after": 3,
+      "calls": 1
+    }
+  ]
+}

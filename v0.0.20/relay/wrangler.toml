@@ -1,0 +1,22 @@
+# 另存人生 · 免费体验额度中转（Cloudflare Worker）
+# 已部署：https://lingcun-relay.lingcun.workers.dev（账户 huangchenyun25@gmail.com，2026-10-24）
+# 密钥不写在这里：部署前运行  npx wrangler secret put DEEPSEEK_API_KEY
+name = "lingcun-relay"
+main = "worker.js"
+compatibility_date = "2025-07-01"
+
+# 每日限额用的 KV（2026-10-24 已建好：lingcun-relay-QUOTA）。id 不是机密
+[[kv_namespaces]]
+binding = "QUOTA"
+id = "7da795f6d4134df5abd1b77686b05adc"
+
+[vars]
+ALLOWED_ORIGINS = "https://huangchenyun25-web.github.io"
+DAILY_LIMIT = "40"
+GLOBAL_DAILY_LIMIT = "3000"
+MAX_BODY_BYTES = "262144"
+MAX_MESSAGES = "8"
+MAX_TOKENS = "8192"
+# UPSTREAM_BASE = "https://api.deepseek.com"   # 默认就是这个；本机测试时可指向假的上游
+# IP_SALT 建议也用 secret 设置：npx wrangler secret put IP_SALT
+# 可选人机验证：npx wrangler secret put TURNSTILE_SECRET（不设就不检查）

@@ -1,0 +1,261 @@
+/* v0.0.20：首屏收成一组；留声机；另存成功改成一块紧凑的结果，不再用大块空方和发光星。 */
+
+/* 品牌是字，不是小色块。首页的线只托住字，不横贯整行。 */
+body.v20 .brand {
+  background: transparent !important;
+  color: #fff !important;
+  box-shadow: none !important;
+  min-height: 0 !important;
+  height: auto !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  font-size: 20px;
+  letter-spacing: .16em;
+  line-height: 1.2;
+  text-decoration: none !important;
+  text-shadow: 2px 2px 0 #4A5C9B;
+}
+body.v20 .homelinks button {
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #fff !important;
+  min-height: 0 !important;
+  height: auto !important;
+  padding: 2px 0 !important;
+  letter-spacing: .04em;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+body.v20.scr-pick .topbar { height: auto; margin-top: 16px; }
+body.v20.scr-pick .rule {
+  width: 76px;
+  height: 4px;
+  margin-top: 8px;
+  background: #F7F0DF;
+  box-shadow: 3px 3px 0 #232B55;
+}
+body.v20.scr-pick #s-pick > .head { padding-top: 16px; }
+body.v20.scr-pick #s-pick > .head { padding-right: 76px; }
+body.v20.scr-pick #h-pick {
+  font-size: clamp(22px, 5.2vw, 28px);
+  line-height: 1.35;
+  letter-spacing: .01em;
+  max-width: 12em;
+}
+body.v20.scr-pick .v18sub { margin-top: 8px; }
+body.v20.scr-pick .dock {
+  position: relative;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  transform: none;
+  width: auto;
+  max-width: none;
+  padding: 18px 0 0;
+}
+body.v20.scr-pick .wrap { padding-bottom: 28px; }
+
+/* 按住说话：留声机本身就是按钮，不再套方框和玻璃圆。 */
+body.v20 .vz-say,
+body.v20 .vz-hint { color: #fff; }
+body.v20 .vz-btn {
+  width: 168px !important;
+  height: 168px !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+body.v20 .vz-btn::before { display: none !important; }
+body.v20 .vz-btn:active { transform: none; }
+body.v20 .vz-btn svg {
+  width: 168px;
+  height: 168px;
+  overflow: visible;
+  image-rendering: pixelated;
+}
+body.v20 .vz-time { fill: #F7F0DF; font-size: 3px; }
+body.v20 .vz[data-st="rec"] .g-disc,
+body.v20 .vz[data-st="near"] .g-disc {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: gspin .8s steps(4) infinite;
+}
+body.v20 .vz[data-st="near"] .g-disc { animation-duration: .4s; }
+@keyframes gspin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 原话不够拆时，说明和原话贴在一起，不另起一张问卷。 */
+body.v20 .srcquote {
+  margin: 0 0 8px;
+  color: #fff;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* 另存成功：标记、方向、这一步、「看这一版」收在同一块里。 */
+body.v20.scr-ok .wrap { padding-bottom: 28px; }
+body.v20.scr-ok .dock {
+  position: relative;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  transform: none;
+  width: auto;
+  max-width: none;
+  padding: 16px 0 0;
+  flex-direction: column;
+}
+body.v20.scr-ok #ok-screen {
+  text-align: left;
+  max-width: 420px;
+  margin: 12px auto 0;
+  padding: 14px 14px 12px;
+  background: #F7F0DF;
+  color: #232B55;
+  box-shadow:
+    0 -4px 0 0 #232B55,
+    0 4px 0 0 #232B55,
+    -4px 0 0 0 #232B55,
+    4px 0 0 0 #232B55,
+    6px 6px 0 0 #4A5C9B;
+}
+body.v20.scr-ok #ok-screen h2,
+body.v20.scr-ok #ok-screen .oksub,
+body.v20.scr-ok #ok-screen .kaitu,
+body.v20.scr-ok #ok-screen .ok-try {
+  color: #232B55;
+  text-shadow: none;
+}
+body.v20.scr-ok .okhead { display: flex; align-items: center; gap: 12px; }
+body.v20.scr-ok .okhead-copy { min-width: 0; }
+body.v20.scr-ok #ok-screen h2 {
+  margin: 0;
+  font-size: 26px;
+  letter-spacing: .08em;
+  line-height: 1.2;
+}
+body.v20.scr-ok .oksub { margin: 4px 0 0; max-width: none; font-size: 14px; line-height: 1.45; }
+body.v20.scr-ok .okmark {
+  width: 64px;
+  height: 64px;
+  flex: none;
+  margin: 0;
+  background: #FFFBF1;
+  box-shadow: 0 0 0 3px #232B55, 4px 4px 0 0 #4A5C9B;
+}
+body.v20.scr-ok .okmark svg { display: block; width: 64px; height: 64px; image-rendering: pixelated; }
+body.v20.scr-ok .ok-try {
+  margin: 12px 0 8px;
+  padding: 8px 10px;
+  background: #FFFBF1;
+  font-size: 16px;
+  line-height: 1.45;
+  box-shadow:
+    0 -3px 0 0 #232B55,
+    0 3px 0 0 #232B55,
+    -3px 0 0 0 #232B55,
+    3px 0 0 0 #232B55;
+}
+body.v20.scr-ok .kaitu { margin: 0; max-width: none; font-size: 13px; line-height: 1.5; }
+body.v20.scr-ok #ok-review {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 12px;
+  min-height: 44px;
+  padding: 0 16px;
+  background: #232B55 !important;
+  color: #F7F0DF !important;
+  text-decoration: none !important;
+  letter-spacing: .12em;
+  box-shadow: 4px 4px 0 0 #4A5C9B !important;
+}
+body.v20 .okmark .px-dot { animation: pxblink 1.2s steps(2) infinite; }
+@keyframes pxblink {
+  from { fill: #5E72B5; }
+  to { fill: #F7F0DF; }
+}
+
+body.v20 .v20-mind {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  background: #F7F0DF;
+  color: #232B55;
+  box-shadow:
+    0 -3px 0 0 #232B55,
+    0 3px 0 0 #232B55,
+    -3px 0 0 0 #232B55,
+    3px 0 0 0 #232B55;
+}
+body.v20 .v20-mind p,
+body.v20 .v20-mind li { color: #232B55; font-size: 13px; line-height: 1.45; }
+body.v20 .v20-mind ul { margin: 6px 0; padding-left: 1.1em; }
+body.v20 .v20-mode { margin: 0 0 6px; font-weight: 600; }
+body.v20 .v20-inf, body.v20 .v20-unk, body.v20 .v20-ref { margin: 4px 0; }
+body.v20 .v20-mini {
+  min-height: 22px !important;
+  height: 22px !important;
+  padding: 0 6px !important;
+  font-size: 12px !important;
+  letter-spacing: 0 !important;
+  background: transparent !important;
+  color: #232B55 !important;
+  box-shadow: none !important;
+  text-decoration: underline;
+}
+body.v20 .v20-q { display: block; margin-top: 6px; }
+body.v20 #v20-ask { margin-top: 6px; min-height: 36px; }
+body.v20 .v20-extra { margin-top: 8px; font-size: 13px; line-height: 1.45; color: #232B55; }
+body.v20 .v20-extra b { font-weight: 600; }
+@media (max-width: 360px) {
+  body.v20 .vz-btn,
+  body.v20 .vz-btn svg { width: 132px !important; height: 132px !important; }
+  body.v20.scr-pick #h-pick { font-size: 22px; }
+}
+@media (min-width: 900px) {
+  body.v20.scr-pick .wrap,
+  body.v20.scr-ok .wrap,
+  body.v20.scr-share .wrap {
+    max-width: 920px;
+    width: min(920px, calc(100vw - 48px));
+    background: #F7F0DF;
+    margin: 16px auto 24px;
+    padding: 12px 36px 40px;
+    min-height: calc(100vh - 40px);
+    box-shadow: 8px 8px 0 #232B55;
+  }
+  body.v20.scr-pick #h-pick,
+  body.v20.scr-pick .v18sub,
+  body.v20.scr-pick .brand,
+  body.v20.scr-ok .brand,
+  body.v20.scr-share .brand {
+    color: #232B55;
+    text-shadow: none;
+  }
+  body.v20.scr-pick .rule,
+  body.v20.scr-ok .rule,
+  body.v20.scr-share .rule { background: #5E72B5; box-shadow: 3px 3px 0 #232B55; }
+  body.v20.scr-material .wrap,
+  body.v20.scr-draft .wrap,
+  body.v20.scr-check .wrap { max-width: 960px; }
+}
+body.v20 .okorb {
+  width: 64px;
+  height: 64px;
+  margin: 0;
+  border-radius: 0;
+  background: #FFFBF1;
+  box-shadow: 0 0 0 3px #232B55, 4px 4px 0 #4A5C9B;
+}
+@media (max-width: 899px) {
+  body.v20.scr-ok #ok-screen { margin-right: 56px; margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.v20 .g-disc,
+  body.v20 .okmark .px-dot { animation: none !important; }
+}
+</style></head>

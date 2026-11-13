@@ -1,0 +1,49 @@
+  /* ================= v0.0.14（#41 #42 #43）================= */
+  /* 说想法这一屏：大类小胶囊 + 语音入口（设计稿 方向 A：星球 + 轨道小球走一圈 = 30 秒） */
+  .pk-cap { display: inline-block; position: relative; margin: 0 0 12px 2px; padding: 3px 16px; border-radius: 999px; font-size: 13px; font-weight: 400; letter-spacing: .16em; color: var(--ink); background: var(--glass2); box-shadow: inset 0 0 0 1.2px var(--ink); }
+  .pk-cap::after { content: ""; position: absolute; top: 5px; right: 6px; width: 4px; height: 4px; background: var(--ink); }
+  #s-pick.idea > .head .pk-cap + h2 { margin-top: 0; }
+  .vz { position: relative; display: flex; flex-direction: column; align-items: center; margin-top: clamp(64px, 15vh, 150px); --lv: 1; }
+  .vz-say { min-height: 32px; font-size: 19px; font-weight: 300; letter-spacing: .06em; color: var(--ink); text-align: center; }
+  .vz-btn { position: relative; width: 220px; height: 220px; margin-top: 14px; padding: 0; min-height: 0; border-radius: 50%; background: none; box-shadow: none; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; letter-spacing: 0; }
+  .vz-btn::before { content: ""; position: absolute; left: 46px; top: 46px; width: 128px; height: 128px; border-radius: 50%; background: rgba(255,255,255,.14); -webkit-backdrop-filter: blur(16px) saturate(140%); backdrop-filter: blur(16px) saturate(140%); box-shadow: 0 12px 30px rgba(60,45,120,.14), inset 0 1px 0 rgba(255,255,255,.8); }
+  .vz-btn:active { transform: none; }
+  .vz-btn svg { position: relative; display: block; width: 220px; height: 220px; overflow: visible; }
+  .vz-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
+  .vz-halo { transform-box: view-box; transform-origin: 110px 110px; transform: scale(var(--lv)); transition: transform .12s linear, opacity .3s; opacity: 0; }
+  .vz-halo circle { fill: none; stroke: #C9B8F5; stroke-width: 1.2; }
+  .vz-planet { transform-box: view-box; transform-origin: 110px 110px; transition: transform .3s; }
+  .vz-time { font-family: "Geist", var(--F); font-size: 15px; font-weight: 400; fill: #231C45; opacity: 0; }
+  .vz-hint { margin-top: 18px; font-size: 13px; font-weight: 400; color: var(--sub); letter-spacing: .1em; visibility: hidden; }
+  .vz-type { margin-top: 26px; min-height: 30px; height: 30px; padding: 0 16px; border-radius: 15px; font-size: 13px; font-weight: 400; letter-spacing: .1em; color: var(--sub); background: rgba(243,240,249,.3); box-shadow: inset 0 0 0 1px rgba(201,184,245,.6); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+  .vz-card { display: none; width: 100%; padding: 20px 22px 12px; border-radius: 20px; }
+  .vz-card textarea { display: block; width: 100%; min-height: 84px; border: 0; padding: 0; background: none; box-shadow: none; resize: none; font-family: var(--UGC); font-size: 18px; line-height: 1.65; letter-spacing: .02em; color: var(--ink); }
+  .vz-card textarea:focus { box-shadow: none; }
+  .vz-ed { display: block; margin-top: 6px; font-size: 12px; font-weight: 400; color: var(--faint); letter-spacing: .08em; }
+  .vz-acts { display: none; width: 100%; gap: 12px; margin-top: 30px; }
+  .vz-acts button { height: 44px; min-height: 44px; padding: 0; font-size: 16px; letter-spacing: .08em; }
+  .vz-acts .sec2 { flex: 0 0 76px; }
+  .vz-acts #vz-ok { flex: 1; }
+  .vz[data-st="rec"] .vz-halo { opacity: 1; }
+  .vz[data-st="rec"] .vz-time, .vz[data-st="near"] .vz-time { opacity: .92; }
+  .vz[data-st="rec"] .vz-hint, .vz[data-st="near"] .vz-hint { visibility: visible; }
+  .vz[data-st="rec"] .vz-type, .vz[data-st="near"] .vz-type { visibility: hidden; }
+  .vz[data-st="near"] .vz-say { color: var(--sub); }
+  .vz[data-st="near"] .vz-planet { animation: vzbreathe 1.6s ease-in-out infinite; }
+  .vz[data-st="near"] .vz-core { fill-opacity: .42; }
+  .vz[data-st="done"] { margin-top: clamp(22px, 4vh, 40px); }
+  .vz[data-st="done"] .vz-say, .vz[data-st="done"] .vz-type, .vz[data-st="done"] .vz-hint { display: none; }
+  .vz[data-st="done"] .vz-card { display: block; }
+  .vz[data-st="done"] .vz-acts { display: flex; }
+  .vz[data-st="done"] .vz-btn { margin-top: 44px; cursor: default; }
+  .vz.nolv[data-st="rec"] .vz-halo { animation: vzhalo 1.4s ease-in-out infinite; }
+  @keyframes vzbreathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.035); } }
+  @keyframes vzhalo { 0%, 100% { transform: scale(.97); } 50% { transform: scale(1.05); } }
+  @media (prefers-reduced-motion: reduce) { .vz[data-st="near"] .vz-planet, .vz.nolv[data-st="rec"] .vz-halo { animation: none; } }
+  .vz-back { position: absolute; left: 22px; bottom: 20px; min-height: 0; height: 26px; padding: 0 12px; border-radius: 13px; font-size: 12px; font-weight: 400; letter-spacing: .1em; color: var(--sub); background: rgba(255,255,255,.5); box-shadow: inset 0 0 0 1px rgba(35,28,69,.25); }
+  #vz-note { margin-top: 14px; }
+  /* 第一步页：三类的框架短标签有两到三个字；摘星标准放在第一步卡片里 */
+  .crfw .fr .lbl { width: 42px; }
+  .crstar { display: flex; gap: 12px; align-items: baseline; margin-top: 16px; padding-top: 12px; border-top: 1px dashed rgba(35,28,69,.2); font-size: 13.5px; line-height: 1.55; font-family: var(--UGC); }
+  .crstar .lbl { flex: none; }
+
