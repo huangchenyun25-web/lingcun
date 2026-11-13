@@ -62,10 +62,12 @@ function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
     inferences: [], unknowns: [], relations: [{ a: "f1", b: "f2", relation: "independent", why: "理解时先写成互不影响。" }], advice: "offer"
   });
   await sleep(250);
-  var state = await p.evaluate(function () { return { n: window.__n, mind: window.__lingcun20.mindState() }; });
-  ok("换方向后仍打了关系小步", state.n.relation === 1, JSON.stringify(state.n));
-  var rel = (state.mind && state.mind.relations || [])[0] || {};
-  ok("后一句取代前一句", state.mind && state.mind.relationFrom === "focus" && rel.relation === "supersedes" && rel.b === "f1", JSON.stringify(rel));
+  var asked = await p.$("#v20-pair");
+  ok("换方向后先问用户，不打关系模型", !!asked && (await p.evaluate(function () { return window.__n.relation; })) === 0);
+  await p.evaluate(function () { document.querySelector("#v20-pair-withdraw").click(); });
+  await sleep(200);
+  var rel = await p.evaluate(function () { return window.__lingcun20.record().userRelation; });
+  ok("后一句取代前一句", rel && rel.sourceId === "user" && rel.choice === "withdraw" && rel.relations[0].relation === "supersedes" && rel.relations[0].b === "f1", JSON.stringify(rel));
   await p.click("#try-no");
   await sleep(80);
   await p.click("#try-no");

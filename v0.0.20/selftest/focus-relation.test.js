@@ -54,14 +54,17 @@ function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
     inferences: [], unknowns: [], relations: [{ a: "f1", b: "f2", relation: "independent", why: "理解时先写成互不影响。" }], advice: "offer"
   };
   var replaced = await open(skipLib + "。" + fillForm + "。", u1, { pairs: [{ a: "f1", b: "f2", replaces: true, both_ok: false, why: "后一句改成现在要做的事，前一句不再做。" }] });
-  var withdrawn = await replaced.p.$eval('#v20-mind [data-voice="withdrawn"]', function (e) { return e.nextElementSibling.innerText; }).catch(function () { return ""; });
-  var counts = await replaced.p.evaluate(function () { return window.__n; });
-  ok("后一句取代前一句", withdrawn.indexOf("图书馆") >= 0 && !(await replaced.p.$("#v20-conflict")), withdrawn);
-  ok("关系小步只打一次", counts.relation === 1, JSON.stringify(counts));
-  await replaced.p.evaluate(function () { if (window.__lingcun20) document.querySelector("#frag-revise") && document.querySelector("#frag-revise").click(); });
+  await replaced.p.evaluate(function () { var s = document.querySelector(".sticker-btn"); if (s) s.click(); });
+  await replaced.p.click(".v19-act-take", { force: true }).catch(function () {});
+  await sleep(80);
+  await replaced.p.evaluate(function () { var b = document.querySelector("#frag-go"); if (b) b.click(); var d = document.querySelector('[data-dir="body"]'); if (d) d.click(); var g = document.querySelector("#dir-go"); if (g) g.click(); });
+  await sleep(250);
+  await replaced.p.evaluate(function () { var b = document.querySelector("#v20-pair-withdraw"); if (b) b.click(); });
   await sleep(200);
-  var counts2 = await replaced.p.evaluate(function () { return window.__n; });
-  ok("离开这一屏不再追问关系", counts2.relation === 1, JSON.stringify(counts2));
+  var withdrawn = await replaced.p.$eval("#v20-withdrawn", function (e) { return e.textContent; }).catch(function () { return ""; });
+  var counts = await replaced.p.evaluate(function () { return window.__n; });
+  ok("后一句取代前一句", withdrawn.indexOf("已撤回") >= 0 && withdrawn.indexOf("图书馆") >= 0, withdrawn);
+  ok("关系不再打模型", counts.relation === 0, JSON.stringify(counts));
   await replaced.ctx.close();
 
   var u2 = {
@@ -72,6 +75,13 @@ function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
     inferences: [], unknowns: [], relations: [{ a: "f1", b: "f2", relation: "independent", why: "理解时还没分开。" }], advice: "offer"
   };
   var clash = await open(lend + "，" + keep + "。", u2, { pairs: [{ a: "f1", b: "f2", replaces: false, both_ok: false, why: "两件都还成立，但不能一起做。" }] });
+  await clash.p.evaluate(function () { var s = document.querySelector(".sticker-btn"); if (s) s.click(); });
+  await clash.p.click(".v19-act-take", { force: true }).catch(function () {});
+  await sleep(80);
+  await clash.p.evaluate(function () { var b = document.querySelector("#frag-go"); if (b) b.click(); var d = document.querySelector('[data-dir="body"]'); if (d) d.click(); var g = document.querySelector("#dir-go"); if (g) g.click(); });
+  await sleep(250);
+  await clash.p.evaluate(function () { var b = document.querySelector("#v20-pair-clash"); if (b) b.click(); });
+  await sleep(200);
   var asked = await clash.p.$eval("#v20-conflict", function (e) { return e.textContent; }).catch(function () { return ""; });
   ok("不能同时做就先问选边", asked.indexOf("不能只留一边") >= 0, asked);
   await clash.ctx.close();

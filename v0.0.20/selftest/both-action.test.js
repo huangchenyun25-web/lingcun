@@ -55,8 +55,6 @@ function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
   await p.fill("#pk-idea", input);
   await p.evaluate(function () { document.querySelector("#pk-go").click(); });
   await sleep(400);
-  await p.click("#v20-keep-both");
-  await sleep(150);
   var label = await p.$eval(".sticker-label", function (e) { return e.textContent; });
   await p.click('.v19-sticker[data-label="' + label + '"] .sticker-btn', { force: true });
   await p.click(".v19-act-take", { force: true });
@@ -65,7 +63,9 @@ function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
   await sleep(60);
   await p.evaluate(function () { document.querySelector('[data-dir="body"]').click(); });
   await p.evaluate(function () { document.querySelector("#dir-go").click(); });
-  await sleep(400);
+  await sleep(200);
+  await p.evaluate(function () { var b = document.querySelector("#v20-pair-both"); if (b) b.click(); });
+  await sleep(300);
   var line = await p.$eval("#try-line", function (e) { return e.textContent; }).catch(function () { return ""; });
   ok("留下同时做得到的小动作", line.indexOf("放在门外的台阶上") >= 0 && line.indexOf("两边都还在") < 0 && line.indexOf(share) < 0, line);
   ok("没有发出网页请求", net.length === 0, net.join(" "));

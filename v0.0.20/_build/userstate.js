@@ -125,7 +125,40 @@ var LingcunUserState = (function () {
     next.history = state.history.concat(next.history);
     next.lateRejected = (state.lateRejected || []).slice();
     next.contradictions = contradictions(next.current.intents);
+    next.relationRev = state.relationRev || 0;
+    next.relationHistory = (state.relationHistory || []).slice();
+    if (state.userRelation) {
+      var oldRel = {};
+      for (var rk in state.userRelation) oldRel[rk] = state.userRelation[rk];
+      oldRel.status = "history";
+      next.relationHistory.push(oldRel);
+    }
     return next;
+  }
+  function setUserRelation(state, decision) {
+    decision = decision || {};
+    state.relationRev = (state.relationRev || 0) + 1;
+    state.relationHistory = state.relationHistory || [];
+    if (state.userRelation) {
+      var prev = {};
+      for (var k in state.userRelation) prev[k] = state.userRelation[k];
+      prev.status = "history";
+      state.relationHistory.push(prev);
+    }
+    state.userRelation = {
+      sourceId: "user",
+      rev: state.relationRev,
+      status: "current",
+      source: decision.source || state.text || "",
+      choice: decision.choice || "",
+      earlierId: decision.earlierId || "",
+      laterId: decision.laterId || "",
+      earlierText: decision.earlierText || "",
+      laterText: decision.laterText || "",
+      conflictChoice: decision.conflictChoice || "",
+      relations: decision.relations || []
+    };
+    return state;
   }
   function addUtterance(state, text, sourceId) {
     var t = String(text || "").trim();
@@ -206,6 +239,8 @@ var LingcunUserState = (function () {
       intents: state.current.intents.map(copyItem),
       inferences: state.current.inferences.map(copyItem),
       history: state.history.map(copyItem),
+      userRelation: state.userRelation ? copyItem(state.userRelation) : null,
+      relationHistory: (state.relationHistory || []).map(copyItem),
       contradictions: state.contradictions.map(function (c) { return { ids: c.ids.slice(), note: c.note }; }),
       unknowns: []
     };
@@ -224,6 +259,7 @@ var LingcunUserState = (function () {
     ingest: ingest,
     replaceSource: replaceSource,
     addUtterance: addUtterance,
+    setUserRelation: setUserRelation,
     confirm: confirm,
     withdraw: withdraw,
     acceptLate: acceptLate,

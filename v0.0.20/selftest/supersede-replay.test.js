@@ -56,9 +56,6 @@ function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
   await p.fill("#pk-idea", input);
   await p.evaluate(function () { document.querySelector("#pk-go").click(); });
   await sleep(450);
-  var asked = await p.$("#v20-conflict");
-  var withdrawn = await p.$eval('#v20-mind [data-voice="withdrawn"]', function (e) { return e.nextElementSibling.innerText; }).catch(function () { return ""; });
-  ok("撤回不进并存提示", !asked && withdrawn.indexOf(oldText) >= 0, withdrawn);
   await p.click('.v19-sticker[data-label="' + nextText + '"] .sticker-btn', { force: true });
   await p.click(".v19-act-take", { force: true });
   await sleep(80);
@@ -66,7 +63,12 @@ function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
   await sleep(60);
   await p.evaluate(function () { document.querySelector('[data-dir="body"]').click(); });
   await p.evaluate(function () { document.querySelector("#dir-go").click(); });
-  await sleep(400);
+  await sleep(250);
+  await p.evaluate(function () { document.querySelector("#v20-pair-withdraw").click(); });
+  await sleep(300);
+  var asked = await p.$("#v20-conflict");
+  var withdrawn = await p.$eval("#v20-withdrawn", function (e) { return e.textContent; }).catch(function () { return ""; });
+  ok("撤回不进并存提示", !asked && withdrawn.indexOf(oldText) >= 0, withdrawn);
   var line = await p.$eval("#try-line", function (e) { return e.textContent; }).catch(function () { return ""; });
   ok("尝试按还成立的那句", line.indexOf("便条") >= 0 && line.indexOf("空瓶") < 0 && line.indexOf("两边都还在") < 0, line);
   ok("没有发出网页请求", net.length === 0, net.join(" "));

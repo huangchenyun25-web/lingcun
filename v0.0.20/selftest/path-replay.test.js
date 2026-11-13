@@ -145,7 +145,16 @@ function caseOf(id) { return frozen.cases.filter(function (c) { return c.id === 
       await p.evaluate(function () { var b = document.querySelector('[data-dir="body"]'); if (b) b.click(); });
       await p.evaluate(function () { var b = document.querySelector("#dir-go"); if (b) b.click(); });
       await sleep(200);
-      if (await p.$("#v20-want-advice")) { await p.click("#v20-want-advice"); await sleep(200); }
+      var asked = await p.$eval("#v20-pair-title", function (e) { return e.textContent; }).catch(function () { return ""; });
+      ok(label + " 先问两件事的关系", asked.indexOf("你说了两件事") >= 0, asked);
+      if (label === "U04" && await p.$("#v20-pair-withdraw")) {
+        await p.evaluate(function () { document.querySelector("#v20-pair-withdraw").click(); });
+        await sleep(300);
+      }
+      if (label === "U05" && await p.$("#v20-pair-clash")) {
+        await p.evaluate(function () { document.querySelector("#v20-pair-clash").click(); });
+        await sleep(200);
+      }
     }
     var end = await p.evaluate(function () {
       function t(id) { var e = document.querySelector(id); return e ? e.textContent : ""; }
@@ -160,6 +169,7 @@ function caseOf(id) { return frozen.cases.filter(function (c) { return c.id === 
         seen: window.__seen,
         line: t("#try-line"),
         conflict: t("#v20-conflict"),
+        withdrawn: t("#v20-withdrawn"),
         hint: t("#premise-hint"),
         debug: t("#premise-debug"),
         mind: t("#v20-mind"),
@@ -169,13 +179,13 @@ function caseOf(id) { return frozen.cases.filter(function (c) { return c.id === 
     });
     console.log("BUDGET", label, JSON.stringify(end.counts));
     ok(label + " 同一段理解不超过一次返工", end.over === false, JSON.stringify(end.seen));
-    ok(label + " 关系小步发出一次", end.counts.v20_relation === 1, JSON.stringify(end.counts));
+    ok(label + " 不再打关系模型", !end.counts.v20_relation, JSON.stringify(end.counts));
     ok(label + " 没有调试说明", (end.hint + end.mind + end.line).indexOf("程序") < 0 && end.debug === "");
     await ctx.close();
     return end;
   }
   var u04end = await play("U04", first, [second], { replaces: true, both_ok: false, why: "后一句收回前一句，前一句不再做。" }, attemptsFrom(round11, "U04"));
-  ok("U04 标出撤回", (u04end.mind || "").indexOf("已撤回") >= 0, u04end.mind);
+  ok("U04 标出撤回", (u04end.withdrawn || "").indexOf("已撤回") >= 0, u04end.withdrawn);
   ok("U04 核对页是写信的动作", (u04end.line || "").indexOf("信") >= 0 && (u04end.line || "").indexOf("杂志清") < 0, u04end.line);
   var u05end = await play("U05", u05.input, [], { replaces: false, both_ok: false, why: "两件都还成立，但不能一起做。" }, attemptsFrom(round11, "U05"));
   ok("U05 先问选边", (u05end.conflict || "").indexOf("不能只留一边") >= 0, u05end.conflict || u05end.mind);

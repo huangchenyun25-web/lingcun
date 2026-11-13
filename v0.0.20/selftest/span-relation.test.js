@@ -65,7 +65,7 @@ function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
   await p.evaluate(function () { document.querySelector("#pk-go").click(); });
   await sleep(400);
   var counts = await p.evaluate(function () { return window.__n; });
-  ok("只理解一次并打出关系小步", counts.understand === 1 && counts.relation === 1, JSON.stringify(counts));
+  ok("只理解一次，关系不再打模型", counts.understand === 1 && counts.relation === 0, JSON.stringify(counts));
   await ctx.close();
 
   var ctx2 = await b.newContext({ viewport: { width: 390, height: 844 } });

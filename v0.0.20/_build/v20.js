@@ -141,7 +141,39 @@
       return seq[0] || "";
     }
     function pairKey(a, b) { return [String(a || ""), String(b || "")].sort().join("|"); }
-    function relationsOf(v) { return (v && v.mind && v.mind.relations) || []; }
+    function selfCertainList(v) {
+      var src = String((v && v.mind && v.mind.source) || (v && v.record && v.record.text) || "");
+      var seen = {};
+      var list = ((v && v.mind && v.mind.readings) || []).filter(function (r) {
+        if (!r || r.speaker !== "self" || r.modality !== "certain" || !r.text || !r.id) return false;
+        if (seen[r.text]) return false;
+        seen[r.text] = 1;
+        return true;
+      });
+      list.sort(function (a, b) {
+        var as = src.indexOf(a.text), bs = src.indexOf(b.text);
+        if (as < 0) as = 9999;
+        if (bs < 0) bs = 9999;
+        return as - bs;
+      });
+      return list;
+    }
+    function activeUserRelation(v) {
+      var rel = v && v.record && v.record.userRelation;
+      var src = String((v && v.mind && v.mind.source) || (v && v.record && v.record.text) || "");
+      if (!rel || rel.status !== "current" || rel.sourceId !== "user") return null;
+      if (rel.source && rel.source !== src) return null;
+      return rel;
+    }
+    function pairPending(v) {
+      return selfCertainList(v).length >= 2 && !activeUserRelation(v);
+    }
+    function relationsOf(v) {
+      var user = activeUserRelation(v);
+      if (user) return user.relations || [];
+      if (selfCertainList(v).length >= 2) return [];
+      return (v && v.mind && v.mind.relations) || [];
+    }
     function supersededIds(v) {
       var ids = {};
       relationsOf(v).forEach(function (rel) { if (rel && rel.relation === "supersedes" && rel.b) ids[rel.b] = 1; });
@@ -226,6 +258,18 @@
       return rest.length < 4;
     }
     function holdLine() { return "这次先不给做法。还没有一条能做的小动作。"; }
+    function usesDead(v, a) {
+      var dead = supersededIds(v);
+      return ((a && a.uses) || []).some(function (id) { return dead[id]; });
+    }
+    function mentionsDead(v, text) {
+      var dead = supersededIds(v);
+      var hit = false;
+      ((v && v.mind && v.mind.readings) || []).forEach(function (r) {
+        if (dead[r.id] && r.text && r.text.length >= 2 && String(text || "").indexOf(r.text) >= 0) hit = true;
+      });
+      return hit;
+    }
     function manualLine(v) {
       var d = dirLabel20(v);
       var m = v.mind || {};
@@ -287,6 +331,16 @@
         syncOut(p);
         return;
       }
+      syncUserRelation(v);
+      if (pairPending(v)) {
+        v.attempt = "";
+        v.pool = [""];
+        v.attemptFrom = "ask";
+        v.attemptEpoch = v.epochSeq || 0;
+        if (v.mind) v.mind.holdAttempt = true;
+        syncOut(p);
+        return;
+      }
       if (!wantsAction(v)) {
         v.attempt = holdLine();
         v.pool = [v.attempt];
@@ -311,7 +365,9 @@
         } else v.enough = "今天做到这儿就够了：做完你认可的这一件就停。";
       }
       if (v.candidatePack && v.candidatePack.length) {
-        v.candidatePack = v.candidatePack.filter(function (a) { return respectsConflict(v, a) && !quoteAttempt(attemptText(a), v, p); });
+        v.candidatePack = v.candidatePack.filter(function (a) {
+          return respectsConflict(v, a) && !quoteAttempt(attemptText(a), v, p) && !mentionsDead(v, attemptText(a)) && !usesDead(v, a);
+        });
       }
       if (v.candidatePack && v.candidatePack.length && !(v.mind && v.mind.conflictChoice === "both")) {
         var skipped = !!(v.premise && v.premise.skipped);
@@ -473,8 +529,22 @@
       if (!basis) return false;
       return !isDirectText(basis, m.readings);
     }
+    function syncUserRelation(v) {
+      var user = activeUserRelation(v);
+      if (!user || !v || !v.mind) return;
+      v.mind.relations = user.relations || [];
+      v.mind.relationFrom = "user";
+      v.mind.relationChoice = user.choice || "";
+      if (user.conflictChoice) v.mind.conflictChoice = user.conflictChoice;
+      if (user.choice === "skip") {
+        v.mind.advice = "decline";
+        v.mind.adviceFrom = "user";
+      }
+    }
     function wantsAction(v) {
       var m = (v && v.mind) || {};
+      if (pairPending(v)) return false;
+      if (activeUserRelation(v) && activeUserRelation(v).choice === "skip") return false;
       if (m.relationUnsure && !m.relationChoice) return false;
       if (conflictOpen(v)) return false;
       if (voiceNeedsAsk(v)) return false;
@@ -557,7 +627,7 @@
         if (more) more.hidden = false;
       }
       if (v.mind) v.mind.holdAttempt = !wantsAction(v);
-      if ((v.mind && v.mind.pace && v.mind.pace !== "try") || (v.mind && v.mind.advice === "decline" && v.mind.adviceFrom !== "user") || voiceNeedsAsk(v)) {
+      if ((v.mind && v.mind.pace && v.mind.pace !== "try") || (v.mind && v.mind.advice === "decline" && v.mind.adviceFrom !== "user" && !pairPending(v)) || voiceNeedsAsk(v)) {
         var goBtn = $("frag-go");
         if (goBtn) goBtn.disabled = true;
       }
@@ -621,7 +691,7 @@
         });
         html += '<button type="button" id="v20-keep-both">两边都留着</button>';
       } else if (voiceNeedsAsk(p.v18)) html += "<p id=\"v20-voice-ask\">这里有别人说的话，或者还只是假设。你自己是这么想的吗？</p><button type=\"button\" id=\"v20-own-voice\">是我自己的想法</button>";
-      else if (m.advice === "decline" && m.adviceFrom !== "user") html += "<p id=\"v20-no-action\">这次先不给做法。这段话留在这里，不必做成一条尝试。</p><button type=\"button\" id=\"v20-keep-text\">先留下这段话</button><button type=\"button\" id=\"v20-want-advice\">我想听听建议</button>";
+      else if (m.advice === "decline" && m.adviceFrom !== "user" && !pairPending(p.v18)) html += "<p id=\"v20-no-action\">这次先不给做法。这段话留在这里，不必做成一条尝试。</p><button type=\"button\" id=\"v20-keep-text\">先留下这段话</button><button type=\"button\" id=\"v20-want-advice\">我想听听建议</button>";
       else if ((m.advice === "unsure" || !m.advice) && m.adviceFrom !== "user") html += "<p id=\"v20-ask-advice\">还看不出你想不想听一条做法。</p>";
       if (m.pace === "vent") html += "<p>你写了先不要分析。可以停在这里，不必做成一条尝试，也不会把这句存成以后的方向。</p><button type=\"button\" id=\"v20-hold\">先停在这里</button>";
       else if (m.pace === "hold") html += "<p>这里不能判断身体情况，也不会把担心写成诊断。如果身体让你不放心，优先联系你当地能找到的专业帮助。可以先停在这里，不必做尝试。</p><button type=\"button\" id=\"v20-hold\">先停在这里</button>";
@@ -983,12 +1053,14 @@
       var task = taskOf("v20_understand", "读这句原话", "把人的原话拆成可核对的片段", understoodInstructions(), inputs, UNDER_SCHEMA, "v20u:" + p.id + ":" + boundU.reqId);
       task.noRepair = true;
       task.check = function (out) { return checkUnderstand(src, out); };
-      function degradeUnderstand(reason) {
+      function degradeUnderstand(reason, out) {
         var mind = p.v18.mind;
+        var heard = out ? readAdvice(out) : "";
         mind.mode = "manual";
         mind.status = "failed";
         mind.errors = [reason || "没能核上"];
-        mind.adviceFrom = "";
+        mind.advice = heard === "decline" ? "decline" : (mind.advice || "unsure");
+        mind.adviceFrom = heard === "decline" ? "model" : "";
         mind.understandGaveUp = String(p.idea || "");
         try { LingcunEpoch.finish(p, boundU); } catch (e) {}
         save();
@@ -1022,7 +1094,7 @@
             if (S.stage === "material") renderMaterial();
             return;
           }
-          degradeUnderstand(er[0] || err || "格式没核上");
+          degradeUnderstand(er[0] || err || "格式没核上", out);
           return;
         }
         var gate = LingcunEpoch.accept(p, boundU);
@@ -1058,8 +1130,7 @@
         p.v18.mind.status = er.length ? "rejected" : "ok";
         save();
         if (S.stage === "material") renderMaterial();
-        maybeFocusRelation(p);
-        if (advice !== "decline" && !p.v18.mind.relationUnsure && S.stage === "check") kickAttempts(p);
+        if (S.stage === "check") renderCheck();
       }
       runTask(task, 28000, function (out, err) { takeUnderstand(out, err, 0); });
     }
@@ -1074,7 +1145,12 @@
       if (v.mind) v.mind.attemptPending = true;
       var boundA = LingcunEpoch.issue(p, "attempts");
       var view = v.record ? LingcunUserState.view(v.record) : { facts: [], constraints: [], intents: [] };
-      var inputs = { confirmed: view.facts.concat(view.constraints, view.intents), answer: m.answer || "", direction: dirLabel20(v), take: v.take || [], leave: v.leave || [], reference: m.ref || null, user_text: m.source };
+      var deadText = {};
+      var deadIds = supersededIds(v);
+      (m.readings || []).forEach(function (r) { if (r && deadIds[r.id] && r.text) deadText[r.text] = 1; });
+      var confirmed = view.facts.concat(view.constraints, view.intents).filter(function (f) { return f && !deadText[f.text]; });
+      var takeLive = (v.take || []).filter(function (t) { return !deadText[t]; });
+      var inputs = { confirmed: confirmed, answer: m.answer || "", direction: dirLabel20(v), take: takeLive, leave: v.leave || [], reference: m.ref || null, user_text: m.source };
       var task = taskOf("v20_attempts", "写几种小尝试", "按已核对的原话写不同的小尝试", attemptInstructions(), inputs, ATT_SCHEMA, "v20a:" + p.id + ":" + boundA.reqId);
       runTask(task, 28000, function (out, err) {
         if (!gateFlight(p, boundA, err && !out)) {
@@ -1232,10 +1308,106 @@
       };
     })(renderMaterial);
 
+    function briefQuote(text) {
+      text = String(text || "");
+      if (text.length <= 22) return text;
+      return text.slice(0, 20) + "…";
+    }
+    function pairEnds(v) {
+      var list = selfCertainList(v);
+      if (list.length < 2) return null;
+      return { earlier: list[0], later: list[list.length - 1] };
+    }
+    function relationsForChoice(choice, earlier, later) {
+      if (choice === "withdraw") return [{ a: later.id, b: earlier.id, relation: "supersedes", why: "你说后一句改了主意。", from: "user" }];
+      if (choice === "both") return [{ a: earlier.id, b: later.id, relation: "conflicts", why: "你说两件都要。", from: "user" }];
+      if (choice === "conflict") return [{ a: earlier.id, b: later.id, relation: "conflicts", why: "你说这两件有点打架。", from: "user" }];
+      return [];
+    }
+    function choosePair(p, choice) {
+      var v = p && p.v18;
+      var ends = v && pairEnds(v);
+      if (!v || !ends || !v.record) return;
+      var conflictChoice = choice === "both" ? "both" : "";
+      LingcunUserState.setUserRelation(v.record, {
+        source: (v.mind && v.mind.source) || v.record.text || "",
+        choice: choice,
+        earlierId: ends.earlier.id,
+        laterId: ends.later.id,
+        earlierText: ends.earlier.text,
+        laterText: ends.later.text,
+        conflictChoice: conflictChoice,
+        relations: relationsForChoice(choice, ends.earlier, ends.later)
+      });
+      v.aiAttempts = null;
+      v.candidatePack = [];
+      v.modelLine = "";
+      v.aiSig = "";
+      v.mind = v.mind || {};
+      v.mind.conflictChoice = conflictChoice;
+      v.mind.holdAttempt = choice === "skip";
+      if (choice === "skip") {
+        v.mind.advice = "decline";
+        v.mind.adviceFrom = "user";
+      } else {
+        v.mind.advice = "offer";
+        v.mind.adviceFrom = "user";
+      }
+      syncUserRelation(v);
+      save();
+      if (S.stage === "check") renderCheck();
+      else renderMaterial();
+    }
+    function rememberSide(p, side) {
+      var v = p.v18;
+      var cur = v.record && v.record.userRelation;
+      if (!cur) return;
+      LingcunUserState.setUserRelation(v.record, {
+        source: cur.source,
+        choice: cur.choice,
+        earlierId: cur.earlierId,
+        laterId: cur.laterId,
+        earlierText: cur.earlierText,
+        laterText: cur.laterText,
+        conflictChoice: side,
+        relations: cur.relations
+      });
+      syncUserRelation(v);
+    }
     function annotateCheck() {
       var p = curP();
       if (!p || !p.v18) return;
       var v = p.v18, k = $("try-kicker");
+      if (pairPending(v)) {
+        var ends = pairEnds(v);
+        var cardP = document.querySelector(".trycard");
+        var lineP = $("try-line");
+        if (lineP) lineP.textContent = "";
+        if (k) k.textContent = "先选一下这两句怎么摆。";
+        if (cardP && ends && !$("v20-pair")) {
+          var ask = document.createElement("div");
+          ask.className = "v20-extra";
+          ask.id = "v20-pair";
+          ask.innerHTML = '<p id="v20-pair-title"><b>你说了两件事，它们是什么关系？</b></p><p id="v20-pair-a">「' + esc(briefQuote(ends.earlier.text)) + '」</p><p id="v20-pair-b">「' + esc(briefQuote(ends.later.text)) + '」</p><button type="button" class="sec2" id="v20-pair-withdraw">后一句是改主意了</button><button type="button" class="sec2" id="v20-pair-both">两件都要</button><button type="button" class="sec2" id="v20-pair-clash">它们有点打架</button><button type="button" class="v20-mini" id="v20-pair-skip">跳过</button>';
+          cardP.appendChild(ask);
+          $("v20-pair-withdraw").onclick = function () { choosePair(p, "withdraw"); };
+          $("v20-pair-both").onclick = function () { choosePair(p, "both"); };
+          $("v20-pair-clash").onclick = function () { choosePair(p, "conflict"); };
+          $("v20-pair-skip").onclick = function () { choosePair(p, "skip"); };
+        }
+        return;
+      }
+      var deadNow = supersededIds(v);
+      var gone = [];
+      ((v.mind && v.mind.readings) || []).forEach(function (r) { if (r && deadNow[r.id] && r.text) gone.push(r.text); });
+      var cardW = document.querySelector(".trycard");
+      if (cardW && gone.length && !$("v20-withdrawn")) {
+        var note = document.createElement("p");
+        note.id = "v20-withdrawn";
+        note.setAttribute("data-voice", "withdrawn");
+        note.textContent = "已撤回：「" + briefQuote(gone[0]) + "」";
+        cardW.appendChild(note);
+      }
       if (v.mind && v.mind.bothHold) {
         var cardH = document.querySelector(".trycard");
         var lineH = $("try-line");
@@ -1262,9 +1434,12 @@
           cardC.appendChild(clash);
           clash.querySelectorAll("[data-keep-side]").forEach(function (b) {
             b.onclick = function () {
-              v.mind.conflictChoice = b.getAttribute("data-keep-side");
+              var side = b.getAttribute("data-keep-side");
+              v.mind.conflictChoice = side;
               v.mind.advice = "offer";
               v.mind.adviceFrom = "user";
+              v.mind.holdAttempt = false;
+              rememberSide(p, side);
               save();
               renderCheck();
             };
@@ -1273,6 +1448,8 @@
             v.mind.conflictChoice = "both";
             v.mind.advice = "offer";
             v.mind.adviceFrom = "user";
+            v.mind.holdAttempt = false;
+            rememberSide(p, "both");
             save();
             renderCheck();
           };
